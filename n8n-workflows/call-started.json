@@ -1,0 +1,44 @@
+{
+  "name": "AK-Assistance: Anruf gestartet",
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook: call-started",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "path": "call-started",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "airtable-lookup",
+      "name": "Airtable: Kunde suchen",
+      "type": "n8n-nodes-base.airtable",
+      "parameters": {
+        "operation": "search",
+        "table": "Kunden",
+        "filterByFormula": "={Telefon} = '{{ $json.fromNumber }}'"
+      }
+    },
+    {
+      "id": "log-call",
+      "name": "Airtable: Anruf protokollieren",
+      "type": "n8n-nodes-base.airtable",
+      "parameters": {
+        "operation": "create",
+        "table": "Anrufe",
+        "fields": {
+          "Anruf-ID": "={{ $json.callId }}",
+          "Kundennummer": "={{ $json.fromNumber }}",
+          "Status": "Laufend",
+          "Startzeit": "={{ $now }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "webhook-trigger": { "main": [["airtable-lookup"]] },
+    "airtable-lookup": { "main": [["log-call"]] }
+  }
+}

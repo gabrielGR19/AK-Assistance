@@ -1,0 +1,76 @@
+{
+  "name": "AK-Assistance: Anruf beendet",
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook: call-ended",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "path": "call-ended",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "airtable-create",
+      "name": "Airtable: Anruf speichern",
+      "type": "n8n-nodes-base.airtable",
+      "parameters": {
+        "operation": "create",
+        "table": "Anrufe",
+        "fields": {
+          "Anruf-ID": "={{ $json.callId }}",
+          "Kundennummer": "={{ $json.fromNumber }}",
+          "Datum": "={{ $now }}",
+          "Dauer (s)": "={{ Math.round($json.duration / 1000) }}",
+          "Zusammenfassung": "={{ $json.summary }}",
+          "Termin gewünscht": "={{ $json.appointmentRequested }}",
+          "Terminwunsch": "={{ $json.appointmentDate }}",
+          "Aufnahme": "={{ $json.recordingUrl }}"
+        }
+      }
+    },
+    {
+      "id": "if-appointment",
+      "name": "Termin gewünscht?",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{ $json.appointmentRequested }}", "value2": true }]
+        }
+      }
+    },
+    {
+      "id": "google-calendar",
+      "name": "Google Calendar: Termin anlegen",
+      "type": "n8n-nodes-base.googleCalendar",
+      "parameters": {
+        "operation": "create",
+        "calendar": "primary",
+        "summary": "Kundentermin: {{ $json.customerName ?? $json.fromNumber }}",
+        "description": "{{ $json.summary }}\n\nAnruf-ID: {{ $json.callId }}",
+        "start": "={{ $json.appointmentDate }}"
+      }
+    },
+    {
+      "id": "notify-craftworker",
+      "name": "AK-Assistance: Bestätigung senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/n8n/appointment-confirmed",
+        "body": {
+          "customerPhone": "={{ $json.fromNumber }}",
+          "appointmentDate": "={{ $json.appointmentDate }}",
+          "craftworkerName": "Ihr Handwerker"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "webhook-trigger": { "main": [["airtable-create"]] },
+    "airtable-create": { "main": [["if-appointment"]] },
+    "if-appointment": { "true": [["google-calendar"]], "false": [] },
+    "google-calendar": { "main": [["notify-craftworker"]] }
+  }
+}
