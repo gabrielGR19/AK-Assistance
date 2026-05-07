@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kontakt — AK-Assistance</title>
+  <link rel="stylesheet" href="shared.css">
+
+  <script src="assets/script_0.js"></script>
+  <script src="assets/script_1.js"></script>
+  <script src="assets/script_4.js"></script>
+
+  <style>
+    :root {
+      --bg: #FFFFFF; --bg-soft: #F6F7F9; --bg-deep: #0B1220;
+      --ink: #0B1220; --ink-soft: #455066; --ink-mute: #8892A6;
+      --line: #E6E9EE; --line-strong: #CBD2DC;
+      --radius: 16px; --maxw: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 18px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4 { font-family: 'Inter Tight', 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.025em; margin: 0; }
+    p { margin: 0; }
+    a { color: inherit; }
+    button { font-family: inherit; cursor: pointer; }
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+
+    /* Topbar */
+    .topbar { padding: 28px 0 0; position: relative; z-index: 200; }
+    .topbar-inner { display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); white-space: nowrap; }
+    .logo-mark { width: 32px; height: 32px; border-radius: 9px; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+
+    /* Hamburger */
+    .hamburger { background: none; border: none; padding: 6px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 301; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: transform .3s ease, opacity .3s ease; }
+    body.nav-open .hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.nav-open .hamburger span:nth-child(2) { opacity: 0; }
+    body.nav-open .hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Nav-Overlay */
+    .nav-overlay { position: fixed; inset: 0; background: rgba(11,18,32,.5); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+    body.nav-open .nav-overlay { opacity: 1; pointer-events: all; }
+
+    /* Nav-Drawer */
+    .nav-drawer { position: fixed; top: 0; right: 0; width: min(320px, 85vw); height: 100vh; background: #fff; z-index: 300; transform: translateX(100%); transition: transform .35s cubic-bezier(.25,.46,.45,.94); display: flex; flex-direction: column; padding: 28px 32px 40px; box-shadow: -4px 0 32px rgba(11,18,32,.12); }
+    body.nav-open .nav-drawer { transform: translateX(0); }
+    .nav-drawer-logo { display: flex; align-items: center; gap: 10px; font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 17px; text-decoration: none; color: var(--ink); margin-bottom: 40px; white-space: nowrap; }
+    .nav-drawer ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .nav-drawer ul li a { display: block; padding: 12px 0; font-size: 17px; font-weight: 500; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); transition: color .15s; }
+    .nav-drawer ul li:last-child a { border-bottom: none; }
+    .nav-drawer ul li a:hover { color: var(--ink-soft); }
+    .nav-drawer ul li a.active { font-weight: 600; }
+    .nav-drawer-contact { margin-top: 32px; font-size: 14px; color: var(--ink-mute); }
+    .nav-drawer-contact a { color: var(--ink-soft); text-decoration: none; display: inline-flex; align-items: center; gap: 7px; margin-top: 6px; }
+
+    /* Page hero */
+    .page-hero { padding: 80px 0 72px; border-bottom: 1px solid var(--line); }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-soft); text-decoration: none; font-size: 15px; margin-bottom: 40px; transition: color .15s; }
+    .back-link:hover { color: var(--ink); }
+    .page-label { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 16px; }
+    .page-hero h1 { font-size: clamp(40px, 6vw, 72px); line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 24px; }
+    .page-hero .lead { font-size: clamp(18px, 1.4vw, 21px); color: var(--ink-soft); max-width: 52ch; line-height: 1.55; }
+
+    /* Contact section */
+    .contact-section { padding: 80px 0; background: var(--bg-soft); }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: stretch; }
+    @media (max-width: 880px) { .contact-grid { grid-template-columns: 1fr; gap: 28px; } }
+
+    /* Testcall card */
+    .testcall-card { background: var(--bg-deep); color: #fff; border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; min-height: 100%; position: relative; overflow: hidden; }
+    .testcall-card::before { content: ''; position: absolute; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%); top: -100px; right: -100px; pointer-events: none; }
+    .testcall-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 999px; width: fit-content; margin-bottom: 24px; position: relative; }
+    .live { width: 7px; height: 7px; border-radius: 50%; background: #34D399; box-shadow: 0 0 0 4px rgba(52,211,153,.2); animation: pulseSoft 1.6s ease-in-out infinite; }
+    @keyframes pulseSoft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .testcall-card h3 { font-size: 30px; color: #fff; line-height: 1.15; margin-bottom: 16px; position: relative; }
+    .testcall-card p { font-size: 16px; color: rgba(255,255,255,0.7); line-height: 1.55; margin-bottom: 32px; position: relative; }
+    .testcall-number { background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.2); border-radius: 16px; padding: 24px; text-align: center; position: relative; }
+    .testcall-number .label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .testcall-number .num { font-family: 'Inter Tight', sans-serif; font-size: 26px; font-weight: 600; color: #fff; }
+    .testcall-number .placeholder { color: rgba(255,255,255,0.4); font-style: normal; }
+    .testcall-meta { margin-top: 20px; font-size: 14px; color: rgba(255,255,255,0.55); text-align: center; position: relative; }
+
+    /* Form styles */
+    .form-card { background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 40px; }
+    @media (max-width: 480px) { .form-card { padding: 28px; } }
+    .form-card h3 { font-size: 26px; margin-bottom: 8px; line-height: 1.2; }
+    .form-card .lead { font-size: 15px; color: var(--ink-soft); margin-bottom: 28px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+    .field label { font-size: 14px; font-weight: 500; color: var(--ink); }
+    .field label .req { color: var(--ink-soft); font-weight: 400; }
+    .field input, .field textarea { font-family: inherit; font-size: 16px; padding: 14px 16px; border: 1px solid var(--line-strong); border-radius: 12px; background: #fff; color: var(--ink); transition: border-color .15s ease, box-shadow .15s ease; }
+    .field input::placeholder, .field textarea::placeholder { color: var(--ink-mute); }
+    .field input:focus, .field textarea:focus { outline: 0; border-color: var(--ink); box-shadow: 0 0 0 4px rgba(11,18,32,.08); }
+    .field textarea { resize: vertical; min-height: 110px; }
+    .field.error input, .field.error textarea { border-color: #DC2626; background: #FEF2F2; }
+    .field .err-msg { font-size: 13px; color: #DC2626; display: none; }
+    .field.error .err-msg { display: block; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
+    .form-submit { width: 100%; background: var(--ink); color: #fff; border: 0; border-radius: 12px; padding: 20px; font-size: 17px; font-weight: 600; margin-top: 8px; transition: background .15s ease, transform .15s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+    .form-submit:hover { background: #000; transform: translateY(-1px); }
+    .form-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .form-note { font-size: 13px; color: var(--ink-mute); margin-top: 14px; text-align: center; }
+    .form-success { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 16px; padding: 32px; text-align: center; }
+    .form-success .check { width: 56px; height: 56px; border-radius: 50%; background: var(--ink); color: white; display: grid; place-items: center; margin: 0 auto 16px; }
+    .form-success h4 { font-size: 22px; margin-bottom: 8px; }
+    .form-success p { color: var(--ink-soft); font-size: 16px; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--line); padding: 28px 0; }
+    .footer-simple { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; color: var(--ink-mute); font-size: 14px; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a { color: var(--ink-mute); text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: var(--ink); }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">AK</span>
+      <span>AK-Assistance</span>
+    </a>
+    <button class="hamburger" aria-label="Menü öffnen" onclick="document.body.classList.toggle('nav-open')">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
+
+<nav class="nav-drawer" aria-label="Hauptnavigation">
+  <a href="index.html" class="nav-drawer-logo">
+    <span class="logo-mark">AK</span>
+    <span>AK-Assistance</span>
+  </a>
+  <ul>
+    <li><a href="leistungen.html">Leistungen</a></li>
+    <li><a href="testen.html">Live testen</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="kontakt.html" class="active">Kontakt</a></li>
+    <li><a href="impressum.html">Impressum</a></li>
+  </ul>
+  <div class="nav-drawer-contact">
+    <div>Direkt schreiben:</div>
+    <a href="mailto:AK-Assistance@protonmail.com">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+      AK-Assistance@protonmail.com
+    </a>
+  </div>
+</nav>
+
+<!-- Page Hero -->
+<div class="page-hero">
+  <div class="wrap">
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Zurück zur Startseite
+    </a>
+    <div class="page-label">Kontakt</div>
+    <h1>Schreiben Sie uns.</h1>
+    <p class="lead">Wir melden uns schnell zurück — meistens noch am selben Werktag.</p>
+  </div>
+</div>
+
+<!-- Contact -->
+<section class="contact-section">
+  <div class="wrap">
+    <div class="contact-grid">
+      <!-- Test-Anruf-Karte -->
+      <div class="testcall-card">
+        <div>
+          <span class="testcall-eyebrow"><span class="live"></span> Live testen</span>
+          <h3>Oder rufen Sie unsere KI direkt an.</h3>
+          <p>Hören Sie selbst, wie sich der Assistent anhört. Stellen Sie ihm Fragen, vereinbaren Sie einen Test-Termin — kostenlos und unverbindlich.</p>
+        </div>
+        <div>
+          <div class="testcall-number">
+            <div class="label">Test-Nummer</div>
+            <div class="num"><span class="placeholder">+49 — wird in Kürze freigeschaltet</span></div>
+          </div>
+          <div class="testcall-meta">Verfügbar 24/7 · Keine Anmeldung nötig</div>
+        </div>
+      </div>
+
+      <!-- Beratungs-Formular -->
+      <div id="form-mount"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap footer-simple">
+    <div>© 2026 AK-Assistance</div>
+    <div class="footer-links">
+      <a href="mailto:AK-Assistance@protonmail.com">E-Mail</a>
+      <a href="impressum.html">Impressum</a>
+      <a href="agb.html">AGB</a>
+      <a href="datenschutz.html">Datenschutz</a>
+    </div>
+  </div>
+</footer>
+
+<script type="text/babel" src="assets/script_2.js"></script>
+
+<script>
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.body.classList.remove('nav-open');
+  });
+</script>
+</body>
+</html>

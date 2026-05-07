@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leistungen — AK-Assistance</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    :root {
+      --bg: #FFFFFF; --bg-soft: #F6F7F9; --bg-deep: #0B1220;
+      --ink: #0B1220; --ink-soft: #455066; --ink-mute: #8892A6;
+      --line: #E6E9EE; --line-strong: #CBD2DC;
+      --radius: 16px; --maxw: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 18px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3 { font-family: 'Inter Tight', 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.025em; margin: 0; }
+    p { margin: 0; }
+    a { color: inherit; }
+    button { font-family: inherit; cursor: pointer; }
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+
+    /* Topbar */
+    .topbar { padding: 28px 0 0; position: relative; z-index: 200; }
+    .topbar-inner { display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); white-space: nowrap; }
+    .logo-mark { width: 32px; height: 32px; border-radius: 9px; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+
+    /* Hamburger */
+    .hamburger { background: none; border: none; padding: 6px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; z-index: 301; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: transform .3s ease, opacity .3s ease; }
+    body.nav-open .hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.nav-open .hamburger span:nth-child(2) { opacity: 0; }
+    body.nav-open .hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Nav-Overlay */
+    .nav-overlay { position: fixed; inset: 0; background: rgba(11,18,32,.5); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+    body.nav-open .nav-overlay { opacity: 1; pointer-events: all; }
+
+    /* Nav-Drawer */
+    .nav-drawer { position: fixed; top: 0; right: 0; width: min(320px, 85vw); height: 100vh; background: #fff; z-index: 300; transform: translateX(100%); transition: transform .35s cubic-bezier(.25,.46,.45,.94); display: flex; flex-direction: column; padding: 28px 32px 40px; box-shadow: -4px 0 32px rgba(11,18,32,.12); }
+    body.nav-open .nav-drawer { transform: translateX(0); }
+    .nav-drawer-logo { display: flex; align-items: center; gap: 10px; font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 17px; text-decoration: none; color: var(--ink); margin-bottom: 40px; white-space: nowrap; }
+    .nav-drawer ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .nav-drawer ul li a { display: block; padding: 12px 0; font-size: 17px; font-weight: 500; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); transition: color .15s; }
+    .nav-drawer ul li:last-child a { border-bottom: none; }
+    .nav-drawer ul li a:hover { color: var(--ink-soft); }
+    .nav-drawer ul li a.active { color: var(--ink); font-weight: 600; }
+    .nav-drawer-contact { margin-top: 32px; font-size: 14px; color: var(--ink-mute); }
+    .nav-drawer-contact a { color: var(--ink-soft); text-decoration: none; display: inline-flex; align-items: center; gap: 7px; margin-top: 6px; }
+
+    /* Page hero */
+    .page-hero { padding: 80px 0 72px; border-bottom: 1px solid var(--line); }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-soft); text-decoration: none; font-size: 15px; margin-bottom: 40px; transition: color .15s; }
+    .back-link:hover { color: var(--ink); }
+    .page-label { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 16px; }
+    .page-hero h1 { font-size: clamp(40px, 6vw, 72px); line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 24px; max-width: 18ch; }
+    .page-hero .lead { font-size: clamp(18px, 1.4vw, 21px); color: var(--ink-soft); max-width: 52ch; line-height: 1.55; }
+
+    /* Features grid */
+    .features { padding: 96px 0; }
+    .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 64px; }
+    @media (max-width: 760px) { .features-grid { grid-template-columns: 1fr; } }
+    .feature-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 36px 32px; box-shadow: 0 1px 6px rgba(11,18,32,.05); }
+    .feature-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--bg-soft); border: 1px solid var(--line); display: grid; place-items: center; color: var(--ink); margin-bottom: 20px; }
+    .feature-card h3 { font-size: 22px; margin-bottom: 12px; }
+    .feature-card p { font-size: 16px; color: var(--ink-soft); line-height: 1.6; }
+
+    /* CTA */
+    .page-cta { background: var(--bg-deep); color: #fff; padding: 96px 0; text-align: center; }
+    .page-cta h2 { font-size: clamp(32px, 4vw, 52px); color: #fff; max-width: 18ch; margin: 0 auto 20px; }
+    .page-cta p { font-size: 18px; color: rgba(255,255,255,.7); max-width: 48ch; margin: 0 auto 40px; }
+    .btn-cta { display: inline-flex; align-items: center; gap: 12px; background: #fff; color: var(--ink); border: 0; border-radius: 999px; padding: 20px 32px; font-size: 17px; font-weight: 600; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+    .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--line); padding: 28px 0; }
+    .footer-simple { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; color: var(--ink-mute); font-size: 14px; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a { color: var(--ink-mute); text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: var(--ink); }
+
+    .section-label-sm { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 16px; }
+    .section-title-lg { font-size: clamp(32px, 4vw, 48px); line-height: 1.06; letter-spacing: -0.03em; max-width: 20ch; }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">AK</span>
+      <span>AK-Assistance</span>
+    </a>
+    <button class="hamburger" aria-label="Menü öffnen" onclick="document.body.classList.toggle('nav-open')">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
+
+<nav class="nav-drawer" aria-label="Hauptnavigation">
+  <a href="index.html" class="nav-drawer-logo">
+    <span class="logo-mark">AK</span>
+    <span>AK-Assistance</span>
+  </a>
+  <ul>
+    <li><a href="leistungen.html" class="active">Leistungen</a></li>
+    <li><a href="testen.html">Live testen</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="kontakt.html">Kontakt</a></li>
+    <li><a href="impressum.html">Impressum</a></li>
+  </ul>
+  <div class="nav-drawer-contact">
+    <div>Direkt schreiben:</div>
+    <a href="mailto:AK-Assistance@protonmail.com">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+      AK-Assistance@protonmail.com
+    </a>
+  </div>
+</nav>
+
+<!-- Page Hero -->
+<div class="page-hero">
+  <div class="wrap">
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Zurück zur Startseite
+    </a>
+    <div class="page-label">Leistungen</div>
+    <h1>Was unser KI-Assistent für Sie übernimmt.</h1>
+    <p class="lead">Der Assistent übernimmt Anrufe, erfasst Kundenanliegen und entlastet Sie im stressigen Arbeitsalltag — damit Sie sich auf Ihr Handwerk konzentrieren können.</p>
+  </div>
+</div>
+
+<!-- Features -->
+<section class="features">
+  <div class="wrap">
+    <div class="section-label-sm">Funktionen</div>
+    <h2 class="section-title-lg">Alles, was Sie brauchen — nichts, was Sie nicht brauchen.</h2>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        </div>
+        <h3>Anrufe entgegennehmen</h3>
+        <p>Der Assistent nimmt Anrufe entgegen — auch wenn Sie gerade auf der Leiter stehen, am Feierabend oder am Wochenende.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <h3>Anliegen verstehen und erfassen</h3>
+        <p>Der Assistent führt ein natürliches Gespräch, versteht das Anliegen und erfasst alle wichtigen Informationen strukturiert.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg>
+        </div>
+        <h3>Zusammenfassung direkt aufs Handy</h3>
+        <p>Nach jedem Anruf erhalten Sie sofort eine klare Zusammenfassung — damit Sie nichts verpassen und schnell reagieren können.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <h3>Terminabsprachen</h3>
+        <p>Der Assistent kann Terminwünsche aufnehmen und nach Ihren Vorgaben koordinieren — ohne Ihren Arbeitsfluss zu unterbrechen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="page-cta">
+  <div class="wrap">
+    <h2>Bereit, keinen Anruf mehr zu verpassen?</h2>
+    <p>Kontaktieren Sie uns für ein kostenloses Erstgespräch — wir erklären Ihnen alles ohne Fachchinesisch.</p>
+    <a href="kontakt.html" class="btn-cta">
+      Jetzt Gespräch anfragen
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap footer-simple">
+    <div>© 2026 AK-Assistance</div>
+    <div class="footer-links">
+      <a href="mailto:AK-Assistance@protonmail.com">E-Mail</a>
+      <a href="impressum.html">Impressum</a>
+      <a href="agb.html">AGB</a>
+      <a href="datenschutz.html">Datenschutz</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.body.classList.remove('nav-open');
+  });
+</script>
+</body>
+</html>

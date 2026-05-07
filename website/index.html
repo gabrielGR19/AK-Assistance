@@ -640,6 +640,7 @@
     font-family: 'Inter Tight', sans-serif;
     font-weight: 700; font-size: 18px; letter-spacing: -0.01em;
     text-decoration: none; color: var(--ink);
+    white-space: nowrap;
   }
   .logo-mark {
     width: 32px; height: 32px; border-radius: 9px;
@@ -807,9 +808,9 @@
     display: grid; place-items: center;
     flex-shrink: 0;
   }
-  .visual-chip.c1 { top: 10%; left: 2%; animation: float 5s ease-in-out infinite; }
-  .visual-chip.c2 { bottom: 22%; right: 2%; animation: float 5s ease-in-out 1.5s infinite; }
-  .visual-chip.c3 { bottom: 6%; left: 6%; animation: float 5s ease-in-out 3s infinite; }
+  .visual-chip.c1 { top: 10%; left: 2%; animation: chipIn .5s ease .9s both, float 5s ease-in-out 1.5s infinite; }
+  .visual-chip.c2 { bottom: 22%; right: 2%; animation: chipIn .5s ease 1.1s both, float 5s ease-in-out 2.7s infinite; }
+  .visual-chip.c3 { bottom: 6%; left: 6%; animation: chipIn .5s ease 1.3s both, float 5s ease-in-out 4s infinite; }
   @media (max-width: 560px) {
     .visual-chip.c1 { left: 0; }
     .visual-chip.c2 { right: 0; }
@@ -1275,6 +1276,59 @@
   .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
   .footer-links a { color: var(--ink-mute); text-decoration: none; transition: color .15s; }
   .footer-links a:hover { color: var(--ink); }
+
+  /* ── Animationen ── */
+  .hero { overflow: hidden; position: relative; }
+  .hero-chaos {
+    position: absolute; inset: 0;
+    pointer-events: none; overflow: hidden;
+  }
+  .hc-dot {
+    position: absolute; border-radius: 50%;
+    background: var(--ink); opacity: 0;
+    animation: hcFloat var(--dur, 12s) ease-in-out var(--del, 0s) infinite;
+  }
+  @keyframes hcFloat {
+    0%   { opacity: 0; transform: translate(0, 0) scale(1); }
+    15%  { opacity: var(--op, 0.04); }
+    85%  { opacity: var(--op, 0.04); }
+    100% { opacity: 0; transform: translate(var(--tx, 40px), var(--ty, -30px)) scale(var(--sc, 1.1)); }
+  }
+
+  /* Hero Entrance */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero h1     { animation: fadeUp .7s ease .1s both; }
+  .hero-sub    { animation: fadeUp .7s ease .25s both; }
+  .btn-hero    { animation: fadeUp .7s ease .4s both; }
+  .hero-visual { animation: fadeUp .8s ease .2s both; }
+
+  /* Chip entrance */
+  @keyframes chipIn {
+    from { opacity: 0; transform: scale(0.85) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* Scroll fade-in */
+  .fade-in {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity .65s ease, transform .65s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  .stagger > * {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .5s ease, transform .5s ease;
+  }
+  .stagger.visible > *:nth-child(1) { opacity: 1; transform: none; transition-delay: .05s; }
+  .stagger.visible > *:nth-child(2) { opacity: 1; transform: none; transition-delay: .18s; }
+  .stagger.visible > *:nth-child(3) { opacity: 1; transform: none; transition-delay: .31s; }
+
+  /* Subtile Karten-Tiefe */
+  .step { box-shadow: 0 1px 6px rgba(11,18,32,.05); }
+
 </style>
 </head>
 <body>
@@ -1297,15 +1351,15 @@
 
 <!-- Nav-Drawer -->
 <nav class="nav-drawer" aria-label="Hauptnavigation">
-  <a href="#top" class="nav-drawer-logo" onclick="document.body.classList.remove('nav-open')">
+  <a href="index.html" class="nav-drawer-logo">
     <span class="logo-mark">AK</span>
     <span>AK-Assistance</span>
   </a>
   <ul>
-    <li><a href="#wie" onclick="document.body.classList.remove('nav-open')">Wie es funktioniert</a></li>
-    <li><a href="#vorteile" onclick="document.body.classList.remove('nav-open')">Vorteile</a></li>
-    <li><a href="#kontakt" onclick="document.body.classList.remove('nav-open')">Live testen</a></li>
-    <li><a href="#kontakt" onclick="document.body.classList.remove('nav-open')">Kontakt</a></li>
+    <li><a href="leistungen.html">Leistungen</a></li>
+    <li><a href="testen.html">Live testen</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="kontakt.html">Kontakt</a></li>
     <li><a href="impressum.html">Impressum</a></li>
   </ul>
   <div class="nav-drawer-contact">
@@ -1319,6 +1373,13 @@
 
 <!-- ── HERO ── -->
 <section class="hero" id="top" data-screen-label="01 Hero">
+  <div class="hero-chaos" aria-hidden="true">
+    <div class="hc-dot" style="width:90px;height:90px;top:12%;left:6%;--dur:14s;--del:0s;--tx:35px;--ty:-45px;--op:0.04;--sc:1.2"></div>
+    <div class="hc-dot" style="width:45px;height:45px;top:55%;right:8%;--dur:10s;--del:2s;--tx:-28px;--ty:-38px;--op:0.05;--sc:0.85"></div>
+    <div class="hc-dot" style="width:130px;height:130px;bottom:8%;left:38%;--dur:18s;--del:1s;--tx:55px;--ty:25px;--op:0.03;--sc:1.3"></div>
+    <div class="hc-dot" style="width:28px;height:28px;top:28%;right:32%;--dur:8s;--del:3.5s;--tx:-32px;--ty:-18px;--op:0.06;--sc:1.1"></div>
+    <div class="hc-dot" style="width:65px;height:65px;top:70%;left:18%;--dur:13s;--del:4s;--tx:42px;--ty:-28px;--op:0.04;--sc:0.9"></div>
+  </div>
   <div class="wrap">
     <div class="hero-grid">
       <div>
@@ -1326,10 +1387,10 @@
         <p class="hero-sub">
           Wir sind zwei Gründer — und wir wissen, wie nervig es ist, wenn das Telefon klingelt, während Sie auf der Leiter stehen. Unser KI-Assistent nimmt für Sie ab, erfasst alles Wichtige und schickt Ihnen die Zusammenfassung direkt aufs Handy.
         </p>
-        <button class="btn-hero" onclick="document.getElementById('kontakt').scrollIntoView({behavior:'smooth'})">
+        <a href="kontakt.html" class="btn-hero">
           Jetzt kostenlos beraten lassen
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-        </button>
+        </a>
       </div>
 
       <div class="hero-visual" aria-hidden="true">
@@ -1415,43 +1476,43 @@
 <!-- ── 3 SCHRITTE ── -->
 <section id="wie" data-screen-label="03 So funktioniert's">
   <div class="wrap">
-    <div class="section-head">
-      <div class="section-label">So einfach geht's</div>
-      <h2 class="section-title">In 3 Schritten zu mehr Aufträgen.</h2>
-      <p class="section-intro">Keine Technik, keine neue Hardware. Sie behalten Ihre bisherige Telefonnummer.</p>
+    <div class="section-head fade-in">
+      <div class="section-label">In 3 Schritten</div>
+      <h2 class="section-title">So starten Sie durch.</h2>
+      <p class="section-intro">Kein Aufwand, keine neue Hardware. Wir kümmern uns um alles — Sie behalten Ihre Nummer.</p>
     </div>
 
-    <div class="steps-grid">
+    <div class="steps-grid stagger">
       <div class="step">
         <div class="step-num">01</div>
         <div class="step-icon">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
         </div>
         <div>
-          <h3>Anruf geht ein</h3>
-          <p style="margin-top:8px;">Ein Kunde ruft an — egal ob mitten in der Arbeit, am Feierabend oder am Wochenende.</p>
+          <h3>Kostenloses Erstgespräch</h3>
+          <p style="margin-top:8px;">Kontaktieren Sie uns kurz — per Formular oder direkt per Telefon. Wir lernen Ihren Betrieb kennen.</p>
         </div>
       </div>
 
       <div class="step">
         <div class="step-num">02</div>
         <div class="step-icon">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="10.5" r="1.5"></circle><circle cx="15.5" cy="10.5" r="1.5"></circle><path d="M8 15c1 1 2.5 1.5 4 1.5s3-.5 4-1.5"></path></svg>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
         </div>
         <div>
-          <h3>KI nimmt ab und hört zu</h3>
-          <p style="margin-top:8px;">Der Assistent meldet sich freundlich, versteht das Anliegen und erfasst alle wichtigen Infos.</p>
+          <h3>Individuelles Angebot</h3>
+          <p style="margin-top:8px;">Nach unserem Gespräch unterbreiten wir Ihnen ein auf Ihren Betrieb zugeschnittenes Angebot.</p>
         </div>
       </div>
 
       <div class="step">
         <div class="step-num">03</div>
         <div class="step-icon">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <div>
-          <h3>Zusammenfassung aufs Handy</h3>
-          <p style="margin-top:8px;">Sie bekommen sofort eine klare Zusammenfassung per SMS oder E-Mail — fertig.</p>
+          <h3>Los geht's</h3>
+          <p style="margin-top:8px;">Wir richten alles ein — Sie behalten Ihre Nummer und verpassen ab sofort keinen Anruf mehr.</p>
         </div>
       </div>
     </div>
@@ -1461,12 +1522,12 @@
 <!-- ── VORTEILE ── -->
 <section class="benefits" id="vorteile" data-screen-label="04 Vorteile">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head fade-in">
       <div class="section-label">Vorteile</div>
       <h2 class="section-title">Was wir für Sie tun.</h2>
     </div>
 
-    <div class="benefits-grid">
+    <div class="benefits-grid stagger">
       <div class="benefit">
         <div class="benefit-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path><circle cx="19" cy="5" r="2.4" fill="currentColor" stroke="none" opacity="0.9"></circle></svg>
@@ -1496,7 +1557,7 @@
 <!-- ── KONTAKT (Test-Anruf + Formular) ── -->
 <section class="contact" id="kontakt" data-screen-label="05 Kontakt">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head fade-in">
       <div class="section-label">Loslegen</div>
       <h2 class="section-title">Testen Sie uns — oder schreiben Sie uns kurz.</h2>
     </div>
@@ -1544,14 +1605,17 @@
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') document.body.classList.remove('nav-open');
   });
-  // Smooth-Scroll für alle Anker-Links im Drawer
-  document.querySelectorAll('.nav-drawer a[href^="#"]').forEach(function(a) {
-    a.addEventListener('click', function(e) {
-      e.preventDefault();
-      document.body.classList.remove('nav-open');
-      var target = document.querySelector(this.getAttribute('href'));
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
+  // Scroll fade-in via IntersectionObserver
+  var fadeObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        fadeObs.unobserve(e.target);
+      }
     });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-in, .stagger').forEach(function(el) {
+    fadeObs.observe(el);
   });
 </script>
 </body></html>
