@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import logoUrl from "/logo.png";
+import logoUrl from "/logo-transparent.png";
 import HeroAnimation from "./HeroAnimation";
 
 const BOOKING_URL = "https://calendar.app.google/RcAojPDZwf15KeAD9";
@@ -124,11 +124,7 @@ function NavBar({
               <img
                 src={logoUrl}
                 alt="AK-Assistance"
-                style={{
-                  height: 55,
-                  borderRadius: 8,
-                  background: darkMode ? "#0d2d3e" : "#ffffff",
-                }}
+                style={{ height: 55 }}
               />
               <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "1.15rem" }}>
                 AK-assistance
