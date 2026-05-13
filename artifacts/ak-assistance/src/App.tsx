@@ -166,61 +166,6 @@ function NavBar({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (v:
 }
 
 function HeroSection() {
-  const floatingIcons = [
-    { cls: "hero-float", top: "12%", left: "8%", size: 52, opacity: 0.18 },
-    { cls: "hero-float-2", top: "20%", right: "7%", size: 44, opacity: 0.14 },
-    { cls: "hero-float-3", top: "55%", left: "5%", size: 38, opacity: 0.12 },
-    { cls: "hero-float-4", bottom: "20%", right: "10%", size: 56, opacity: 0.16 },
-    { cls: "hero-float-5", top: "35%", left: "18%", size: 32, opacity: 0.10 },
-    { cls: "hero-float-6", top: "70%", right: "20%", size: 40, opacity: 0.13 },
-  ];
-
-  const icons = [
-    // Document
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="8" y="4" width="32" height="40" rx="3" stroke="#e8622a" strokeWidth="2.5" fill="none"/>
-      <line x1="16" y1="16" x2="32" y2="16" stroke="#e8622a" strokeWidth="2.5"/>
-      <line x1="16" y1="24" x2="32" y2="24" stroke="#e8622a" strokeWidth="2.5"/>
-      <line x1="16" y1="32" x2="24" y2="32" stroke="#e8622a" strokeWidth="2.5"/>
-    </svg>,
-    // Excel table
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="4" width="40" height="40" rx="3" stroke="#a0b4c0" strokeWidth="2.5" fill="none"/>
-      <line x1="4" y1="16" x2="44" y2="16" stroke="#a0b4c0" strokeWidth="2"/>
-      <line x1="4" y1="28" x2="44" y2="28" stroke="#a0b4c0" strokeWidth="2"/>
-      <line x1="20" y1="16" x2="20" y2="44" stroke="#a0b4c0" strokeWidth="2"/>
-      <line x1="32" y1="16" x2="32" y2="44" stroke="#a0b4c0" strokeWidth="2"/>
-    </svg>,
-    // Error window
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="8" width="40" height="32" rx="4" stroke="#e8622a" strokeWidth="2.5" fill="none"/>
-      <circle cx="24" cy="26" r="7" stroke="#e8622a" strokeWidth="2.5"/>
-      <line x1="21" y1="23" x2="27" y2="29" stroke="#e8622a" strokeWidth="2.5"/>
-      <line x1="27" y1="23" x2="21" y2="29" stroke="#e8622a" strokeWidth="2.5"/>
-    </svg>,
-    // Ringing phone
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M10 8C10 8 14 12 14 20C14 28 10 32 10 32" stroke="#a0b4c0" strokeWidth="2.5" strokeLinecap="round"/>
-      <path d="M36 16C38 18.5 39 22 39 24C39 26 38 28.5 36 31" stroke="#a0b4c0" strokeWidth="2.5" strokeLinecap="round"/>
-      <rect x="18" y="10" width="12" height="28" rx="3" stroke="#a0b4c0" strokeWidth="2.5" fill="none"/>
-      <circle cx="24" cy="34" r="2" fill="#a0b4c0"/>
-    </svg>,
-    // Clock
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="18" stroke="#e8622a" strokeWidth="2.5" fill="none"/>
-      <polyline points="24 12 24 24 32 30" stroke="#e8622a" strokeWidth="2.5" strokeLinecap="round"/>
-    </svg>,
-    // Calendar
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="10" width="36" height="32" rx="4" stroke="#a0b4c0" strokeWidth="2.5" fill="none"/>
-      <line x1="6" y1="20" x2="42" y2="20" stroke="#a0b4c0" strokeWidth="2"/>
-      <line x1="16" y1="6" x2="16" y2="14" stroke="#a0b4c0" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="32" y1="6" x2="32" y2="14" stroke="#a0b4c0" strokeWidth="2.5" strokeLinecap="round"/>
-      <rect x="14" y="26" width="6" height="6" rx="1" fill="#a0b4c0"/>
-      <rect x="28" y="26" width="6" height="6" rx="1" fill="#a0b4c0"/>
-    </svg>,
-  ];
-
   return (
     <section
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
@@ -229,23 +174,6 @@ function HeroSection() {
       <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #0d2d3e 0%, #0a2231 50%, #0f3347 100%)" }} />
       <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(232,98,42,0.08) 0%, transparent 70%)" }} />
 
-      {floatingIcons.map((pos, i) => (
-        <div
-          key={i}
-          className={`absolute ${pos.cls} pointer-events-none select-none`}
-          style={{
-            top: pos.top,
-            bottom: pos.bottom,
-            left: pos.left,
-            right: pos.right,
-            width: pos.size,
-            height: pos.size,
-            opacity: pos.opacity,
-          }}
-        >
-          {icons[i]}
-        </div>
-      ))}
 
       <div className="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6">
         <div className="animate-in mb-6">
