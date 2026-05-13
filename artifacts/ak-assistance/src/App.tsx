@@ -11,11 +11,9 @@ const BOOKING_URL = "https://calendar.app.google/RcAojPDZwf15KeAD9";
 const SOCIAL_PROOF_COUNT: number | null = null;
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Demo-Audio ────────────────────────────────────────────────────────────────
-// Trage hier die URL zur Audiodatei des Demo-Agenten ein, sobald diese bereit ist.
-// Beispiel: "/demo-agent.mp3"  oder  "https://dein-server.de/demo.mp3"
-// Solange null, zeigt der Button einen Platzhalter-Hinweis.
-const DEMO_AUDIO_URL: string | null = null;
+// ── Retell Demo ───────────────────────────────────────────────────────────────
+// Wird automatisch über den API-Server konfiguriert (RETELL_API_KEY + RETELL_AGENT_ID).
+// Solange der Server noch nicht antwortet, zeigt der Button einen Hinweis.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function useScrollAnimation() {

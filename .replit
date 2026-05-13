@@ -51,3 +51,4 @@ externalPort = 3000
 
 [userenv.shared]
 VITE_WEB3FORMS_KEY = "7e2f9014-c03b-4fc4-b29e-f068d1467f2f"
+RETELL_AGENT_ID = "agent_309131545e0021c379f0307aba"
