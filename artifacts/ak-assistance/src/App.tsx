@@ -194,106 +194,165 @@ function NavBar({
 }
 
 /* ── Landing Hero ───────────────────────────────────────── */
-function LandingHero({ darkMode }: { darkMode: boolean }) {
-  const bg = darkMode ? "#0d2d3e" : "#ffffff";
-  const titleColor = darkMode ? "#ffffff" : "#0d2d3e";
-  const subColor = darkMode ? "rgba(255,255,255,0.72)" : "rgba(13,45,62,0.65)";
-  const arrowColor = darkMode ? "rgba(255,255,255,0.5)" : "rgba(13,45,62,0.4)";
+function AudioDemo() {
+  const [playing, setPlaying] = useState(false);
+  return (
+    <button
+      onClick={() => setPlaying((p) => !p)}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "14px 24px",
+        borderRadius: 100,
+        border: "2px solid var(--foreground)",
+        background: "transparent",
+        cursor: "pointer",
+        color: "var(--foreground)",
+        fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+        fontSize: "0.95rem",
+        fontWeight: 600,
+        transition: "background 0.18s, color 0.18s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "var(--foreground)";
+        e.currentTarget.style.color = "var(--background)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.color = "var(--foreground)";
+      }}
+    >
+      {playing ? (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16" rx="1" />
+          <rect x="14" y="4" width="4" height="16" rx="1" />
+        </svg>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5 3 19 12 5 21 5 3" />
+        </svg>
+      )}
+      Demo anhören
+    </button>
+  );
+}
 
+function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
   return (
     <section
       style={{
-        height: "100vh",
-        background: bg,
+        minHeight: "100vh",
+        background: "var(--background)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
+        padding: "120px 24px 80px",
+        textAlign: "center",
       }}
     >
-      {/* Subtle radial glow — only in dark mode */}
-      {darkMode && (
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255,255,255,0.06) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-      )}
-
-      {/* Content */}
       <motion.div
-        initial={{ opacity: 0, y: 32 }}
+        initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, zIndex: 1, textAlign: "center", padding: "0 24px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        style={{ maxWidth: 760, display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}
       >
-        {/* Name */}
-        <div>
-          <h1 style={{
-            margin: 0,
-            fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontSize: "clamp(2.6rem, 7vw, 5rem)",
-            fontWeight: 800,
-            letterSpacing: "-0.04em",
-            color: titleColor,
-            lineHeight: 1.05,
-            textShadow: darkMode ? "0 2px 24px rgba(0,0,0,0.3)" : "none",
-          }}>
-            AK-Assistance
-          </h1>
-        </div>
-
-        {/* Catchphrase */}
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        {/* Headline */}
+        <h1
           style={{
             margin: 0,
             fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontSize: "clamp(1.1rem, 3vw, 1.7rem)",
-            fontWeight: 600,
-            color: subColor,
-            letterSpacing: "-0.01em",
+            fontSize: "clamp(2.4rem, 6vw, 4.2rem)",
+            fontWeight: 900,
+            letterSpacing: "-0.04em",
+            lineHeight: 1.08,
+            color: "var(--foreground)",
           }}
         >
-          100&nbsp;% Arbeit &nbsp;·&nbsp; 0&nbsp;% Verwaltung
-        </motion.p>
-      </motion.div>
+          Dein KI-Mitarbeiter fürs Büro
+        </h1>
 
-      {/* Scroll-down arrow */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.1, duration: 0.6 }}
-        style={{
-          position: "absolute",
-          bottom: 36,
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 6,
-          color: arrowColor,
-          fontSize: "0.75rem",
-          fontFamily: "'Segoe UI', sans-serif",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-        }}
-      >
-        <span>Scrollen</span>
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+        {/* Subheadline */}
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            margin: 0,
+            fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontSize: "clamp(1rem, 2.2vw, 1.25rem)",
+            fontWeight: 400,
+            lineHeight: 1.65,
+            color: "var(--muted-foreground)",
+            maxWidth: 600,
+          }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M12 5v14M5 12l7 7 7-7" />
-          </svg>
+          Der Assistent beantwortet Kundenanrufe, bucht Termine und entlastet dich bei der Büroarbeit&nbsp;— automatisch, 24/7.
+        </motion.p>
+
+        {/* Audio Demo */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <AudioDemo />
         </motion.div>
+
+        {/* Trust badges */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "center" }}
+        >
+          {["🔒 DSGVO-konform", "🇩🇪 Made in Germany"].map((badge) => (
+            <span
+              key={badge}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "5px 14px",
+                borderRadius: 100,
+                border: "1px solid var(--border)",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                fontFamily: "'Segoe UI', sans-serif",
+                letterSpacing: "0.02em",
+                color: "var(--muted-foreground)",
+              }}
+            >
+              {badge}
+            </span>
+          ))}
+        </motion.div>
+
+        {/* Social proof */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.52 }}
+          style={{
+            margin: 0,
+            fontSize: "0.85rem",
+            fontFamily: "'Segoe UI', sans-serif",
+            color: "var(--muted-foreground)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span style={{ display: "flex", gap: -4 }}>
+            {[...Array(5)].map((_, i) => (
+              <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#e8622a">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            ))}
+          </span>
+          Bereits über 20 Betriebe vertrauen AK&#8209;Assistance
+        </motion.p>
       </motion.div>
     </section>
   );
