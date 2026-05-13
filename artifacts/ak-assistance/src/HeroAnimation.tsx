@@ -272,7 +272,7 @@ function WhiteBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) 
   const opacity = useTransform(scrollYProgress, [0.5, 0.72], [0, 1]);
   return (
     <motion.div
-      style={{ opacity, position: "absolute", inset: 0, background: "#ffffff" }}
+      style={{ opacity, position: "absolute", inset: 0, background: "var(--background)" }}
     />
   );
 }
