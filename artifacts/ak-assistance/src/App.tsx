@@ -112,7 +112,7 @@ function NavBar({
           borderBottom: scrolled ? "1px solid var(--border)" : "none",
         }}
       >
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
             <a href="#" className="flex items-center gap-3">
               <img src={logoUrl} alt="AK-Assistance" style={{ height: 55 }} />
