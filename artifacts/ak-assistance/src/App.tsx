@@ -181,6 +181,117 @@ function NavBar({
   );
 }
 
+/* ── Landing Hero ───────────────────────────────────────── */
+function LandingHero() {
+  return (
+    <section
+      style={{
+        height: "100vh",
+        background: "linear-gradient(135deg, #1565c0 0%, #1976d2 40%, #42a5f5 100%)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Subtle radial glow */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255,255,255,0.10) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 32 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, zIndex: 1, textAlign: "center", padding: "0 24px" }}
+      >
+        {/* Logo */}
+        <img
+          src="/logo.png"
+          alt="AK-Assistance Logo"
+          style={{
+            width: 120,
+            height: 120,
+            borderRadius: "22px",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.30)",
+          }}
+        />
+
+        {/* Name */}
+        <div>
+          <h1 style={{
+            margin: 0,
+            fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontSize: "clamp(2.6rem, 7vw, 5rem)",
+            fontWeight: 800,
+            letterSpacing: "-0.04em",
+            color: "#ffffff",
+            lineHeight: 1.05,
+            textShadow: "0 2px 24px rgba(0,0,0,0.18)",
+          }}>
+            AK-Assistance
+          </h1>
+        </div>
+
+        {/* Catchphrase */}
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            margin: 0,
+            fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontSize: "clamp(1.1rem, 3vw, 1.7rem)",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.88)",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          100&nbsp;% Arbeit &nbsp;·&nbsp; 0&nbsp;% Verwaltung
+        </motion.p>
+      </motion.div>
+
+      {/* Scroll-down arrow */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1, duration: 0.6 }}
+        style={{
+          position: "absolute",
+          bottom: 36,
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 6,
+          color: "rgba(255,255,255,0.65)",
+          fontSize: "0.75rem",
+          fontFamily: "'Segoe UI', sans-serif",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+        }}
+      >
+        <span>Scrollen</span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M12 5v14M5 12l7 7 7-7" />
+          </svg>
+        </motion.div>
+      </motion.div>
+    </section>
+  );
+}
+
 /* ── Hero ───────────────────────────────────────────────── */
 function HeroSection({ darkMode }: { darkMode: boolean }) {
   return (
@@ -1045,6 +1156,7 @@ export default function App() {
     <>
       <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
       <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
+      <LandingHero />
       <HeroSection darkMode={darkMode} />
       <ProblemSection />
       <LösungSection />
