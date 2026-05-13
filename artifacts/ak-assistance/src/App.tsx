@@ -94,7 +94,12 @@ function NavBar({
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    // The hero animation background turns white at ~72% of its 300vh scroll range
+    // = ~2.16 × window.innerHeight. Switch navbar to white slightly before that.
+    const onScroll = () => {
+      const threshold = window.innerHeight * 2.1;
+      setScrolled(window.scrollY > threshold);
+    };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
