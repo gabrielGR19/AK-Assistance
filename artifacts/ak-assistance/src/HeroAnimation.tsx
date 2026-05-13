@@ -233,27 +233,33 @@ function ProblemLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number
       style={{
         opacity,
         position: "absolute",
-        top: "14%",
+        top: "50%",
         left: "50%",
         translateX: "-50%",
+        translateY: "-50%",
         zIndex: 70,
         willChange: "opacity",
         textAlign: "center",
         pointerEvents: "none",
+        width: "100%",
       }}
     >
       <span
         style={{
           display: "inline-block",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          fontSize: "clamp(1.1rem, 2.5vw, 1.6rem)",
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
-          color: "rgba(255,255,255,0.92)",
-          textShadow: "0 2px 12px rgba(0,0,0,0.25)",
+          fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+          fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
+          fontWeight: 800,
+          letterSpacing: "-0.03em",
+          color: "rgba(255,255,255,0.95)",
+          textShadow: "0 2px 20px rgba(0,0,0,0.35)",
+          textDecoration: "underline",
+          textUnderlineOffset: "6px",
+          textDecorationThickness: "3px",
+          textDecorationColor: "rgba(255,255,255,0.7)",
         }}
       >
-        The Problem:
+        Das Problem
       </span>
     </motion.div>
   );
@@ -266,27 +272,31 @@ function SolutionLabel({ scrollYProgress }: { scrollYProgress: MotionValue<numbe
       style={{
         opacity,
         position: "absolute",
-        top: "22%",
+        top: "26%",
         left: "50%",
         translateX: "-50%",
         zIndex: 70,
         willChange: "opacity",
         textAlign: "center",
         pointerEvents: "none",
+        width: "100%",
       }}
     >
       <span
         style={{
           display: "inline-block",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          fontSize: "clamp(1.1rem, 2.5vw, 1.6rem)",
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
+          fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+          fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
+          fontWeight: 800,
+          letterSpacing: "-0.03em",
           color: "var(--foreground)",
-          textShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          textDecoration: "underline",
+          textUnderlineOffset: "6px",
+          textDecorationThickness: "3px",
+          textDecorationColor: "#e8622a",
         }}
       >
-        The Solution:
+        Die Lösung
       </span>
     </motion.div>
   );
