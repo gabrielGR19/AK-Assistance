@@ -5,6 +5,12 @@ import HeroAnimation from "./HeroAnimation";
 
 const BOOKING_URL = "https://calendar.app.google/RcAojPDZwf15KeAD9";
 
+// ── Social Proof ──────────────────────────────────────────────────────────────
+// Trage hier die aktuelle Anzahl der Betriebe ein, die AK-Assistance nutzen.
+// null = Platzhalter-Hinweis anzeigen, kein öffentlicher Wert.
+const SOCIAL_PROOF_COUNT: number | null = null;
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Demo-Audio ────────────────────────────────────────────────────────────────
 // Trage hier die URL zur Audiodatei des Demo-Agenten ein, sobald diese bereit ist.
 // Beispiel: "/demo-agent.mp3"  oder  "https://dein-server.de/demo.mp3"
@@ -391,7 +397,9 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
               </svg>
             ))}
           </span>
-          Bereits über 20 Betriebe vertrauen AK&#8209;Assistance
+          {SOCIAL_PROOF_COUNT
+            ? `Bereits über ${SOCIAL_PROOF_COUNT} Betriebe vertrauen AK\u2011Assistance`
+            : "Demnächst verfügbar — seien Sie einer der Ersten"}
         </motion.p>
       </motion.div>
     </section>
