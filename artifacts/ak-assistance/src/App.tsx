@@ -230,6 +230,14 @@ function AudioDemo() {
     setCallState("loading");
     setErrorMsg("");
     try {
+      // Mikrofon-Berechtigung explizit anfordern
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setCallState("error");
+      setErrorMsg("Mikrofonzugriff verweigert – bitte in den Browser-Einstellungen erlauben.");
+      return;
+    }
+    try {
       const res = await fetch("/api/create-call", { method: "POST" });
       const data = (await res.json()) as { access_token?: string; error?: string };
       if (!res.ok || !data.access_token) throw new Error(data.error ?? "Kein Token");
@@ -237,7 +245,7 @@ function AudioDemo() {
       setCallState("active");
     } catch (err) {
       setCallState("error");
-      setErrorMsg(err instanceof Error ? err.message : "Unbekannter Fehler");
+      setErrorMsg(err instanceof Error ? err.message : "Verbindungsfehler – bitte erneut versuchen.");
     }
   }, []);
 
