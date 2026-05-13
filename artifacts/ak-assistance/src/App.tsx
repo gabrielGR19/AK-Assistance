@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { RetellWebClient } from "retell-client-js-sdk";
 import { motion } from "framer-motion";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
@@ -205,77 +206,130 @@ function NavBar({
 }
 
 /* ── Landing Hero ───────────────────────────────────────── */
+const retellClient = new RetellWebClient();
+
+type CallState = "idle" | "loading" | "active" | "error";
+
 function AudioDemo() {
-  const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [callState, setCallState] = useState<CallState>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const clientReady = useRef(false);
+
+  useEffect(() => {
+    if (clientReady.current) return;
+    clientReady.current = true;
+
+    retellClient.on("call_ended", () => setCallState("idle"));
+    retellClient.on("error", () => {
+      setCallState("error");
+      setErrorMsg("Verbindungsfehler – bitte erneut versuchen");
+    });
+  }, []);
+
+  const startCall = useCallback(async () => {
+    setCallState("loading");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/create-call", { method: "POST" });
+      const data = (await res.json()) as { access_token?: string; error?: string };
+      if (!res.ok || !data.access_token) throw new Error(data.error ?? "Kein Token");
+      await retellClient.startCall({ accessToken: data.access_token });
+      setCallState("active");
+    } catch (err) {
+      setCallState("error");
+      setErrorMsg(err instanceof Error ? err.message : "Unbekannter Fehler");
+    }
+  }, []);
+
+  const endCall = useCallback(() => {
+    retellClient.stopCall();
+    setCallState("idle");
+  }, []);
 
   const handleClick = () => {
-    if (!DEMO_AUDIO_URL) return; // Platzhalter — noch keine Datei
-    if (!audioRef.current) {
-      audioRef.current = new Audio(DEMO_AUDIO_URL);
-      audioRef.current.onended = () => setPlaying(false);
-    }
-    if (playing) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setPlaying(false);
-    } else {
-      audioRef.current.play();
-      setPlaying(true);
-    }
+    if (callState === "loading") return;
+    callState === "active" ? endCall() : startCall();
   };
 
-  const isPlaceholder = !DEMO_AUDIO_URL;
+  const isActive = callState === "active";
+  const isLoading = callState === "loading";
+
+  const label = isLoading
+    ? "Verbindung wird aufgebaut…"
+    : isActive
+    ? "Gespräch beenden"
+    : "Demo anhören";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
       <button
         onClick={handleClick}
-        title={isPlaceholder ? "Demo-Agent wird noch eingerichtet" : undefined}
+        disabled={isLoading}
         style={{
           display: "inline-flex",
           alignItems: "center",
           gap: 12,
           padding: "14px 28px",
           borderRadius: 100,
-          border: `2px solid ${isPlaceholder ? "var(--border)" : "var(--foreground)"}`,
-          background: "transparent",
-          cursor: isPlaceholder ? "default" : "pointer",
-          color: isPlaceholder ? "var(--muted-foreground)" : "var(--foreground)",
+          border: `2px solid ${isActive ? "#e8622a" : "var(--foreground)"}`,
+          background: isActive ? "#e8622a" : "transparent",
+          cursor: isLoading ? "not-allowed" : "pointer",
+          color: isActive ? "#ffffff" : "var(--foreground)",
           fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
           fontSize: "0.95rem",
           fontWeight: 600,
-          opacity: isPlaceholder ? 0.6 : 1,
-          transition: "background 0.18s, color 0.18s",
+          opacity: isLoading ? 0.7 : 1,
+          transition: "all 0.2s ease",
         }}
         onMouseEnter={(e) => {
-          if (!isPlaceholder) {
+          if (!isLoading && !isActive) {
             e.currentTarget.style.background = "var(--foreground)";
             e.currentTarget.style.color = "var(--background)";
           }
         }}
         onMouseLeave={(e) => {
-          if (!isPlaceholder) {
+          if (!isLoading && !isActive) {
             e.currentTarget.style.background = "transparent";
             e.currentTarget.style.color = "var(--foreground)";
           }
         }}
       >
-        {playing ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        {isLoading ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+        ) : isActive ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <rect x="6" y="4" width="4" height="16" rx="1" />
             <rect x="14" y="4" width="4" height="16" rx="1" />
           </svg>
         ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
         )}
-        Demo anhören
+        {label}
       </button>
-      {isPlaceholder && (
-        <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", fontFamily: "'Segoe UI', sans-serif" }}>
-          Demo-Agent wird noch eingerichtet
+
+      {isActive && (
+        <div style={{ display: "flex", alignItems: "center", gap: 4, height: 28 }}>
+          {[0, 0.15, 0.3, 0.45, 0.3, 0.15, 0].map((delay, i) => (
+            <div
+              key={i}
+              style={{
+                width: 3,
+                borderRadius: 2,
+                background: "#e8622a",
+                animation: `soundwave 1.2s ease-in-out ${delay}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {callState === "error" && (
+        <span style={{ fontSize: "0.75rem", color: "#e8622a", fontFamily: "'Segoe UI', sans-serif" }}>
+          {errorMsg}
         </span>
       )}
     </div>
