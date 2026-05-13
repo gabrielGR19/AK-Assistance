@@ -101,20 +101,20 @@ function WindowItem({
 }) {
   const x = useTransform(
     scrollYProgress,
-    [0.28, 0.57, 0.73, 1],
-    [win.startX, win.startX * 0.3, 0, 0]
+    [0.28, 0.40, 0.52],
+    [win.startX, win.startX * 0.3, 0]
   );
   const y = useTransform(
     scrollYProgress,
-    [0.28, 0.57, 0.73, 0.86],
-    [win.startY, win.startY * 0.3, 80, 80]
+    [0.28, 0.40, 0.52],
+    [win.startY, win.startY * 0.3, 80]
   );
   const scale = useTransform(
     scrollYProgress,
-    [0.28, 0.57, 0.73, 0.86],
-    [1, 0.82, 0.66, 0.66]
+    [0.28, 0.40, 0.52],
+    [1, 0.82, 0.66]
   );
-  const fadeStart = 0.755 + (index / TOTAL) * 0.05;
+  const fadeStart = 0.54 + (index / TOTAL) * 0.04;
   const fadeEnd = fadeStart + 0.04;
   const opacity = useTransform(
     scrollYProgress,
@@ -462,7 +462,6 @@ export default function HeroAnimation() {
         <DasProblemIntro scrollYProgress={scrollYProgress} />
 
         <div style={{ position: "relative", width: "100%", height: "100%" }}>
-          <ProblemLabel scrollYProgress={scrollYProgress} />
           <SolutionLabel scrollYProgress={scrollYProgress} />
           {WINDOWS.map((win, index) => (
             <WindowItem
