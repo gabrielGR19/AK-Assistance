@@ -81,9 +81,16 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
 }
 
 /* ── Navigation ─────────────────────────────────────────── */
-function NavBar({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (v: boolean) => void }) {
+function NavBar({
+  darkMode,
+  setDarkMode,
+  onMenuOpen,
+}: {
+  darkMode: boolean;
+  setDarkMode: (v: boolean) => void;
+  onMenuOpen: () => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -93,7 +100,6 @@ function NavBar({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (v:
 
   return (
     <>
-      <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
       <nav
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
@@ -142,7 +148,7 @@ function NavBar({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (v:
               </a>
 
               <button
-                onClick={() => setMenuOpen(true)}
+                onClick={onMenuOpen}
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
                 style={{ background: "var(--muted)", color: "var(--foreground)" }}
                 aria-label="Open menu"
@@ -672,6 +678,7 @@ function ChatbotWidget() {
 /* ── App ─────────────────────────────────────────────────── */
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const root = document.getElementById("root");
@@ -682,7 +689,8 @@ export default function App() {
 
   return (
     <>
-      <NavBar darkMode={darkMode} setDarkMode={setDarkMode} />
+      <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
+      <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
       <HeroSection />
       <ProblemSection />
       <LösungSection />
