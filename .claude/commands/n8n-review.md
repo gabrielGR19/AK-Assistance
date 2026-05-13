@@ -1,8 +1,3 @@
----
-name: n8n-review
-description: Baut n8n-Workflows und überprüft sie aus unabhängiger Perspektive. Führt den Skill auch aus, wenn ein vorhandener Workflow zur Prüfung angegeben wird, und überprüft bei der Eingabe von "n8n-review" den zuletzt gebauten Workflow inklusive der beim Bauen verwendeten Code-Daten.
----
-
 # n8n-review — Baut n8n-Workflows und überprüft sie aus unabhängiger Perspektive
 
 ## Trigger
