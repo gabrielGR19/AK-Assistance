@@ -174,10 +174,8 @@ function NavBar({
 function HeroSection() {
   return (
     <>
-      {/* Scroll-driven animation — takes up 300vh of scroll space */}
-      <div style={{ paddingTop: "72px" }}>
-        <HeroAnimation />
-      </div>
+      {/* Scroll-driven animation — takes up 300vh of scroll space, starts behind navbar */}
+      <HeroAnimation />
 
       {/* CTA buttons below the animation */}
       <section className="py-16 px-4 sm:px-6" style={{ background: "#ffffff" }}>
