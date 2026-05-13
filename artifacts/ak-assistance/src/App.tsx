@@ -117,7 +117,7 @@ function NavBar({
             <a href="#" className="flex items-center gap-3">
               <img src={logoUrl} alt="AK-Assistance" style={{ height: 55 }} />
               <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "1.15rem" }}>
-                AK-<span style={{ fontWeight: 400 }}>assistance</span>
+                AK-assistance
               </span>
             </a>
 
