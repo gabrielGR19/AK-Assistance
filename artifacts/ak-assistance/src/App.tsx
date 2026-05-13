@@ -218,18 +218,6 @@ function LandingHero({ darkMode }: { darkMode: boolean }) {
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, zIndex: 1, textAlign: "center", padding: "0 24px" }}
       >
-        {/* Logo */}
-        <img
-          src="/logo.png"
-          alt="AK-Assistance Logo"
-          style={{
-            width: 120,
-            height: 120,
-            borderRadius: "22px",
-            boxShadow: "0 16px 48px rgba(0,0,0,0.30)",
-          }}
-        />
-
         {/* Name */}
         <div>
           <h1 style={{
