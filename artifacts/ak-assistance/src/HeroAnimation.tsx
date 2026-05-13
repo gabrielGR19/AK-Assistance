@@ -86,22 +86,6 @@ function WindowContent({ win }: { win: WinData }) {
           (e.currentTarget as HTMLImageElement).style.display = "none";
         }}
       />
-      <span
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "1.1rem",
-          fontWeight: 700,
-          color: "rgba(0,0,0,0.18)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      >
-        {win.label}
-      </span>
     </div>
   );
 }
