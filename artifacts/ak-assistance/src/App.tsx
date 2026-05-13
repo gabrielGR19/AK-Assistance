@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import { RetellWebClient } from "retell-client-js-sdk";
 import { motion } from "framer-motion";
 import logoUrl from "/logo.png";
@@ -205,12 +205,20 @@ function NavBar({
   );
 }
 
-/* ── Landing Hero ───────────────────────────────────────── */
+/* ── Retell shared context ───────────────────────────────── */
 const retellClient = new RetellWebClient();
-
 type CallState = "idle" | "loading" | "active" | "error";
 
-function AudioDemo() {
+interface RetellCtx {
+  callState: CallState;
+  errorMsg: string;
+  startCall: () => Promise<void>;
+  endCall: () => void;
+}
+
+const RetellContext = createContext<RetellCtx | null>(null);
+
+function RetellProvider({ children }: { children: React.ReactNode }) {
   const [callState, setCallState] = useState<CallState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const clientReady = useRef(false);
@@ -218,11 +226,10 @@ function AudioDemo() {
   useEffect(() => {
     if (clientReady.current) return;
     clientReady.current = true;
-
     retellClient.on("call_ended", () => setCallState("idle"));
     retellClient.on("error", () => {
       setCallState("error");
-      setErrorMsg("Verbindungsfehler – bitte erneut versuchen");
+      setErrorMsg("Verbindungsfehler – bitte erneut versuchen.");
     });
   }, []);
 
@@ -230,7 +237,6 @@ function AudioDemo() {
     setCallState("loading");
     setErrorMsg("");
     try {
-      // Mikrofon-Berechtigung explizit anfordern
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
       setCallState("error");
@@ -254,91 +260,70 @@ function AudioDemo() {
     setCallState("idle");
   }, []);
 
-  const handleClick = () => {
-    if (callState === "loading") return;
-    callState === "active" ? endCall() : startCall();
-  };
+  return (
+    <RetellContext.Provider value={{ callState, errorMsg, startCall, endCall }}>
+      {children}
+    </RetellContext.Provider>
+  );
+}
 
+function useRetell() {
+  const ctx = useContext(RetellContext);
+  if (!ctx) throw new Error("useRetell must be used inside RetellProvider");
+  return ctx;
+}
+
+/* ── Shared soundwave visualiser ─────────────────────────── */
+function SoundwaveBars() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4, height: 28 }}>
+      {[0, 0.15, 0.3, 0.45, 0.3, 0.15, 0].map((delay, i) => (
+        <div key={i} style={{ width: 3, borderRadius: 2, background: "#e8622a", animation: `soundwave 1.2s ease-in-out ${delay}s infinite` }} />
+      ))}
+    </div>
+  );
+}
+
+/* ── Landing Hero ───────────────────────────────────────── */
+function AudioDemo() {
+  const { callState, errorMsg, startCall, endCall } = useRetell();
   const isActive = callState === "active";
   const isLoading = callState === "loading";
 
-  const label = isLoading
-    ? "Verbindung wird aufgebaut…"
-    : isActive
-    ? "Gespräch beenden"
-    : "Demo anhören";
+  const label = isLoading ? "Verbindung wird aufgebaut…" : isActive ? "Gespräch beenden" : "Demo anhören";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
       <button
-        onClick={handleClick}
+        onClick={() => { if (callState === "loading") return; isActive ? endCall() : startCall(); }}
         disabled={isLoading}
         style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "14px 28px",
-          borderRadius: 100,
+          display: "inline-flex", alignItems: "center", gap: 12,
+          padding: "14px 28px", borderRadius: 100,
           border: `2px solid ${isActive ? "#e8622a" : "var(--foreground)"}`,
           background: isActive ? "#e8622a" : "transparent",
           cursor: isLoading ? "not-allowed" : "pointer",
           color: isActive ? "#ffffff" : "var(--foreground)",
           fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-          fontSize: "0.95rem",
-          fontWeight: 600,
-          opacity: isLoading ? 0.7 : 1,
-          transition: "all 0.2s ease",
+          fontSize: "0.95rem", fontWeight: 600, opacity: isLoading ? 0.7 : 1, transition: "all 0.2s ease",
         }}
-        onMouseEnter={(e) => {
-          if (!isLoading && !isActive) {
-            e.currentTarget.style.background = "var(--foreground)";
-            e.currentTarget.style.color = "var(--background)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isLoading && !isActive) {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--foreground)";
-          }
-        }}
+        onMouseEnter={(e) => { if (!isLoading && !isActive) { e.currentTarget.style.background = "var(--foreground)"; e.currentTarget.style.color = "var(--background)"; } }}
+        onMouseLeave={(e) => { if (!isLoading && !isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--foreground)"; } }}
       >
         {isLoading ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
           </svg>
         ) : isActive ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="6" y="4" width="4" height="16" rx="1" />
-            <rect x="14" y="4" width="4" height="16" rx="1" />
-          </svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
         ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3" />
-          </svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
         )}
         {label}
       </button>
-
-      {isActive && (
-        <div style={{ display: "flex", alignItems: "center", gap: 4, height: 28 }}>
-          {[0, 0.15, 0.3, 0.45, 0.3, 0.15, 0].map((delay, i) => (
-            <div
-              key={i}
-              style={{
-                width: 3,
-                borderRadius: 2,
-                background: "#e8622a",
-                animation: `soundwave 1.2s ease-in-out ${delay}s infinite`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
+      {isActive && <SoundwaveBars />}
       {callState === "error" && (
-        <span style={{ fontSize: "0.75rem", color: "#e8622a", fontFamily: "'Segoe UI', sans-serif" }}>
-          {errorMsg}
-        </span>
+        <span style={{ fontSize: "0.75rem", color: "#e8622a", fontFamily: "'Segoe UI', sans-serif" }}>{errorMsg}</span>
       )}
     </div>
   );
@@ -491,22 +476,7 @@ function HeroSection({ darkMode }: { darkMode: boolean }) {
           >
             Kostenloses Gespräch buchen
           </a>
-          <button
-            className="w-full sm:w-auto px-8 py-4 rounded-full text-base flex items-center justify-center gap-2"
-            style={{
-              background: darkMode ? "transparent" : "#e8622a",
-              border: darkMode ? "1.5px solid rgba(255,255,255,0.6)" : "none",
-              color: "#ffffff",
-              fontWeight: 600,
-              cursor: "pointer",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-            Demo anhören
-          </button>
+          <AudioDemo />
         </div>
       </motion.section>
     </>
@@ -831,7 +801,48 @@ function BewertungenSection() {
 }
 
 /* ── Demo ───────────────────────────────────────────────── */
+function DemoMicButton() {
+  const { callState, startCall, endCall } = useRetell();
+  const isActive = callState === "active";
+  const isLoading = callState === "loading";
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
+      {isActive ? (
+        <>
+          <div className="wave-ring" />
+          <div className="wave-ring" />
+          <div className="wave-ring" />
+        </>
+      ) : null}
+      <button
+        className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center btn-orange"
+        style={{ fontSize: 0, opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}
+        onClick={() => { if (isLoading) return; isActive ? endCall() : startCall(); }}
+        aria-label={isActive ? "Gespräch beenden" : "Demo starten"}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+        ) : isActive ? (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+        ) : (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
 function DemoSection() {
+  const { callState, errorMsg, startCall, endCall } = useRetell();
+  const isActive = callState === "active";
+  const isLoading = callState === "loading";
   return (
     <section id="demo" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-3xl mx-auto text-center">
@@ -848,37 +859,19 @@ function DemoSection() {
         </div>
 
         <div className="animate-in delay-3 flex flex-col items-center gap-6">
-          <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
-            <div className="wave-ring" />
-            <div className="wave-ring" />
-            <div className="wave-ring" />
-            <button
-              className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center btn-orange"
-              style={{ fontSize: 0 }}
-              onClick={() => {
-                /* RETELL AI DEMO AGENT - insert Retell AI agent ID here: */
-                /* retellWebClient.startCall({ agentId: "YOUR_AGENT_ID_HERE" }) */
-                alert("Retell AI Demo — Agent ID noch nicht konfiguriert.");
-              }}
-              aria-label="Demo starten"
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" />
-              </svg>
-            </button>
-          </div>
+          <DemoMicButton />
           <button
             className="px-10 py-4 rounded-full text-base btn-orange"
-            onClick={() => {
-              /* RETELL AI DEMO AGENT - insert Retell AI agent ID here: */
-              /* retellWebClient.startCall({ agentId: "YOUR_AGENT_ID_HERE" }) */
-              alert("Retell AI Demo — Agent ID noch nicht konfiguriert.");
-            }}
+            style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}
+            disabled={isLoading}
+            onClick={() => { if (isLoading) return; isActive ? endCall() : startCall(); }}
           >
-            Demo starten
+            {isLoading ? "Verbindung wird aufgebaut…" : isActive ? "Gespräch beenden" : "Demo starten"}
           </button>
+          {isActive && <SoundwaveBars />}
+          {callState === "error" && (
+            <span style={{ fontSize: "0.8rem", color: "#e8622a" }}>{errorMsg}</span>
+          )}
         </div>
       </div>
     </section>
@@ -1463,7 +1456,7 @@ export default function App() {
   useScrollAnimation();
 
   return (
-    <>
+    <RetellProvider>
       <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
       <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
       <LandingHero darkMode={darkMode} />
@@ -1480,6 +1473,6 @@ export default function App() {
       <CTASection />
       <Footer />
       <ChatbotWidget />
-    </>
+    </RetellProvider>
   );
 }
