@@ -178,7 +178,7 @@ function WindowItem({
             flex: 1,
             fontSize: "12px",
             fontWeight: 400,
-            color: "#1a1a1a",
+            color: "var(--foreground)",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -251,8 +251,8 @@ function ProblemLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number
           fontSize: "clamp(2.2rem, 5vw, 3.4rem)",
           fontWeight: 800,
           letterSpacing: "-0.03em",
-          color: "#000000",
-          background: "rgba(255,255,255,0.82)",
+          color: "var(--foreground)",
+          background: "var(--background)",
           backdropFilter: "blur(4px)",
           padding: "6px 24px 8px",
           borderRadius: "8px",
@@ -385,7 +385,7 @@ function DasProblemIntro({ scrollYProgress }: { scrollYProgress: MotionValue<num
             fontSize: "clamp(2.8rem, 7vw, 5rem)",
             fontWeight: 900,
             letterSpacing: "-0.04em",
-            color: "#0d2d3e",
+            color: "var(--foreground)",
             lineHeight: 1.05,
           }}
         >
