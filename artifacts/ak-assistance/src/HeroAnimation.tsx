@@ -389,7 +389,7 @@ function DasProblemIntro({ scrollYProgress }: { scrollYProgress: MotionValue<num
             lineHeight: 1.05,
           }}
         >
-          Das Problem:
+          Das Problem
         </h2>
         {/* Orange underline */}
         <div
