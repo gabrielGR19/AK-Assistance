@@ -224,35 +224,6 @@ function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> })
   );
 }
 
-function TaskbarItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
-  return (
-    <motion.div
-      style={{
-        opacity,
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 44,
-        background: "rgba(30,30,30,0.92)",
-        backdropFilter: "blur(12px)",
-        borderTop: "1px solid rgba(255,255,255,0.08)",
-        zIndex: 50,
-        display: "flex",
-        alignItems: "center",
-        paddingLeft: 8,
-        gap: 4,
-      }}
-    >
-      <div style={{ width: 44, height: 36, background: "#0078d4", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 18, height: 18, border: "2px solid white" }} />
-      </div>
-      <div style={{ flex: 1 }} />
-      <span style={{ color: "white", fontSize: 11, paddingRight: 12, fontFamily: "sans-serif" }}>12:34</span>
-    </motion.div>
-  );
-}
 
 function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const opacity = useTransform(scrollYProgress, [0, 0.5, 0.72], [1, 1, 0]);
@@ -298,8 +269,6 @@ export default function HeroAnimation() {
         <WhiteBg scrollYProgress={scrollYProgress} />
 
         <div style={{ position: "relative", width: "100%", height: "100%" }}>
-          <TaskbarItem scrollYProgress={scrollYProgress} />
-
           {WINDOWS.map((win, index) => (
             <WindowItem
               key={index}
