@@ -195,6 +195,72 @@ function WindowItem({
   );
 }
 
+function ProblemLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
+  const opacity = useTransform(scrollYProgress, [0, 0.02, 0.28, 0.42], [1, 1, 1, 0]);
+  return (
+    <motion.div
+      style={{
+        opacity,
+        position: "absolute",
+        top: "14%",
+        left: "50%",
+        translateX: "-50%",
+        zIndex: 70,
+        willChange: "opacity",
+        textAlign: "center",
+        pointerEvents: "none",
+      }}
+    >
+      <span
+        style={{
+          display: "inline-block",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontSize: "clamp(1.1rem, 2.5vw, 1.6rem)",
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          color: "rgba(255,255,255,0.92)",
+          textShadow: "0 2px 12px rgba(0,0,0,0.25)",
+        }}
+      >
+        The Problem:
+      </span>
+    </motion.div>
+  );
+}
+
+function SolutionLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
+  const opacity = useTransform(scrollYProgress, [0.66, 0.76], [0, 1]);
+  return (
+    <motion.div
+      style={{
+        opacity,
+        position: "absolute",
+        top: "22%",
+        left: "50%",
+        translateX: "-50%",
+        zIndex: 70,
+        willChange: "opacity",
+        textAlign: "center",
+        pointerEvents: "none",
+      }}
+    >
+      <span
+        style={{
+          display: "inline-block",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontSize: "clamp(1.1rem, 2.5vw, 1.6rem)",
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          color: "var(--foreground)",
+          textShadow: "0 2px 12px rgba(0,0,0,0.08)",
+        }}
+      >
+        The Solution:
+      </span>
+    </motion.div>
+  );
+}
+
 function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const opacity = useTransform(scrollYProgress, [0.5, 0.65], [0, 1]);
   const y = useTransform(scrollYProgress, [0.5, 0.65, 0.8], [500, 80, 80]);
@@ -281,6 +347,8 @@ export default function HeroAnimation() {
         <WhiteBg scrollYProgress={scrollYProgress} />
 
         <div style={{ position: "relative", width: "100%", height: "100%" }}>
+          <ProblemLabel scrollYProgress={scrollYProgress} />
+          <SolutionLabel scrollYProgress={scrollYProgress} />
           {WINDOWS.map((win, index) => (
             <WindowItem
               key={index}
