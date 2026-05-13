@@ -23,6 +23,7 @@ function useScrollAnimation() {
 /* ── Side Panel ─────────────────────────────────────────── */
 function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => void; darkMode: boolean }) {
   const links = [
+    { label: "News in der KI-Welt", href: "#news" },
     { label: "FAQ", href: "#faq" },
     { label: "Pilot Programm", href: "#pilot" },
     { label: "Kontakt", href: "#kontakt" },
@@ -743,6 +744,131 @@ function TeamSection() {
   );
 }
 
+/* ── News ────────────────────────────────────────────────── */
+const PLACEHOLDER_POSTS = [
+  {
+    id: 1,
+    date: "13. Mai 2025",
+    category: "KI & Handwerk",
+    title: "Wie KI-Sprachassistenten das Handwerk revolutionieren",
+    excerpt: "Immer mehr Betriebe setzen auf intelligente Sprachassistenten, um Anrufe effizienter zu bearbeiten und Termine ohne Wartezeit zu vergeben.",
+    readTime: "3 Min.",
+  },
+  {
+    id: 2,
+    date: "6. Mai 2025",
+    category: "Praxisbericht",
+    title: "KI im Büro: Weniger Papierkram, mehr Zeit für Kunden",
+    excerpt: "Ein Blick auf die neuesten Entwicklungen rund um KI-gestützte Dokumentenverarbeitung — und was das für kleine und mittlere Unternehmen bedeutet.",
+    readTime: "4 Min.",
+  },
+  {
+    id: 3,
+    date: "29. April 2025",
+    category: "Branchentrends",
+    title: "Sprachmodelle 2025: Was wirklich neu ist",
+    excerpt: "Die neuesten Sprachmodelle werden effizienter, günstiger und branchenspezifischer. Wir zeigen, welche Trends besonders für den Mittelstand relevant sind.",
+    readTime: "5 Min.",
+  },
+];
+
+function NewsSection() {
+  return (
+    <section id="news" className="py-20 px-4 sm:px-6" style={{ background: "var(--background)" }}>
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-12">
+          <span
+            className="inline-block text-xs font-semibold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
+            style={{ background: "rgba(232,98,42,0.12)", color: "#e8622a" }}
+          >
+            Blog
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: "var(--foreground)" }}>
+            News in der KI-Welt
+          </h2>
+          <p className="text-base" style={{ color: "var(--foreground-muted)", maxWidth: 520 }}>
+            Aktuelle Entwicklungen, Praxistipps und Branchentrends rund um Künstliche Intelligenz — speziell für Unternehmen und Dienstleister.
+          </p>
+        </div>
+
+        {/* Blog post grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {PLACEHOLDER_POSTS.map((post) => (
+            <article
+              key={post.id}
+              className="card-hover flex flex-col rounded-2xl overflow-hidden"
+              style={{
+                background: "var(--card-bg)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              {/* Colored top bar as image placeholder */}
+              <div
+                style={{
+                  height: 160,
+                  background: "linear-gradient(135deg, #1565c0 0%, #1976d2 60%, #42a5f5 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+              </div>
+
+              {/* Content */}
+              <div className="flex flex-col flex-1 p-5 gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: "rgba(232,98,42,0.12)", color: "#e8622a" }}
+                  >
+                    {post.category}
+                  </span>
+                  <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>
+                    {post.date} · {post.readTime} Lesezeit
+                  </span>
+                </div>
+
+                <h3 className="text-base font-bold leading-snug" style={{ color: "var(--foreground)" }}>
+                  {post.title}
+                </h3>
+
+                <p className="text-sm leading-relaxed flex-1" style={{ color: "var(--foreground-muted)" }}>
+                  {post.excerpt}
+                </p>
+
+                <a
+                  href="#news"
+                  className="text-sm font-semibold flex items-center gap-1 mt-1 transition-colors"
+                  style={{ color: "#e8622a" }}
+                >
+                  Weiterlesen
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {/* "More posts" placeholder */}
+        <div className="mt-10 text-center">
+          <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
+            Weitere Beiträge folgen regelmäßig — abonniere unseren Newsletter, um keine News zu verpassen.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ── FAQ ─────────────────────────────────────────────────── */
 function FAQSection() {
   const [open, setOpen] = useState<number | null>(null);
@@ -903,6 +1029,7 @@ export default function App() {
       <DemoSection />
       <PilotSection />
       <TeamSection />
+      <NewsSection />
       <FAQSection />
       <CTASection />
       <Footer />
