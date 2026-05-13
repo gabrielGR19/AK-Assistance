@@ -753,34 +753,90 @@ function TeamSection() {
 }
 
 /* ── News ────────────────────────────────────────────────── */
-const PLACEHOLDER_POSTS = [
-  {
-    id: 1,
-    date: "13. Mai 2025",
-    category: "KI & Handwerk",
-    title: "Wie KI-Sprachassistenten das Handwerk revolutionieren",
-    excerpt: "Immer mehr Betriebe setzen auf intelligente Sprachassistenten, um Anrufe effizienter zu bearbeiten und Termine ohne Wartezeit zu vergeben.",
-    readTime: "3 Min.",
-  },
-  {
-    id: 2,
-    date: "6. Mai 2025",
-    category: "Praxisbericht",
-    title: "KI im Büro: Weniger Papierkram, mehr Zeit für Kunden",
-    excerpt: "Ein Blick auf die neuesten Entwicklungen rund um KI-gestützte Dokumentenverarbeitung — und was das für kleine und mittlere Unternehmen bedeutet.",
-    readTime: "4 Min.",
-  },
-  {
-    id: 3,
-    date: "29. April 2025",
-    category: "Branchentrends",
-    title: "Sprachmodelle 2025: Was wirklich neu ist",
-    excerpt: "Die neuesten Sprachmodelle werden effizienter, günstiger und branchenspezifischer. Wir zeigen, welche Trends besonders für den Mittelstand relevant sind.",
-    readTime: "5 Min.",
-  },
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  AUTOMATISIERUNG: Blog-Posts hier eintragen                 ║
+// ║  Jeder Eintrag hat: id, date, category, title,              ║
+// ║  excerpt, readTime, imageUrl (optional), link (optional)    ║
+// ╚══════════════════════════════════════════════════════════════╝
+const BLOG_POSTS: {
+  id: number;
+  date: string;
+  category: string;
+  title: string;
+  excerpt: string;
+  readTime: string;
+  imageUrl?: string;
+  link?: string;
+}[] = [
+  // → Hier werden automatisch neue Blog-Posts eingefügt ←
 ];
 
+function BlogCard({ post }: { post: (typeof BLOG_POSTS)[number] }) {
+  return (
+    <article
+      className="card-hover flex flex-col rounded-2xl overflow-hidden"
+      style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}
+    >
+      {/* Cover-Bild oder Fallback-Verlauf */}
+      <div
+        style={{
+          height: 160,
+          flexShrink: 0,
+          background: post.imageUrl
+            ? `url(${post.imageUrl}) center/cover no-repeat`
+            : "linear-gradient(135deg, #1565c0 0%, #1976d2 60%, #42a5f5 100%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {!post.imageUrl && (
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+          </svg>
+        )}
+      </div>
+
+      {/* Inhalt */}
+      <div className="flex flex-col flex-1 p-5 gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="text-xs font-semibold px-2 py-0.5 rounded-full"
+            style={{ background: "rgba(232,98,42,0.12)", color: "#e8622a" }}
+          >
+            {post.category}
+          </span>
+          <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>
+            {post.date} · {post.readTime} Lesezeit
+          </span>
+        </div>
+        <h3 className="text-base font-bold leading-snug" style={{ color: "var(--foreground)" }}>
+          {post.title}
+        </h3>
+        <p className="text-sm leading-relaxed flex-1" style={{ color: "var(--foreground-muted)" }}>
+          {post.excerpt}
+        </p>
+        <a
+          href={post.link ?? "#news"}
+          target={post.link ? "_blank" : undefined}
+          rel="noopener noreferrer"
+          className="text-sm font-semibold flex items-center gap-1 mt-1"
+          style={{ color: "#e8622a" }}
+        >
+          Weiterlesen
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </article>
+  );
+}
+
 function NewsSection() {
+  const hasPosts = BLOG_POSTS.length > 0;
+
   return (
     <section id="news" className="py-20 px-4 sm:px-6" style={{ background: "var(--background)" }}>
       <div className="max-w-5xl mx-auto">
@@ -800,78 +856,37 @@ function NewsSection() {
           </p>
         </div>
 
-        {/* Blog post grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PLACEHOLDER_POSTS.map((post) => (
-            <article
-              key={post.id}
-              className="card-hover flex flex-col rounded-2xl overflow-hidden"
-              style={{
-                background: "var(--card-bg)",
-                border: "1px solid var(--border)",
-              }}
+        {hasPosts ? (
+          /* Blog-Post Grid — wird befüllt sobald BLOG_POSTS Einträge enthält */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {BLOG_POSTS.map((post) => (
+              <BlogCard key={post.id} post={post} />
+            ))}
+          </div>
+        ) : (
+          /* Platzhalter — wird ersetzt sobald erste Beiträge vorhanden sind */
+          <div
+            className="rounded-2xl flex flex-col items-center justify-center text-center py-16 px-8 gap-4"
+            style={{ border: "1.5px dashed var(--border)", background: "var(--muted)" }}
+          >
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(232,98,42,0.1)" }}
             >
-              {/* Colored top bar as image placeholder */}
-              <div
-                style={{
-                  height: 160,
-                  background: "linear-gradient(135deg, #1565c0 0%, #1976d2 60%, #42a5f5 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-              </div>
-
-              {/* Content */}
-              <div className="flex flex-col flex-1 p-5 gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(232,98,42,0.12)", color: "#e8622a" }}
-                  >
-                    {post.category}
-                  </span>
-                  <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>
-                    {post.date} · {post.readTime} Lesezeit
-                  </span>
-                </div>
-
-                <h3 className="text-base font-bold leading-snug" style={{ color: "var(--foreground)" }}>
-                  {post.title}
-                </h3>
-
-                <p className="text-sm leading-relaxed flex-1" style={{ color: "var(--foreground-muted)" }}>
-                  {post.excerpt}
-                </p>
-
-                <a
-                  href="#news"
-                  className="text-sm font-semibold flex items-center gap-1 mt-1 transition-colors"
-                  style={{ color: "#e8622a" }}
-                >
-                  Weiterlesen
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        {/* "More posts" placeholder */}
-        <div className="mt-10 text-center">
-          <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
-            Weitere Beiträge folgen regelmäßig — abonniere unseren Newsletter, um keine News zu verpassen.
-          </p>
-        </div>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-base mb-1" style={{ color: "var(--foreground)" }}>
+                Beiträge folgen in Kürze
+              </p>
+              <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
+                Hier werden regelmäßig neue Artikel rund um KI, Automatisierung und den digitalen Wandel im Handwerk veröffentlicht.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
