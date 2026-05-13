@@ -24,11 +24,24 @@ function useScrollAnimation() {
 /* ── Side Panel ─────────────────────────────────────────── */
 function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => void; darkMode: boolean }) {
   const links = [
-    { label: "News in der KI-Welt", href: "#news" },
-    { label: "FAQ", href: "#faq" },
-    { label: "Pilot Programm", href: "#pilot" },
-    { label: "Kontakt", href: "#kontakt" },
+    { label: "Das Problem", id: "problem" },
+    { label: "Die Lösung", id: "loesung" },
+    { label: "Wie es funktioniert", id: "wie-es-funktioniert" },
+    { label: "Kundenstimmen", id: "bewertungen" },
+    { label: "Live Demo", id: "demo" },
+    { label: "Pilot Programm", id: "pilot" },
+    { label: "Team", id: "team" },
+    { label: "News in der KI-Welt", id: "news" },
+    { label: "FAQ", id: "faq" },
+    { label: "Kontakt", id: "kontakt" },
   ];
+
+  const scrollTo = (id: string) => {
+    onClose();
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }, 320);
+  };
 
   return (
     <>
@@ -54,17 +67,16 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
         </div>
         <nav className="flex flex-col gap-2">
           {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              onClick={onClose}
-              className="text-xl font-semibold py-4 border-b transition-colors"
-              style={{ color: "var(--foreground)", borderColor: "var(--border)" }}
+            <button
+              key={l.id}
+              onClick={() => scrollTo(l.id)}
+              className="text-left text-xl font-semibold py-4 border-b transition-colors"
+              style={{ color: "var(--foreground)", borderColor: "var(--border)", background: "none", border: "none", borderBottom: `1px solid var(--border)`, cursor: "pointer", padding: "16px 0" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#e8622a")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground)")}
             >
               {l.label}
-            </a>
+            </button>
           ))}
         </nav>
         <div className="mt-auto pt-8">
@@ -364,7 +376,7 @@ function ProblemSection() {
   ];
 
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--background)" }}>
+    <section id="problem" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--background)" }}>
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <span className="section-label animate-in">Das Problem</span>
@@ -430,7 +442,7 @@ function LösungSection() {
   ];
 
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
+    <section id="loesung" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-20">
           <span className="section-label animate-in">Die Lösung</span>
@@ -470,7 +482,7 @@ function WieEsFunktioniertSection() {
   ];
 
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--background)" }}>
+    <section id="wie-es-funktioniert" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--background)" }}>
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-20">
           <span className="section-label animate-in">So einfach geht's</span>
@@ -553,7 +565,7 @@ function StarRow({ count }: { count: number }) {
 
 function BewertungenSection() {
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
+    <section id="bewertungen" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-6xl mx-auto">
 
         {/* Headline */}
@@ -654,7 +666,7 @@ function BewertungenSection() {
 /* ── Demo ───────────────────────────────────────────────── */
 function DemoSection() {
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
+    <section id="demo" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-3xl mx-auto text-center">
         <span className="section-label animate-in">Live testen</span>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mt-3 mb-6 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
@@ -963,7 +975,7 @@ function TeamSection() {
   ];
 
   return (
-    <section className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
+    <section id="team" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <span className="section-label animate-in">Das Team</span>
