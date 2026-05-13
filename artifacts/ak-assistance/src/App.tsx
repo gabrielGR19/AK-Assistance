@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
 
@@ -188,7 +189,14 @@ function HeroSection({ darkMode }: { darkMode: boolean }) {
       <HeroAnimation />
 
       {/* CTA buttons below the animation */}
-      <section className="py-16 px-4 sm:px-6" style={{ background: darkMode ? "#0d2d3e" : "#ffffff" }}>
+      <motion.section
+        className="py-16 px-4 sm:px-6"
+        style={{ background: darkMode ? "#0d2d3e" : "#ffffff" }}
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-30px" }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href={BOOKING_URL}
@@ -215,7 +223,7 @@ function HeroSection({ darkMode }: { darkMode: boolean }) {
             Demo anhören
           </button>
         </div>
-      </section>
+      </motion.section>
     </>
   );
 }
