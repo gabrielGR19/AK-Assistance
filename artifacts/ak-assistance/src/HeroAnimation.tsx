@@ -71,7 +71,7 @@ type WinData = (typeof WINDOWS)[number];
 
 function WindowContent({ win }: { win: WinData }) {
   return (
-    <div className="relative w-full h-full overflow-hidden" style={{ background: win.bg }}>
+    <div className="relative w-full h-full overflow-hidden" style={{ background: "var(--background)" }}>
       <img
         src={win.url}
         alt={win.title}
@@ -156,8 +156,8 @@ function WindowItem({
         <div
           style={{
             height: "32px",
-            background: "#f3f3f3",
-            borderBottom: "1px solid #d0d0d0",
+            background: "var(--muted, #f3f3f3)",
+            borderBottom: "1px solid var(--border, #d0d0d0)",
             display: "flex",
             alignItems: "center",
             paddingLeft: "12px",
@@ -415,7 +415,7 @@ function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
         opacity,
         position: "absolute",
         inset: 0,
-        background: "linear-gradient(135deg, #1565c0 0%, #1976d2 40%, #42a5f5 100%)",
+        background: "var(--background)",
         willChange: "opacity",
       }}
     />
@@ -426,7 +426,7 @@ function WhiteBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) 
   const opacity = useTransform(scrollYProgress, [0.64, 0.75], [0, 1]);
   return (
     <motion.div
-      style={{ opacity, position: "absolute", inset: 0, background: "#ffffff", willChange: "opacity" }}
+      style={{ opacity, position: "absolute", inset: 0, background: "var(--background)", willChange: "opacity" }}
     />
   );
 }
