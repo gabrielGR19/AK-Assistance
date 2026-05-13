@@ -1,1621 +1,1876 @@
 <!DOCTYPE html>
-<html lang="de"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AK-Assistance — Kein Anruf mehr verpasst.</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<style>/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_5.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_6.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_7.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_8.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_9.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_10.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_11.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_5.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_6.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_7.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_8.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_9.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_10.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_11.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_5.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_6.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_7.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_8.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_9.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_10.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_11.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_12.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_13.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_14.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_15.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_16.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_17.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/font_18.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_12.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_13.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_14.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_15.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_16.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_17.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("assets/font_18.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_12.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_13.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_14.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_15.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_16.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_17.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("assets/font_18.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/font_12.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/font_13.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/font_14.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/font_15.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/font_16.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/font_17.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("assets/font_18.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/font_12.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* cyrillic */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/font_13.woff2") format('woff2');
-  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-}
-/* greek-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/font_14.woff2") format('woff2');
-  unicode-range: U+1F00-1FFF;
-}
-/* greek */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/font_15.woff2") format('woff2');
-  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/font_16.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/font_17.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Inter Tight';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url("assets/font_18.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-</style>
-
-<script src="assets/script_0.js"></script>
-<script src="assets/script_1.js"></script>
-<script src="assets/script_4.js"></script>
-
-<style>
-  :root {
-    --bg: #FFFFFF;
-    --bg-soft: #F6F7F9;
-    --bg-deep: #0B1220;
-    --ink: #0B1220;
-    --ink-soft: #455066;
-    --ink-mute: #8892A6;
-    --line: #E6E9EE;
-    --line-strong: #CBD2DC;
-    --accent: #0B1220;
-    --accent-soft: #EEF1F6;
-    --star: #F5A524;
-    --radius: 16px;
-    --radius-sm: 12px;
-    --maxw: 1180px;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; overflow-x: hidden; }
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    font-size: 18px;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    overflow-x: hidden;
-  }
-  h1, h2, h3, h4 {
-    font-family: 'Inter Tight', 'Inter', sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    margin: 0;
-    text-wrap: balance;
-  }
-  p { margin: 0; text-wrap: pretty; }
-  a { color: inherit; }
-  button { font-family: inherit; cursor: pointer; }
-  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
-
-  /* ── Top bar + Hamburger-Menü ── */
-  .topbar {
-    padding: 28px 0 0;
-    position: relative;
-    z-index: 200;
-  }
-  .topbar-inner { display: flex; align-items: center; justify-content: space-between; }
-
-  /* Hamburger-Button */
-  .hamburger {
-    background: none; border: none; padding: 6px;
-    display: flex; flex-direction: column; gap: 5px;
-    cursor: pointer; z-index: 301;
-  }
-  .hamburger span {
-    display: block; width: 22px; height: 2px;
-    background: var(--ink); border-radius: 2px;
-    transition: transform .3s ease, opacity .3s ease;
-  }
-  body.nav-open .hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  body.nav-open .hamburger span:nth-child(2) { opacity: 0; }
-  body.nav-open .hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-  /* Nav-Overlay */
-  .nav-overlay {
-    position: fixed; inset: 0;
-    background: rgba(11,18,32,.5);
-    z-index: 299;
-    opacity: 0; pointer-events: none;
-    transition: opacity .3s ease;
-  }
-  body.nav-open .nav-overlay { opacity: 1; pointer-events: all; }
-
-  /* Nav-Drawer */
-  .nav-drawer {
-    position: fixed; top: 0; right: 0;
-    width: min(320px, 85vw); height: 100vh;
-    background: #fff;
-    z-index: 300;
-    transform: translateX(100%);
-    transition: transform .35s cubic-bezier(.25,.46,.45,.94);
-    display: flex; flex-direction: column;
-    padding: 28px 32px 40px;
-    box-shadow: -4px 0 32px rgba(11,18,32,.12);
-  }
-  body.nav-open .nav-drawer { transform: translateX(0); }
-
-  .nav-drawer-logo {
-    display: flex; align-items: center; gap: 10px;
-    font-family: 'Inter Tight', sans-serif;
-    font-weight: 700; font-size: 17px;
-    text-decoration: none; color: var(--ink);
-    margin-bottom: 40px;
-  }
-  .nav-drawer ul {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: 4px;
-    flex: 1;
-  }
-  .nav-drawer ul li a {
-    display: block; padding: 12px 0;
-    font-size: 17px; font-weight: 500;
-    color: var(--ink); text-decoration: none;
-    border-bottom: 1px solid var(--line);
-    transition: color .15s;
-  }
-  .nav-drawer ul li:last-child a { border-bottom: none; }
-  .nav-drawer ul li a:hover { color: var(--ink-soft); }
-  .nav-drawer-contact {
-    margin-top: 32px;
-    font-size: 14px; color: var(--ink-mute);
-  }
-  .nav-drawer-contact a {
-    color: var(--ink-soft); text-decoration: none;
-    display: inline-flex; align-items: center; gap: 7px;
-    margin-top: 6px;
-  }
-  .logo {
-    display: flex; align-items: center; gap: 10px;
-    font-family: 'Inter Tight', sans-serif;
-    font-weight: 700; font-size: 18px; letter-spacing: -0.01em;
-    text-decoration: none; color: var(--ink);
-    white-space: nowrap;
-  }
-  .logo-mark {
-    width: 32px; height: 32px; border-radius: 9px;
-    background: var(--ink); color: #fff;
-    display: grid; place-items: center;
-    font-size: 13px; font-weight: 700;
-  }
-  .topbar-contact {
-    font-size: 14px; color: var(--ink-soft);
-    text-decoration: none;
-    display: inline-flex; align-items: center; gap: 8px;
-  }
-  .topbar-contact:hover { color: var(--ink); }
-  @media (max-width: 560px) { .topbar-contact { display: none; } }
-
-  /* ── HERO ── */
-  .hero { padding: 72px 0 40px; }
-  @media (max-width: 760px) { .hero { padding: 48px 0 24px; } }
-  .hero-grid {
-    display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 64px;
-    align-items: center;
-  }
-  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; gap: 48px; } }
-  .hero h1 {
-    font-size: clamp(48px, 7vw, 96px);
-    line-height: 0.98;
-    letter-spacing: -0.035em;
-    margin-bottom: 28px;
-  }
-  .hero-sub {
-    font-size: clamp(18px, 1.4vw, 21px);
-    color: var(--ink-soft);
-    max-width: 46ch;
-    margin-bottom: 40px;
-    line-height: 1.5;
-  }
-  .btn-hero {
-    background: var(--ink); color: #fff;
-    border: 0; border-radius: 999px;
-    padding: 22px 36px;
-    font-size: 18px; font-weight: 600;
-    display: inline-flex; align-items: center; gap: 12px;
-    transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
-    box-shadow: 0 1px 2px rgba(11,18,32,.08), 0 8px 24px -12px rgba(11,18,32,.4);
-  }
-  .btn-hero:hover { background: #000; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(11,18,32,.12), 0 16px 32px -12px rgba(11,18,32,.5); }
-  .btn-hero svg { transition: transform .2s ease; }
-  .btn-hero:hover svg { transform: translateX(4px); }
-  @media (max-width: 480px) {
-    .btn-hero { padding: 20px 28px; font-size: 17px; width: 100%; justify-content: center; }
-  }
-
-  /* Hero visual — abstract AI/phone */
-  .hero-visual {
-    position: relative;
-    aspect-ratio: 1 / 1;
-    max-width: 460px;
-    margin-left: auto;
-  }
-  @media (max-width: 880px) {
-    .hero-visual { margin: 0 auto; max-width: 340px; }
-  }
-  .visual-bg {
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%, var(--bg-soft) 0%, var(--bg) 70%);
-  }
-  .ring {
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    border: 1px solid var(--line);
-    animation: ping 3.6s ease-out infinite;
-    opacity: 0;
-  }
-  .ring.r1 { animation-delay: 0s; }
-  .ring.r2 { animation-delay: 1.2s; }
-  .ring.r3 { animation-delay: 2.4s; }
-  @keyframes ping {
-    0%   { transform: scale(0.55); opacity: 0.9; border-color: var(--ink); }
-    80%  { opacity: 0; }
-    100% { transform: scale(1.0); opacity: 0; }
-  }
-  /* Smartphone-Frame (ersetzt phone-disc) */
-  .phone-frame {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 44%; height: 72%;
-    transform: translate(-50%, -50%);
-    background: var(--ink);
-    border-radius: 28px;
-    box-shadow: 0 24px 64px -16px rgba(11,18,32,.55), 0 0 0 1.5px rgba(255,255,255,.08);
-    display: flex; flex-direction: column;
-    overflow: hidden;
-  }
-  .phone-notch {
-    width: 36%; height: 12px;
-    background: rgba(255,255,255,.12);
-    border-radius: 0 0 10px 10px;
-    margin: 0 auto;
-    flex-shrink: 0;
-  }
-  .phone-screen {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 10px 10px 6px;
-  }
-  .phone-screen-inner {
-    background: rgba(255,255,255,.07);
-    border-radius: 14px;
-    width: 100%; height: 100%;
-    padding: 12px 10px;
-    display: flex; flex-direction: column; gap: 8px;
-    align-items: center;
-  }
-  .ps-avatar {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(255,255,255,.15);
-    color: rgba(255,255,255,.8);
-    display: grid; place-items: center;
-    flex-shrink: 0;
-  }
-  .ps-lines { width: 100%; display: flex; flex-direction: column; gap: 5px; align-items: center; }
-  .ps-line { height: 5px; border-radius: 99px; background: rgba(255,255,255,.15); }
-  .ps-line.w80 { width: 80%; }
-  .ps-line.w55 { width: 55%; }
-  .ps-wave { width: 100%; height: 28px; }
-  .ps-wave svg { width: 100%; height: 100%; }
-  .ps-status {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 9px; color: rgba(255,255,255,.65);
-    font-family: 'Inter', sans-serif; font-weight: 500;
-    letter-spacing: .03em;
-  }
-  .ps-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 6px #4ade80;
-    animation: blink 2s ease-in-out infinite;
-  }
-  .ps-status-text { white-space: nowrap; }
-  .phone-home-bar {
-    width: 30%; height: 4px; background: rgba(255,255,255,.2);
-    border-radius: 99px; margin: 0 auto 10px;
-    flex-shrink: 0;
-  }
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  .visual-chip {
-    position: absolute;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 8px 14px 8px 10px;
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 13px; font-weight: 500;
-    box-shadow: 0 4px 12px -4px rgba(11,18,32,.1), 0 1px 2px rgba(11,18,32,.04);
-    white-space: nowrap;
-  }
-  .visual-chip .icn {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--ink); color: #fff;
-    display: grid; place-items: center;
-    flex-shrink: 0;
-  }
-  .visual-chip.c1 { top: 10%; left: 2%; animation: chipIn .5s ease .9s both, float 5s ease-in-out 1.5s infinite; }
-  .visual-chip.c2 { bottom: 22%; right: 2%; animation: chipIn .5s ease 1.1s both, float 5s ease-in-out 2.7s infinite; }
-  .visual-chip.c3 { bottom: 6%; left: 6%; animation: chipIn .5s ease 1.3s both, float 5s ease-in-out 4s infinite; }
-  @media (max-width: 560px) {
-    .visual-chip.c1 { left: 0; }
-    .visual-chip.c2 { right: 0; }
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  /* ── Social proof bar ── */
-  .social-proof {
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    padding: 28px 0;
-    background: var(--bg-soft);
-  }
-  .sp-inner {
-    display: flex; align-items: center; justify-content: center; gap: 20px;
-    flex-wrap: wrap;
-    text-align: center;
-  }
-  .stars { display: inline-flex; gap: 3px; }
-  .stars svg { color: var(--star); width: 20px; height: 20px; }
-  .stars.stars-muted svg { color: var(--ink-mute); }
-  .sp-muted { color: var(--ink-soft); font-style: normal; }
-  .sp-text {
-    font-size: 16px; color: var(--ink);
-    font-weight: 500;
-  }
-  .sp-text strong { font-weight: 700; }
-  @media (max-width: 560px) {
-    .sp-inner { flex-direction: column; gap: 10px; }
-    .sp-text { font-size: 15px; }
-  }
-
-  /* ── Section base ── */
-  section { padding: 112px 0; }
-  @media (max-width: 760px) { section { padding: 80px 0; } }
-  .section-label {
-    font-size: 13px; font-weight: 600;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-soft);
-    margin-bottom: 18px;
-  }
-  .section-title {
-    font-size: clamp(36px, 4.5vw, 56px);
-    line-height: 1.05;
-    max-width: 20ch;
-    margin-bottom: 20px;
-    letter-spacing: -0.03em;
-  }
-  .section-intro {
-    font-size: 18px; color: var(--ink-soft);
-    max-width: 56ch; line-height: 1.55;
-    margin-bottom: 64px;
-  }
-  .section-head { text-align: center; margin: 0 auto 64px; }
-  .section-head .section-title, .section-head .section-intro { margin-left: auto; margin-right: auto; }
-
-  /* ── 3 SCHRITTE ── */
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    position: relative;
-  }
-  @media (max-width: 880px) { .steps-grid { grid-template-columns: 1fr; gap: 16px; } }
-  .step {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 36px 32px 32px;
-    display: flex; flex-direction: column;
-    gap: 20px;
-    position: relative;
-    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
-  }
-  .step:hover {
-    transform: translateY(-4px);
-    border-color: var(--line-strong);
-    box-shadow: 0 24px 48px -24px rgba(11,18,32,.12);
-  }
-  .step-num {
-    position: absolute;
-    top: 28px; right: 28px;
-    font-family: 'Inter Tight', sans-serif;
-    font-size: 14px; font-weight: 600;
-    color: var(--ink-mute);
-    font-variant-numeric: tabular-nums;
-  }
-  .step-icon {
-    width: 64px; height: 64px;
-    border-radius: 18px;
-    background: var(--bg-soft);
-    border: 1px solid var(--line);
-    display: grid; place-items: center;
-    color: var(--ink);
-    flex-shrink: 0;
-  }
-  .step h3 {
-    font-size: 22px;
-    line-height: 1.2;
-  }
-  .step p {
-    font-size: 16px;
-    color: var(--ink-soft);
-    line-height: 1.55;
-  }
-
-  /* connector line between step cards (desktop) */
-  @media (min-width: 881px) {
-    .steps-grid::before {
-      content: '';
-      position: absolute;
-      top: 70px;
-      left: 16%; right: 16%;
-      height: 1px;
-      background: repeating-linear-gradient(to right, var(--line-strong) 0 6px, transparent 6px 12px);
-      z-index: 0;
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AK Assistance — Ihr KI-Telefon-Agent für Handwerksbetriebe</title>
+  <meta name="description" content="AK Assistance nimmt Ihre Anrufe rund um die Uhr entgegen, vereinbart Termine und entlastet Ihr Handwerksunternehmen — damit Sie sich auf Ihre eigentliche Arbeit konzentrieren können.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* ===== CSS-VARIABLEN ===== */
+    :root {
+      --accent: #e8622a;
+      --accent-hover: #d4541f;
+      --accent-soft: rgba(232, 98, 42, 0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --maxw: 1200px;
+      --nav-h: 72px;
+      --transition: 0.2s ease;
     }
-    .step { z-index: 1; }
-  }
 
-  /* ── VORTEILE ── */
-  .benefits {
-    background: var(--bg-deep);
-    color: #fff;
-  }
-  .benefits .section-label { color: #8892A6; }
-  .benefits .section-title { color: #fff; }
-  .benefits-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-  @media (max-width: 880px) { .benefits-grid { grid-template-columns: 1fr; } }
-  .benefit {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    padding: 36px 32px;
-    display: flex; flex-direction: column; gap: 16px;
-    transition: background .2s ease, border-color .2s ease;
-  }
-  .benefit:hover {
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.16);
-  }
-  .benefit-icon {
-    width: 48px; height: 48px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.08);
-    display: grid; place-items: center;
-    color: #fff;
-  }
-  .benefit h3 {
-    font-size: 22px;
-    color: #fff;
-    line-height: 1.2;
-  }
-  .benefit p {
-    font-size: 16px;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.55;
-  }
+    [data-theme="dark"] {
+      --bg: #1a2e4a;
+      --bg-panel: #162540;
+      --bg-nav: rgba(22, 37, 64, 0.92);
+      --text: #ffffff;
+      --text-soft: #a0b4c0;
+      --border: rgba(160, 180, 192, 0.15);
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
 
-  /* ── TESTIMONIALS ── */
-  .testimonials { background: var(--bg); }
-  .reviews-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-bottom: 80px;
-  }
-  @media (max-width: 880px) { .reviews-grid { grid-template-columns: 1fr; } }
-  .review {
-    background: #fff;
-    border: 1px dashed var(--line-strong);
-    border-radius: 20px;
-    padding: 32px;
-    display: flex; flex-direction: column; gap: 20px;
-    min-height: 240px;
-    position: relative;
-  }
-  .review-stars { display: inline-flex; gap: 2px; color: var(--star); }
-  .review-stars svg { width: 18px; height: 18px; }
-  .review-quote {
-    flex: 1;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .ph-line {
-    height: 12px; border-radius: 6px;
-    background: var(--bg-soft);
-  }
-  .ph-line.w-90 { width: 90%; }
-  .ph-line.w-75 { width: 75%; }
-  .ph-line.w-60 { width: 60%; }
-  .ph-line.w-50 { width: 50%; }
-  .ph-line.w-40 { width: 40%; }
-  .review-author {
-    display: flex; align-items: center; gap: 12px;
-    padding-top: 18px;
-    border-top: 1px solid var(--line);
-  }
-  .ph-avatar {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--bg-soft);
-    border: 1px solid var(--line);
-    flex-shrink: 0;
-  }
-  .ph-author-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-  .review-tag {
-    position: absolute; top: 20px; right: 20px;
-    font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--ink-mute);
-    background: var(--bg-soft);
-    padding: 4px 10px; border-radius: 999px;
-  }
+    [data-theme="light"] {
+      --bg: #f5f5f5;
+      --bg-panel: #ffffff;
+      --bg-nav: rgba(245, 245, 245, 0.92);
+      --text: #1a1a1a;
+      --text-soft: #5a6a78;
+      --border: rgba(0,0,0,0.1);
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
 
-  /* ── REVIEW FORM ── */
-  .review-form-wrap {
-    background: var(--bg-soft);
-    border-radius: 24px;
-    padding: 56px;
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 56px;
-    align-items: center;
-  }
-  @media (max-width: 880px) {
-    .review-form-wrap { grid-template-columns: 1fr; gap: 32px; padding: 36px; }
-  }
-  .review-form-wrap h3 {
-    font-size: clamp(28px, 3vw, 38px);
-    line-height: 1.1;
-    margin-bottom: 14px;
-  }
-  .review-form-wrap .lead {
-    font-size: 16px;
-    color: var(--ink-soft);
-    line-height: 1.55;
-  }
-  .star-picker {
-    display: inline-flex; gap: 4px;
-    margin-bottom: 18px;
-  }
-  .star-picker button {
-    background: transparent;
-    border: 0; padding: 4px;
-    cursor: pointer;
-    color: var(--line-strong);
-    transition: color .12s ease, transform .12s ease;
-  }
-  .star-picker button:hover { transform: scale(1.1); }
-  .star-picker button.on { color: var(--star); }
-  .star-picker svg { width: 28px; height: 28px; display: block; }
-  .star-picker-label {
-    font-size: 13px; color: var(--ink-soft);
-    margin-left: 8px;
-  }
-  .rf-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── KONTAKT ── */
-  .contact {
-    background: var(--bg-soft);
-  }
-  .contact-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 56px;
-    align-items: stretch;
-  }
-  @media (max-width: 880px) { .contact-grid { grid-template-columns: 1fr; gap: 28px; } }
+    html { scroll-behavior: smooth; font-size: 16px; }
 
-  /* Test-call card */
-  .testcall-card {
-    background: var(--bg-deep);
-    color: #fff;
-    border-radius: 24px;
-    padding: 40px;
-    display: flex; flex-direction: column;
-    justify-content: space-between;
-    min-height: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-  .testcall-card::before {
-    content: '';
-    position: absolute;
-    width: 380px; height: 380px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
-    top: -100px; right: -100px;
-    pointer-events: none;
-  }
-  .testcall-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 13px; font-weight: 500;
-    color: rgba(255,255,255,0.7);
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 6px 14px;
-    border-radius: 999px;
-    width: fit-content;
-    margin-bottom: 24px;
-    position: relative;
-  }
-  .testcall-eyebrow .live {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #34D399;
-    box-shadow: 0 0 0 4px rgba(52,211,153,.2);
-    animation: pulse-soft 1.6s ease-in-out infinite;
-  }
-  @keyframes pulse-soft {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  .testcall-card h3 {
-    font-size: 30px;
-    color: #fff;
-    line-height: 1.15;
-    margin-bottom: 16px;
-    position: relative;
-  }
-  .testcall-card p {
-    font-size: 16px;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.55;
-    margin-bottom: 32px;
-    position: relative;
-  }
-  .testcall-number {
-    background: rgba(255,255,255,0.04);
-    border: 1px dashed rgba(255,255,255,0.2);
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-    position: relative;
-  }
-  .testcall-number .label {
-    font-size: 12px; font-weight: 500;
-    color: rgba(255,255,255,0.55);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 10px;
-  }
-  .testcall-number .num {
-    font-family: 'Inter Tight', sans-serif;
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: #fff;
-    font-variant-numeric: tabular-nums;
-  }
-  .testcall-number .placeholder {
-    font-style: normal;
-    color: rgba(255,255,255,0.4);
-  }
-  .testcall-meta {
-    margin-top: 20px;
-    font-size: 14px;
-    color: rgba(255,255,255,0.55);
-    text-align: center;
-    position: relative;
-  }
-  @media (max-width: 480px) {
-    .testcall-card { padding: 28px; }
-    .testcall-card h3 { font-size: 24px; }
-    .testcall-number .num { font-size: 22px; }
-  }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 17px;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
 
-  /* Form */
-  .form-card {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 40px;
-  }
-  @media (max-width: 480px) { .form-card { padding: 28px; } }
-  .form-card h3 {
-    font-size: 26px;
-    margin-bottom: 8px;
-    line-height: 1.2;
-  }
-  .form-card .lead {
-    font-size: 15px; color: var(--ink-soft);
-    margin-bottom: 28px;
-  }
-  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-  .field label {
-    font-size: 14px; font-weight: 500; color: var(--ink);
-  }
-  .field label .req { color: var(--ink-soft); font-weight: 400; }
-  .field input, .field textarea {
-    font-family: inherit;
-    font-size: 16px;
-    padding: 14px 16px;
-    border: 1px solid var(--line-strong);
-    border-radius: 12px;
-    background: #fff;
-    color: var(--ink);
-    transition: border-color .15s ease, box-shadow .15s ease;
-  }
-  .field input::placeholder, .field textarea::placeholder { color: var(--ink-mute); }
-  .field input:focus, .field textarea:focus {
-    outline: 0;
-    border-color: var(--ink);
-    box-shadow: 0 0 0 4px rgba(11,18,32,.08);
-  }
-  .field textarea { resize: vertical; min-height: 110px; }
-  .field.error input, .field.error textarea {
-    border-color: #DC2626;
-    background: #FEF2F2;
-  }
-  .field .err-msg {
-    font-size: 13px; color: #DC2626;
-    display: none;
-  }
-  .field.error .err-msg { display: block; }
-  .form-submit {
-    width: 100%;
-    background: var(--ink); color: #fff;
-    border: 0; border-radius: 12px;
-    padding: 20px;
-    font-size: 17px; font-weight: 600;
-    margin-top: 8px;
-    transition: background .15s ease, transform .15s ease;
-    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  }
-  .form-submit:hover { background: #000; transform: translateY(-1px); }
-  .form-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-  .form-note {
-    font-size: 13px; color: var(--ink-mute);
-    margin-top: 14px; text-align: center;
-  }
-  .form-success {
-    background: var(--bg-soft);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 32px;
-    text-align: center;
-  }
-  .form-success .check {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: var(--ink); color: white;
-    display: grid; place-items: center;
-    margin: 0 auto 16px;
-  }
-  .form-success h4 { font-size: 22px; margin-bottom: 8px; }
-  .form-success p { color: var(--ink-soft); font-size: 16px; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    button { cursor: pointer; font-family: inherit; }
+    input, textarea { font-family: inherit; }
 
-  /* ── Footer ── */
-  footer {
-    border-top: 1px solid var(--line);
-    padding: 28px 0;
-  }
-  .footer-simple {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 16px;
-    color: var(--ink-mute); font-size: 14px;
-  }
-  .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
-  .footer-links a { color: var(--ink-mute); text-decoration: none; transition: color .15s; }
-  .footer-links a:hover { color: var(--ink); }
+    /* ===== LAYOUT UTILITIES ===== */
+    .container {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
 
-  /* ── Animationen ── */
-  .hero { overflow: hidden; position: relative; }
-  .hero-chaos {
-    position: absolute; inset: 0;
-    pointer-events: none; overflow: hidden;
-  }
-  .hc-dot {
-    position: absolute; border-radius: 50%;
-    background: var(--ink); opacity: 0;
-    animation: hcFloat var(--dur, 12s) ease-in-out var(--del, 0s) infinite;
-  }
-  @keyframes hcFloat {
-    0%   { opacity: 0; transform: translate(0, 0) scale(1); }
-    15%  { opacity: var(--op, 0.04); }
-    85%  { opacity: var(--op, 0.04); }
-    100% { opacity: 0; transform: translate(var(--tx, 40px), var(--ty, -30px)) scale(var(--sc, 1.1)); }
-  }
+    section { padding: 100px 0; }
 
-  /* Hero Entrance */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(22px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .hero h1     { animation: fadeUp .7s ease .1s both; }
-  .hero-sub    { animation: fadeUp .7s ease .25s both; }
-  .btn-hero    { animation: fadeUp .7s ease .4s both; }
-  .hero-visual { animation: fadeUp .8s ease .2s both; }
+    .section-label {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
 
-  /* Chip entrance */
-  @keyframes chipIn {
-    from { opacity: 0; transform: scale(0.85) translateY(8px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-  }
+    .section-headline {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
 
-  /* Scroll fade-in */
-  .fade-in {
-    opacity: 0; transform: translateY(24px);
-    transition: opacity .65s ease, transform .65s ease;
-  }
-  .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .section-sub {
+      font-size: 18px;
+      color: var(--text-soft);
+      max-width: 600px;
+      line-height: 1.7;
+    }
 
-  .stagger > * {
-    opacity: 0; transform: translateY(20px);
-    transition: opacity .5s ease, transform .5s ease;
-  }
-  .stagger.visible > *:nth-child(1) { opacity: 1; transform: none; transition-delay: .05s; }
-  .stagger.visible > *:nth-child(2) { opacity: 1; transform: none; transition-delay: .18s; }
-  .stagger.visible > *:nth-child(3) { opacity: 1; transform: none; transition-delay: .31s; }
+    .section-header { margin-bottom: 56px; }
+    .section-header.centered { text-align: center; }
+    .section-header.centered .section-sub { margin: 0 auto; }
 
-  /* Subtile Karten-Tiefe */
-  .step { box-shadow: 0 1px 6px rgba(11,18,32,.05); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .grid-6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 
-</style>
+    /* ===== CARD ===== */
+    .card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--accent-soft);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 22px;
+      color: var(--accent);
+    }
+
+    .card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .card p { color: var(--text-soft); font-size: 15px; line-height: 1.65; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: all var(--transition);
+      border: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      box-shadow: 0 6px 20px rgba(232, 98, 42, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-lg { padding: 18px 36px; font-size: 17px; }
+
+    /* ===== SCROLL REVEAL ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== NAVIGATION ===== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      height: var(--nav-h);
+      background: var(--bg-nav);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+    }
+
+    .navbar .container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .nav-logo { display: flex; align-items: center; flex-shrink: 0; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-soft);
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+    .theme-toggle:hover { background: var(--bg-panel); }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all var(--transition);
+    }
+
+    .mobile-menu {
+      display: none;
+      position: absolute;
+      top: var(--nav-h);
+      right: 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      min-width: 220px;
+      box-shadow: var(--shadow);
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      display: block;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+      font-size: 15px;
+      color: var(--text-soft);
+      transition: all var(--transition);
+    }
+    .mobile-menu a:hover { background: var(--accent-soft); color: var(--accent); }
+    .mobile-menu .btn { margin-top: 8px; justify-content: center; }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: calc(100vh - var(--nav-h));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content { position: relative; z-index: 2; }
+
+    .hero-headline {
+      font-size: clamp(38px, 7vw, 64px);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      transition: opacity 0.5s ease;
+    }
+
+    .hero-headline span { color: var(--accent); }
+
+    .hero-sub {
+      font-size: clamp(17px, 2.5vw, 21px);
+      color: var(--text-soft);
+      max-width: 620px;
+      margin: 0 auto 40px;
+      line-height: 1.65;
+    }
+
+    .hero-logo-reveal {
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      margin: 0 auto 24px;
+    }
+    .hero-logo-reveal.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 64px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .hero-stat span {
+      font-size: 14px;
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+
+    /* Schwebende Chaos-Icons */
+    .chaos-icons {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.6s ease;
+    }
+    .chaos-icons.faded { opacity: 0; }
+
+    .chaos-icon {
+      position: absolute;
+      font-size: 32px;
+      color: var(--accent);
+      opacity: 0.18;
+      animation: floatRandom 6s ease-in-out infinite;
+    }
+    .chaos-icon:nth-child(1) { top: 15%; left: 8%;  animation-duration: 5.5s; animation-delay: 0s;   font-size: 28px; }
+    .chaos-icon:nth-child(2) { top: 25%; right: 10%; animation-duration: 7s;   animation-delay: 1s;   font-size: 36px; }
+    .chaos-icon:nth-child(3) { top: 60%; left: 12%; animation-duration: 6s;   animation-delay: 2s;   font-size: 24px; }
+    .chaos-icon:nth-child(4) { top: 70%; right: 8%; animation-duration: 5s;   animation-delay: 0.5s; font-size: 30px; }
+    .chaos-icon:nth-child(5) { top: 40%; left: 5%;  animation-duration: 8s;   animation-delay: 1.5s; font-size: 22px; }
+    .chaos-icon:nth-child(6) { top: 50%; right: 5%; animation-duration: 6.5s; animation-delay: 3s;   font-size: 34px; }
+
+    @keyframes floatRandom {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      33%      { transform: translateY(-18px) rotate(8deg); }
+      66%      { transform: translateY(10px) rotate(-5deg); }
+    }
+
+    /* ===== PROBLEM ===== */
+    #problem { background: var(--bg-panel); }
+
+    .sparrechner {
+      margin-top: 48px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+    }
+    .sparrechner h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .sparrechner p { color: var(--text-soft); font-size: 15px; margin-bottom: 28px; }
+
+    .slider-wrap { margin-bottom: 24px; }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .slider-label span { color: var(--accent); font-size: 18px; font-weight: 700; }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      background: var(--border);
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(232,98,42,0.4);
+    }
+
+    .sparrechner-result {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .sparrechner-result.visible { opacity: 1; }
+
+    .spar-item {
+      flex: 1;
+      min-width: 160px;
+      background: var(--accent-soft);
+      border-radius: var(--radius-sm);
+      padding: 20px 24px;
+    }
+    .spar-item strong { display: block; font-size: 28px; font-weight: 700; color: var(--accent); }
+    .spar-item span { font-size: 13px; color: var(--text-soft); }
+
+    /* ===== WIE ES FUNKTIONIERT ===== */
+    .steps { display: flex; flex-direction: column; gap: 32px; }
+
+    .step {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--accent);
+      opacity: 0.25;
+      line-height: 1;
+      flex-shrink: 0;
+      width: 64px;
+    }
+
+    .step-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent-soft);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .step-body h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .step-body p { color: var(--text-soft); font-size: 15px; }
+
+    /* ===== DEMO ===== */
+    #demo { background: var(--bg-panel); }
+
+    .audio-player {
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+    }
+
+    .audio-play-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 20px rgba(232,98,42,0.4);
+    }
+    .audio-play-btn:hover { transform: scale(1.05); }
+
+    .audio-progress-wrap {
+      background: var(--border);
+      height: 6px;
+      border-radius: 3px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .audio-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s linear;
+    }
+
+    .audio-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-bottom: 20px;
+    }
+
+    .audio-note { font-size: 14px; color: var(--text-soft); font-style: italic; }
+
+    /* ===== TESTEN ===== */
+    .test-option {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 36px;
+      text-align: center;
+    }
+
+    .test-option .icon-big {
+      font-size: 48px;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .test-option h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+    .test-option p { color: var(--text-soft); margin-bottom: 28px; font-size: 15px; }
+
+    .chat-placeholder {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .chat-msg {
+      display: inline-block;
+      background: var(--accent-soft);
+      border-radius: 16px 16px 16px 4px;
+      padding: 10px 16px;
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .chat-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      background: var(--accent);
+      animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+      margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ===== PILOT-FORMULAR ===== */
+    #pilot { background: var(--bg-panel); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+
+    .form-field label { font-size: 14px; font-weight: 600; color: var(--text); }
+
+    .form-field input,
+    .form-field textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .form-field input:focus,
+    .form-field textarea:focus { border-color: var(--accent); }
+    .form-field textarea { resize: vertical; min-height: 100px; }
+
+    .form-field input::placeholder,
+    .form-field textarea::placeholder { color: var(--text-soft); opacity: 0.7; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .checkbox-row label { font-size: 14px; color: var(--text-soft); }
+    .checkbox-row a { color: var(--accent); }
+
+    .form-submit-row { grid-column: 1 / -1; }
+
+    .form-success {
+      display: none;
+      background: rgba(46, 160, 67, 0.15);
+      border: 1px solid rgba(46, 160, 67, 0.3);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      text-align: center;
+    }
+    .form-success.visible { display: block; }
+    .form-success i { font-size: 36px; color: #2ea043; margin-bottom: 12px; display: block; }
+    .form-success h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .form-success p { color: var(--text-soft); }
+
+    .form-error { font-size: 13px; color: #e8622a; margin-top: 4px; display: none; }
+    .form-field.has-error input,
+    .form-field.has-error textarea { border-color: var(--accent); }
+    .form-field.has-error .form-error { display: block; }
+
+    /* ===== BEWERTUNGEN ===== */
+    .stars { color: #f5a524; font-size: 15px; margin-bottom: 12px; }
+
+    .review-card { position: relative; }
+
+    .review-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text-soft);
+      margin-bottom: 16px;
+    }
+
+    .review-quote { font-style: italic; color: var(--text-soft); font-size: 15px; margin-bottom: 16px; line-height: 1.65; }
+
+    .review-author strong { font-size: 15px; font-weight: 700; display: block; }
+    .review-author span { font-size: 13px; color: var(--text-soft); }
+
+    /* ===== FAQ ===== */
+    #faq { background: var(--bg-panel); }
+
+    .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+
+    .faq-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      padding: 22px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: color var(--transition);
+    }
+    .faq-question:hover { color: var(--accent); }
+    .faq-question i { font-size: 14px; color: var(--text-soft); transition: transform var(--transition); flex-shrink: 0; }
+    .faq-item.open .faq-question i { transform: rotate(180deg); color: var(--accent); }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.2s ease;
+      padding: 0 28px;
+    }
+    .faq-answer p { color: var(--text-soft); font-size: 15px; padding-bottom: 22px; line-height: 1.7; }
+    .faq-item.open .faq-answer { max-height: 400px; }
+
+    /* ===== BLOG ===== */
+    .blog-badge {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 50px;
+      margin-bottom: 14px;
+    }
+
+    .blog-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+    .blog-card p { font-size: 14px; color: var(--text-soft); margin-bottom: 16px; line-height: 1.65; }
+    .blog-date { font-size: 13px; color: var(--text-soft); margin-bottom: 16px; display: block; }
+    .blog-link { font-size: 14px; font-weight: 700; color: var(--accent); display: inline-flex; align-items: center; gap: 6px; }
+    .blog-link:hover { gap: 10px; }
+
+    /* ===== TEAM ===== */
+    #team { background: var(--bg-panel); }
+
+    .team-card { text-align: center; }
+
+    .team-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: var(--text-soft);
+      margin: 0 auto 20px;
+    }
+
+    .team-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .team-card span { font-size: 14px; color: var(--accent); font-weight: 600; }
+
+    .team-text {
+      max-width: 680px;
+      margin: 48px auto 0;
+      text-align: center;
+      color: var(--text-soft);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    /* ===== KONTAKT CTA ===== */
+    #kontakt { text-align: center; }
+
+    .kontakt-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 48px;
+      align-items: start;
+      text-align: left;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .kontakt-info h2 { font-size: clamp(24px, 4vw, 36px); font-weight: 700; margin-bottom: 16px; line-height: 1.25; }
+    .kontakt-info p { color: var(--text-soft); margin-bottom: 32px; font-size: 17px; }
+
+    .kontakt-details { display: flex; flex-direction: column; gap: 14px; }
+    .kontakt-detail {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 15px;
+    }
+    .kontakt-detail i { color: var(--accent); font-size: 16px; width: 20px; }
+    .kontakt-detail a { color: var(--text); transition: color var(--transition); }
+    .kontakt-detail a:hover { color: var(--accent); }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 48px;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .footer-links { display: flex; gap: 28px; }
+    .footer-links a { font-size: 14px; color: var(--text-soft); transition: color var(--transition); }
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-social a {
+      font-size: 14px;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color var(--transition);
+    }
+    .footer-social a:hover { color: var(--accent); }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-soft);
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== COOKIE BANNER ===== */
+    .cookie-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      z-index: 9999;
+      display: none;
+    }
+    .cookie-banner.visible { display: flex; }
+    .cookie-inner {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .cookie-text { font-size: 14px; color: var(--text-soft); flex: 1; min-width: 260px; }
+    .cookie-text a { color: var(--accent); }
+    .cookie-actions { display: flex; gap: 12px; flex-shrink: 0; }
+    .cookie-actions button {
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      transition: all var(--transition);
+    }
+    .cookie-actions .cookie-accept {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .cookie-actions .cookie-accept:hover { background: var(--accent-hover); }
+    .cookie-actions .cookie-decline:hover { border-color: var(--text); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .grid-6 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      section { padding: 72px 0; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .grid-6 { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .hero-stats { gap: 28px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-field.full { grid-column: auto; }
+      .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+      .kontakt-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-buttons { flex-direction: column; align-items: center; }
+      .grid-6 { grid-template-columns: 1fr; }
+      .btn-lg { width: 100%; justify-content: center; }
+      .hero-stats { flex-direction: column; gap: 20px; }
+      .sparrechner { padding: 24px 20px; }
+      .sparrechner-result { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ── TOPBAR ── -->
-<div class="topbar">
-  <div class="wrap topbar-inner">
-    <a href="#top" class="logo">
-      <span class="logo-mark">AK</span>
-      <span>AK-Assistance</span>
+<!-- ===== NAVIGATION ===== -->
+<nav class="navbar">
+  <div class="container">
+    <!-- PLATZHALTER: Finales Logo SVG — aktuell inline SVG Nachbau -->
+    <a href="#" class="nav-logo" aria-label="AK Assistance">
+      <svg width="160" height="36" viewBox="0 0 160 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <text x="0" y="27" font-family="DM Sans, sans-serif" font-weight="700" font-size="26" fill="currentColor">AK</text>
+        <polygon points="57,8 64,22 50,22" fill="#e8622a"/>
+        <text x="72" y="27" font-family="DM Sans, sans-serif" font-weight="700" font-size="26" fill="currentColor">ASSISTANCE</text>
+      </svg>
     </a>
-    <button class="hamburger" aria-label="Menü öffnen" onclick="document.body.classList.toggle('nav-open')">
-      <span></span><span></span><span></span>
-    </button>
+
+    <ul class="nav-links" role="list">
+      <li><a href="leistungen.html">Leistungen</a></li>
+      <li><a href="testen.html">Live testen</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="kontakt.html">Kontakt</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Farbschema wechseln">
+        <i class="fa-solid fa-moon" id="themeIcon"></i>
+      </button>
+      <a href="https://calendar.app.google/RcAojPDZwf15KeAD9" class="btn btn-primary" target="_blank" rel="noopener">
+        Termin buchen
+      </a>
+      <button class="hamburger" id="hamburger" aria-label="Menü" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
-</div>
 
-<!-- Nav-Overlay (Hintergrund zum Schließen) -->
-<div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
-
-<!-- Nav-Drawer -->
-<nav class="nav-drawer" aria-label="Hauptnavigation">
-  <a href="index.html" class="nav-drawer-logo">
-    <span class="logo-mark">AK</span>
-    <span>AK-Assistance</span>
-  </a>
-  <ul>
-    <li><a href="leistungen.html">Leistungen</a></li>
-    <li><a href="testen.html">Live testen</a></li>
-    <li><a href="blog.html">Blog</a></li>
-    <li><a href="kontakt.html">Kontakt</a></li>
-    <li><a href="impressum.html">Impressum</a></li>
-  </ul>
-  <div class="nav-drawer-contact">
-    <div>Direkt schreiben:</div>
-    <a href="mailto:AK-Assistance@protonmail.com">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-      AK-Assistance@protonmail.com
-    </a>
+  <div class="mobile-menu" id="mobileMenu" role="navigation">
+    <a href="leistungen.html">Leistungen</a>
+    <a href="testen.html">Live testen</a>
+    <a href="blog.html">Blog</a>
+    <a href="kontakt.html">Kontakt</a>
+    <a href="https://calendar.app.google/RcAojPDZwf15KeAD9" class="btn btn-primary" target="_blank" rel="noopener">Termin buchen</a>
   </div>
 </nav>
 
-<!-- ── HERO ── -->
-<section class="hero" id="top" data-screen-label="01 Hero">
-  <div class="hero-chaos" aria-hidden="true">
-    <div class="hc-dot" style="width:90px;height:90px;top:12%;left:6%;--dur:14s;--del:0s;--tx:35px;--ty:-45px;--op:0.04;--sc:1.2"></div>
-    <div class="hc-dot" style="width:45px;height:45px;top:55%;right:8%;--dur:10s;--del:2s;--tx:-28px;--ty:-38px;--op:0.05;--sc:0.85"></div>
-    <div class="hc-dot" style="width:130px;height:130px;bottom:8%;left:38%;--dur:18s;--del:1s;--tx:55px;--ty:25px;--op:0.03;--sc:1.3"></div>
-    <div class="hc-dot" style="width:28px;height:28px;top:28%;right:32%;--dur:8s;--del:3.5s;--tx:-32px;--ty:-18px;--op:0.06;--sc:1.1"></div>
-    <div class="hc-dot" style="width:65px;height:65px;top:70%;left:18%;--dur:13s;--del:4s;--tx:42px;--ty:-28px;--op:0.04;--sc:0.9"></div>
+<!-- ===== 1. HERO ===== -->
+<!-- PLATZHALTER: Hero Chaos-zu-Logo Animation — wird in separatem Schritt perfektioniert -->
+<section class="hero" id="hero">
+  <div class="chaos-icons" id="chaosIcons" aria-hidden="true">
+    <i class="chaos-icon fa-solid fa-file-lines"></i>
+    <i class="chaos-icon fa-solid fa-table-cells"></i>
+    <i class="chaos-icon fa-solid fa-phone"></i>
+    <i class="chaos-icon fa-solid fa-triangle-exclamation"></i>
+    <i class="chaos-icon fa-solid fa-calendar"></i>
+    <i class="chaos-icon fa-solid fa-folder-open"></i>
   </div>
-  <div class="wrap">
-    <div class="hero-grid">
-      <div>
-        <h1>Kein Anruf<br>mehr verpasst.</h1>
-        <p class="hero-sub">
-          Wir sind zwei Gründer — und wir wissen, wie nervig es ist, wenn das Telefon klingelt, während Sie auf der Leiter stehen. Unser KI-Assistent nimmt für Sie ab, erfasst alles Wichtige und schickt Ihnen die Zusammenfassung direkt aufs Handy.
-        </p>
-        <a href="kontakt.html" class="btn-hero">
-          Jetzt kostenlos beraten lassen
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+
+  <div class="hero-content">
+    <p class="section-label">KI-Telefon-Agent für Handwerk</p>
+    <h1 class="hero-headline" id="heroHeadline">
+      Ihr Problem: <span>Verpasste Anrufe.</span>
+    </h1>
+
+    <div class="hero-logo-reveal" id="heroLogoReveal" aria-hidden="true">
+      <svg width="200" height="44" viewBox="0 0 200 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="33" font-family="DM Sans, sans-serif" font-weight="700" font-size="32" fill="white">AK</text>
+        <polygon points="71,8 80,26 62,26" fill="#e8622a"/>
+        <text x="88" y="33" font-family="DM Sans, sans-serif" font-weight="700" font-size="32" fill="white">ASSISTANCE</text>
+      </svg>
+    </div>
+
+    <!-- PLATZHALTER: Slogan / Kernaussage -->
+    <p class="hero-sub" id="heroSub">
+      Wir übernehmen Ihre Anrufe — rund um die Uhr, auf Deutsch, professionell. Damit kein Auftrag mehr verloren geht.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="https://calendar.app.google/RcAojPDZwf15KeAD9" class="btn btn-primary btn-lg" target="_blank" rel="noopener">
+        <i class="fa-solid fa-calendar-check"></i> Kostenloses Gespräch buchen
+      </a>
+      <a href="#demo" class="btn btn-outline btn-lg">
+        <i class="fa-solid fa-play"></i> Demo anhören
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <strong>24/7</strong>
+        <span>Erreichbar</span>
+      </div>
+      <div class="hero-stat">
+        <strong>0</strong>
+        <span>Verpasste Anrufe</span>
+      </div>
+      <div class="hero-stat">
+        <strong>48h</strong>
+        <span>Einrichtung</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 2. PROBLEM ===== -->
+<section id="problem">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Das kennen Sie</span>
+      <h2 class="section-headline">Kennen Sie das?</h2>
+    </div>
+
+    <div class="grid-3">
+      <div class="card reveal">
+        <div class="card-icon"><i class="fa-solid fa-hard-hat"></i></div>
+        <h3>Sie sind auf der Baustelle</h3>
+        <p>Das Telefon klingelt — die Hände sind voll — der Kunde legt auf und ruft nie wieder an.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.1s">
+        <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
+        <h3>Außerhalb der Öffnungszeiten</h3>
+        <p>Ein Interessent ruft abends an. Niemand geht ran. Er bucht am nächsten Morgen beim Mitbewerber.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.2s">
+        <div class="card-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+        <h3>Termine per Telefon kosten Zeit</h3>
+        <p>Terminvereinbarungen am Telefon unterbrechen Ihre Arbeit täglich — und das für jede Kleinigkeit.</p>
+      </div>
+    </div>
+
+    <!-- Sparrechner -->
+    <div class="sparrechner reveal">
+      <h3>Wie viel Zeit verlieren Sie täglich?</h3>
+      <p>Verschieben Sie den Regler — wir zeigen Ihnen, wie viel AK Assistance für Ihren Betrieb einspart.</p>
+
+      <div class="slider-wrap">
+        <div class="slider-label">
+          <label for="mitarbeiterSlider">Mitarbeiter in Ihrem Betrieb</label>
+          <span id="mitarbeiterZahl">5</span>
+        </div>
+        <input type="range" id="mitarbeiterSlider" min="1" max="50" value="5" aria-label="Anzahl Mitarbeiter">
+      </div>
+
+      <div class="sparrechner-result" id="sparrechnerResult">
+        <div class="spar-item">
+          <strong id="sparStunden">12</strong>
+          <span>Stunden Zeitverlust / Woche</span>
+        </div>
+        <div class="spar-item">
+          <strong id="sparEinsparung">10</strong>
+          <span>Stunden gespart / Woche durch AK Assistance</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3. LÖSUNG ===== -->
+<section id="loesung">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Die Lösung</span>
+      <h2 class="section-headline">Ihr KI-Assistent übernimmt das</h2>
+      <p class="section-sub">Modernste KI-Technologie — trainiert auf Ihren Betrieb, verfügbar rund um die Uhr.</p>
+    </div>
+
+    <div class="grid-3">
+      <div class="card reveal">
+        <div class="card-icon"><i class="fa-solid fa-phone-volume"></i></div>
+        <h3>Nimmt jeden Anruf an</h3>
+        <p>Sofort, professionell, auf Deutsch — 24 Stunden am Tag, 7 Tage die Woche. Kein Klingeln bleibt unbeantwortet.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.1s">
+        <div class="card-icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <h3>Bucht Termine automatisch</h3>
+        <p>Ihr KI-Agent trägt Termine direkt in Ihren Google Calendar ein — und schickt dem Kunden sofort eine WhatsApp-Bestätigung.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.2s">
+        <div class="card-icon"><i class="fa-solid fa-comments"></i></div>
+        <h3>Beantwortet Kundenfragen</h3>
+        <p>Preise, Verfügbarkeit, Anfahrt — Ihr Agent kennt Ihren Betrieb und antwortet präzise auf die wichtigsten Fragen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 4. WIE ES FUNKTIONIERT ===== -->
+<section id="wie-es-funktioniert" style="background: var(--bg-panel)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Der Ablauf</span>
+      <h2 class="section-headline">In 3 Schritten live</h2>
+    </div>
+
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-number">01</div>
+        <div class="step-icon"><i class="fa-solid fa-comments"></i></div>
+        <div class="step-body">
+          <h3>Kostenloses Gespräch</h3>
+          <p>Wir lernen Ihren Betrieb kennen: Leistungen, Öffnungszeiten, häufige Kundenfragen — alles was Ihr Agent wissen muss.</p>
+        </div>
+      </div>
+      <div class="step reveal" style="transition-delay: 0.1s">
+        <div class="step-number">02</div>
+        <div class="step-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="step-body">
+          <h3>Einrichtung in 48 Stunden</h3>
+          <p>Wir konfigurieren alles — Retell.ai, Ihren Kalender, WhatsApp. Kein technisches Wissen auf Ihrer Seite nötig.</p>
+        </div>
+      </div>
+      <div class="step reveal" style="transition-delay: 0.2s">
+        <div class="step-number">03</div>
+        <div class="step-icon"><i class="fa-solid fa-hard-hat"></i></div>
+        <div class="step-body">
+          <h3>Ihr Agent übernimmt</h3>
+          <p>Jeder Anruf wird beantwortet, jeder Termin gebucht, jede Zusammenfassung direkt an Ihr Handy gesendet — Sie konzentrieren sich aufs Handwerk.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 5. VORTEILE ===== -->
+<section id="vorteile">
+  <div class="container">
+    <div class="section-header centered reveal">
+      <span class="section-label">Warum AK Assistance</span>
+      <h2 class="section-headline">Ihr Betrieb. Immer erreichbar.</h2>
+    </div>
+
+    <div class="grid-6">
+      <div class="card reveal">
+        <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
+        <h3>24/7 erreichbar</h3>
+        <p>Kein Anruf geht verloren — auch nachts, am Wochenende und im Urlaub.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.05s">
+        <div class="card-icon"><i class="fa-solid fa-ban"></i></div>
+        <h3>Keine verpassten Aufträge</h3>
+        <p>Jeder Interessent wird sofort bedient — bevor er zur Konkurrenz wechselt.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.1s">
+        <div class="card-icon"><i class="fa-solid fa-user-minus"></i></div>
+        <h3>Kein extra Personal</h3>
+        <p>Kein Bürokraft, keine Rezeption — Ihr KI-Agent übernimmt das vollautomatisch.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.15s">
+        <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>DSGVO-konform</h3>
+        <p>Alle Daten werden auf deutschen Servern verarbeitet und nach DSGVO-Standards gespeichert.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.2s">
+        <div class="card-icon"><i class="fa-solid fa-sliders"></i></div>
+        <h3>Individuell angepasst</h3>
+        <p>Ihr Agent kennt Ihre Preise, Ihre Leistungen und Ihre Kunden — kein Baukastensystem.</p>
+      </div>
+      <div class="card reveal" style="transition-delay: 0.25s">
+        <div class="card-icon"><i class="fa-solid fa-rotate"></i></div>
+        <h3>Monatlich kündbar</h3>
+        <p>Keine langen Verträge. Wir überzeugen lieber durch Leistung als durch Bindung.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 6. DEMO ===== -->
+<section id="demo">
+  <div class="container">
+    <div class="section-header centered reveal">
+      <span class="section-label">Hören Sie selbst</span>
+      <h2 class="section-headline">Wie natürlich klingt Ihr KI-Agent?</h2>
+      <p class="section-sub">Hören Sie eine echte Demo-Aufnahme — genau so würde Ihr Agent am Telefon klingen.</p>
+    </div>
+
+    <!-- PLATZHALTER: Audio-Demo — MP3-Datei wird nachgereicht -->
+    <div class="audio-player reveal">
+      <button class="audio-play-btn" id="audioPlayBtn" aria-label="Demo abspielen">
+        <i class="fa-solid fa-play" id="audioPlayIcon"></i>
+      </button>
+
+      <div class="audio-progress-wrap">
+        <div class="audio-progress-bar" id="audioProgressBar"></div>
+      </div>
+
+      <div class="audio-time">
+        <span id="audioCurrentTime">0:00</span>
+        <span id="audioDuration">0:00</span>
+      </div>
+
+      <audio id="audioElement" style="display:none">
+        <!-- PLATZHALTER: src="demo.mp3" -->
+      </audio>
+
+      <p class="audio-note">Demo-Aufnahme folgt in Kürze — hören Sie wie natürlich unser KI-Agent spricht.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 7. KI-AGENTEN TESTEN ===== -->
+<section id="testen" style="background: var(--bg-panel)">
+  <div class="container">
+    <div class="section-header centered reveal">
+      <span class="section-label">Live testen</span>
+      <h2 class="section-headline">Testen Sie uns — live</h2>
+    </div>
+
+    <div class="grid-2">
+      <div class="test-option reveal">
+        <!-- PLATZHALTER: Telefonnummer Demo-Agent -->
+        <div class="icon-big"><i class="fa-solid fa-phone"></i></div>
+        <h3>Rufen Sie direkt an</h3>
+        <p>Erleben Sie unseren KI-Agenten live am Telefon — vereinbaren Sie direkt einen Termin oder stellen Sie Fragen.</p>
+        <a href="tel:+49000000000" class="btn btn-primary btn-lg">
+          <!-- PLATZHALTER: Telefonnummer Demo-Agent (tel:) -->
+          <i class="fa-solid fa-phone"></i> Jetzt anrufen
         </a>
       </div>
 
-      <div class="hero-visual" aria-hidden="true">
-        <div class="visual-bg"></div>
-        <!-- Pulswellen -->
-        <div class="ring r1"></div>
-        <div class="ring r2"></div>
-        <div class="ring r3"></div>
-        <!-- Stilisiertes Smartphone -->
-        <div class="phone-frame">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="phone-screen-inner">
-              <div class="ps-avatar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-              </div>
-              <div class="ps-lines">
-                <div class="ps-line w80"></div>
-                <div class="ps-line w55"></div>
-              </div>
-              <div class="ps-wave">
-                <svg viewBox="0 0 80 28" fill="none" preserveAspectRatio="none">
-                  <path d="M0 14 Q10 4 20 14 Q30 24 40 14 Q50 4 60 14 Q70 24 80 14" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.15">
-                    <animate attributeName="d" dur="2s" repeatCount="indefinite"
-                      values="M0 14 Q10 4 20 14 Q30 24 40 14 Q50 4 60 14 Q70 24 80 14;
-                              M0 14 Q10 24 20 14 Q30 4 40 14 Q50 24 60 14 Q70 4 80 14;
-                              M0 14 Q10 4 20 14 Q30 24 40 14 Q50 4 60 14 Q70 24 80 14"/>
-                  </path>
-                  <path d="M0 14 Q10 4 20 14 Q30 24 40 14 Q50 4 60 14 Q70 24 80 14" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.08">
-                    <animate attributeName="d" dur="2s" begin="-0.5s" repeatCount="indefinite"
-                      values="M0 14 Q10 4 20 14 Q30 24 40 14 Q50 4 60 14 Q70 24 80 14;
-                              M0 14 Q10 24 20 14 Q30 4 40 14 Q50 24 60 14 Q70 4 80 14;
-                              M0 14 Q10 4 20 14 Q30 24 40 14 Q50 4 60 14 Q70 24 80 14"/>
-                  </path>
-                </svg>
-              </div>
-              <div class="ps-status">
-                <span class="ps-dot"></span>
-                <span class="ps-status-text">KI nimmt ab…</span>
-              </div>
+      <div class="test-option reveal" style="transition-delay: 0.1s">
+        <!-- PLATZHALTER: Chat-Widget Einbettungscode -->
+        <div class="icon-big"><i class="fa-solid fa-comment-dots"></i></div>
+        <h3>Chat-Assistent</h3>
+        <p>Stellen Sie unserem KI-Assistenten direkt hier eine Frage — schnell, einfach, kostenlos.</p>
+        <div class="chat-placeholder">
+          <div style="text-align:left">
+            <div class="chat-msg">Guten Tag! Wie kann ich Ihnen helfen?<span class="chat-cursor"></span></div>
+          </div>
+        </div>
+        <p style="font-size:13px; color:var(--text-soft); margin-top: 0; font-style:italic;">Chat-Widget wird in Kürze eingebettet.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 8. PILOTPROGRAMM ===== -->
+<section id="pilot">
+  <div class="container">
+    <div class="section-header reveal" style="max-width: 640px">
+      <span class="section-label">Pilot-Programm</span>
+      <h2 class="section-headline">Werden Sie Pilot-Kunde</h2>
+      <p class="section-sub">Wir suchen Handwerksbetriebe, die als erste von unserem KI-Agenten profitieren — zu Sonderkonditionen und mit direktem Draht zu unserem Team.</p>
+    </div>
+
+    <div id="pilotFormWrap" style="max-width: 680px">
+      <div class="form-grid">
+        <div class="form-field" id="pilotNameField">
+          <label for="pilotName">Name *</label>
+          <input type="text" id="pilotName" placeholder="Max Mustermann" autocomplete="name">
+          <span class="form-error">Bitte geben Sie Ihren Namen ein.</span>
+        </div>
+        <div class="form-field" id="pilotFirmaField">
+          <label for="pilotFirma">Firmenname *</label>
+          <input type="text" id="pilotFirma" placeholder="Mustermann Elektro GmbH">
+          <span class="form-error">Bitte geben Sie Ihren Firmennamen ein.</span>
+        </div>
+        <div class="form-field" id="pilotTelField">
+          <label for="pilotTel">Telefon *</label>
+          <input type="tel" id="pilotTel" placeholder="+49 123 456789" autocomplete="tel">
+          <span class="form-error">Bitte geben Sie eine gültige Telefonnummer ein.</span>
+        </div>
+        <div class="form-field" id="pilotEmailField">
+          <label for="pilotEmail">E-Mail *</label>
+          <input type="email" id="pilotEmail" placeholder="max@mustermann.de" autocomplete="email">
+          <span class="form-error">Bitte geben Sie eine gültige E-Mail-Adresse ein.</span>
+        </div>
+        <div class="form-field full">
+          <label for="pilotNachricht">Nachricht (optional)</label>
+          <textarea id="pilotNachricht" placeholder="Was beschäftigt Sie am meisten im Alltag?"></textarea>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="pilotDatenschutz">
+          <label for="pilotDatenschutz">Ich habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen und stimme der Verarbeitung meiner Daten zu. *</label>
+        </div>
+        <div class="form-submit-row">
+          <button class="btn btn-primary btn-lg" onclick="submitForm('pilot')">
+            <i class="fa-solid fa-paper-plane"></i> Jetzt bewerben
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-success" id="pilotSuccess">
+      <i class="fa-solid fa-circle-check"></i>
+      <h3>Vielen Dank für Ihre Bewerbung!</h3>
+      <p>Wir melden uns innerhalb von 24 Stunden bei Ihnen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 9. KUNDENBEWERTUNGEN ===== -->
+<section id="bewertungen" style="background: var(--bg-panel)">
+  <div class="container">
+    <div class="section-header centered reveal">
+      <span class="section-label">Kundenstimmen</span>
+      <h2 class="section-headline">Das sagen unsere Kunden</h2>
+    </div>
+
+    <!-- PLATZHALTER: Echte Kundenbewertungen — werden nachgereicht -->
+    <div class="grid-3">
+      <div class="card review-card reveal">
+        <div class="review-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="stars">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="review-quote">"Hier kommt Ihre echte Bewertung — wir freuen uns auf Ihr Feedback nach der ersten Woche."</p>
+        <div class="review-author">
+          <strong>Max Mustermann</strong>
+          <span>Muster Elektro GmbH</span>
+        </div>
+      </div>
+      <div class="card review-card reveal" style="transition-delay: 0.1s">
+        <div class="review-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="stars">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="review-quote">"Echte Kundenstimmen folgen in Kürze — unsere Pilot-Kunden testen den Agenten gerade."</p>
+        <div class="review-author">
+          <strong>Erika Musterfrau</strong>
+          <span>Muster Sanitär GmbH</span>
+        </div>
+      </div>
+      <div class="card review-card reveal" style="transition-delay: 0.2s">
+        <div class="review-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="stars">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="review-quote">"Sobald unsere ersten Pilot-Kunden live sind, erscheinen hier ihre echten Erfahrungen."</p>
+        <div class="review-author">
+          <strong>Hans Beispiel</strong>
+          <span>Beispiel Malerbetrieb</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 10. FAQ ===== -->
+<section id="faq">
+  <div class="container">
+    <div class="section-header centered reveal">
+      <span class="section-label">FAQ</span>
+      <h2 class="section-headline">Häufige Fragen</h2>
+    </div>
+
+    <div class="faq-list" role="list">
+      <div class="faq-item reveal">
+        <button class="faq-question" aria-expanded="false">
+          Was kostet der KI-Assistent?
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="faq-answer">
+          <p>Die Kosten besprechen wir individuell in einem persönlichen Gespräch — je nach Betriebsgröße und Anforderungen. Es gibt eine einmalige Setupgebühr sowie ein monatliches Abo ohne lange Vertragsbindung.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay: 0.05s">
+        <button class="faq-question" aria-expanded="false">
+          Wie lange dauert die Einrichtung?
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="faq-answer">
+          <p>In der Regel 48 Stunden nach unserem ersten Gespräch. Wir konfigurieren alles für Sie — Kalender-Anbindung, WhatsApp-Integration und die Wissensbasis Ihres Agenten.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay: 0.1s">
+        <button class="faq-question" aria-expanded="false">
+          Spricht der Agent wirklich wie ein Mensch?
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="faq-answer">
+          <p>Ja — moderne KI-Stimmen sind kaum noch von echten Menschen zu unterscheiden. Unser Agent spricht flüssiges Deutsch, reagiert natürlich auf Nachfragen und klingt professionell. Hören Sie selbst in unserer Demo.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay: 0.15s">
+        <button class="faq-question" aria-expanded="false">
+          Was passiert bei komplexen Fragen?
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="faq-answer">
+          <p>Der Agent erkennt, wenn ein Anliegen zu komplex für eine automatische Antwort ist. In diesem Fall leitet er den Kunden direkt an Sie weiter — per Rückruf-Ankündigung oder WhatsApp-Nachricht mit allen relevanten Informationen.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay: 0.2s">
+        <button class="faq-question" aria-expanded="false">
+          Ist das DSGVO-konform?
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="faq-answer">
+          <p>Ja. Alle Gespräche und Kundendaten werden auf deutschen Servern verarbeitet und nach DSGVO-Standards gespeichert. Kunden werden zu Beginn des Gesprächs über die Aufzeichnung informiert.</p>
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay: 0.25s">
+        <button class="faq-question" aria-expanded="false">
+          Kann ich monatlich kündigen?
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="faq-answer">
+          <p>Ja — keine langen Vertragsbindungen. Wir überzeugen lieber durch Leistung. Sie können jederzeit zum Monatsende kündigen, ohne Angabe von Gründen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 11. BLOG ===== -->
+<section id="blog" style="background: var(--bg-panel)">
+  <div class="container">
+    <div class="section-header centered reveal">
+      <span class="section-label">Wissen</span>
+      <h2 class="section-headline">Wissen für Handwerker</h2>
+    </div>
+
+    <!-- PLATZHALTER: Blog-Beiträge — werden später aus JSON-Datei dynamisch geladen -->
+    <!-- Struktur blogs.json: [{title, date, category, excerpt, slug}]
+         JavaScript lädt die JSON-Datei per fetch('blogs.json') und rendert Karten dynamisch. -->
+    <div class="grid-3" id="blogGrid">
+      <div class="card blog-card reveal">
+        <span class="blog-badge">Digitalisierung</span>
+        <span class="blog-date">Demnächst</span>
+        <h3>Warum jeder Handwerksbetrieb einen KI-Agenten braucht</h3>
+        <p>Erfahren Sie, wie Handwerker durch KI-Assistenten täglich Stunden einsparen und gleichzeitig mehr Aufträge gewinnen.</p>
+        <a href="#" class="blog-link">Weiterlesen <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="card blog-card reveal" style="transition-delay: 0.1s">
+        <span class="blog-badge">Tipps</span>
+        <span class="blog-date">Demnächst</span>
+        <h3>5 Gründe warum Handwerker Anrufe verpassen</h3>
+        <p>Baustelle, Lärm, volle Hände — die häufigsten Ursachen für verpasste Kundenanrufe und was Sie dagegen tun können.</p>
+        <a href="#" class="blog-link">Weiterlesen <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="card blog-card reveal" style="transition-delay: 0.2s">
+        <span class="blog-badge">DSGVO</span>
+        <span class="blog-date">Demnächst</span>
+        <h3>KI und DSGVO: Was Handwerker wissen müssen</h3>
+        <p>Ein praxisnaher Überblick über die wichtigsten Datenschutzregeln beim Einsatz von KI-Telefonsystemen in Deutschland.</p>
+        <a href="#" class="blog-link">Weiterlesen <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 12. TEAM ===== -->
+<section id="team">
+  <div class="container">
+    <div class="section-header centered reveal">
+      <span class="section-label">Das Team</span>
+      <h2 class="section-headline">Die Menschen hinter AK Assistance</h2>
+    </div>
+
+    <!-- PLATZHALTER: Team-Fotos — echte Fotos von Moritz und Gabriel folgen -->
+    <div class="grid-2" style="max-width: 600px; margin: 0 auto">
+      <div class="card team-card reveal">
+        <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
+        <h3>Moritz Koch</h3>
+        <span>Co-Founder</span>
+      </div>
+      <div class="card team-card reveal" style="transition-delay: 0.1s">
+        <div class="team-avatar"><i class="fa-solid fa-user"></i></div>
+        <h3>Gabriel Adam</h3>
+        <span>Co-Founder</span>
+      </div>
+    </div>
+
+    <p class="team-text reveal">
+      Wir sind zwei Gründer mit einer Mission: Handwerksbetriebe von unnötiger Bürokratie befreien — damit Sie sich auf das konzentrieren können, was Sie wirklich können.
+    </p>
+  </div>
+</section>
+
+<!-- ===== 13. KONTAKT / CTA ===== -->
+<section id="kontakt" style="background: var(--bg-panel)">
+  <div class="container">
+    <div class="kontakt-grid">
+      <div class="kontakt-info reveal">
+        <span class="section-label">Jetzt starten</span>
+        <h2>Bereit für Ihren KI-Assistenten?</h2>
+        <p>Buchen Sie jetzt Ihr kostenloses Erstgespräch — unverbindlich und ohne Vorbereitung.</p>
+
+        <a href="https://calendar.app.google/RcAojPDZwf15KeAD9" class="btn btn-primary btn-lg" style="margin-bottom: 40px" target="_blank" rel="noopener">
+          <i class="fa-solid fa-calendar-check"></i> Jetzt Termin buchen
+        </a>
+
+        <div class="kontakt-details">
+          <div class="kontakt-detail">
+            <i class="fa-solid fa-envelope"></i>
+            <a href="mailto:ak-assistance@protonmail.com">ak-assistance@protonmail.com</a>
+          </div>
+          <div class="kontakt-detail">
+            <i class="fa-brands fa-instagram"></i>
+            <a href="https://instagram.com/ak_assistance" target="_blank" rel="noopener">@ak_assistance</a>
+          </div>
+          <div class="kontakt-detail">
+            <!-- PLATZHALTER: Telefonnummer -->
+            <i class="fa-solid fa-phone"></i>
+            <span style="color: var(--text-soft); font-style: italic">Telefon folgt in Kürze</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal" style="transition-delay: 0.1s">
+        <div id="kontaktFormWrap">
+          <div class="form-grid">
+            <div class="form-field" id="kontaktNameField">
+              <label for="kontaktName">Name *</label>
+              <input type="text" id="kontaktName" placeholder="Max Mustermann" autocomplete="name">
+              <span class="form-error">Pflichtfeld</span>
+            </div>
+            <div class="form-field" id="kontaktFirmaField">
+              <label for="kontaktFirma">Unternehmen *</label>
+              <input type="text" id="kontaktFirma" placeholder="Muster GmbH">
+              <span class="form-error">Pflichtfeld</span>
+            </div>
+            <div class="form-field" id="kontaktTelField">
+              <label for="kontaktTel">Telefon *</label>
+              <input type="tel" id="kontaktTel" placeholder="+49 123 456789" autocomplete="tel">
+              <span class="form-error">Pflichtfeld</span>
+            </div>
+            <div class="form-field" id="kontaktEmailField">
+              <label for="kontaktEmail">E-Mail *</label>
+              <input type="email" id="kontaktEmail" placeholder="max@firma.de" autocomplete="email">
+              <span class="form-error">Pflichtfeld</span>
+            </div>
+            <div class="form-field full">
+              <label for="kontaktNachricht">Nachricht</label>
+              <textarea id="kontaktNachricht" placeholder="Wie können wir Ihnen helfen?"></textarea>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="kontaktDatenschutz">
+              <label for="kontaktDatenschutz">Ich stimme der <a href="datenschutz.html">Datenschutzerklärung</a> zu. *</label>
+            </div>
+            <div class="form-submit-row">
+              <button class="btn btn-primary" onclick="submitForm('kontakt')">
+                <i class="fa-solid fa-paper-plane"></i> Nachricht senden
+              </button>
             </div>
           </div>
-          <div class="phone-home-bar"></div>
         </div>
-        <!-- Floating Chips -->
-        <div class="visual-chip c1">
-          <span class="icn">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </span>
-          Termin angelegt
-        </div>
-        <div class="visual-chip c2">
-          <span class="icn">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          </span>
-          Auftrag erfasst
-        </div>
-        <div class="visual-chip c3">
-          <span class="icn">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          </span>
-          24/7 erreichbar
+        <div class="form-success" id="kontaktSuccess">
+          <i class="fa-solid fa-circle-check"></i>
+          <h3>Vielen Dank!</h3>
+          <p>Wir melden uns innerhalb von 24 Stunden bei Ihnen.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── SOCIAL PROOF (placeholder) ── -->
-<div class="social-proof" data-screen-label="02 Social Proof">
-  <div class="wrap sp-inner">
-    <div class="stars stars-muted" aria-label="Bewertungen folgen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-    </div>
-    <div class="sp-text sp-muted">Erste Bewertungen folgen in Kürze</div>
-  </div>
-</div>
-
-<!-- ── 3 SCHRITTE ── -->
-<section id="wie" data-screen-label="03 So funktioniert's">
-  <div class="wrap">
-    <div class="section-head fade-in">
-      <div class="section-label">In 3 Schritten</div>
-      <h2 class="section-title">So starten Sie durch.</h2>
-      <p class="section-intro">Kein Aufwand, keine neue Hardware. Wir kümmern uns um alles — Sie behalten Ihre Nummer.</p>
-    </div>
-
-    <div class="steps-grid stagger">
-      <div class="step">
-        <div class="step-num">01</div>
-        <div class="step-icon">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        </div>
-        <div>
-          <h3>Kostenloses Erstgespräch</h3>
-          <p style="margin-top:8px;">Kontaktieren Sie uns kurz — per Formular oder direkt per Telefon. Wir lernen Ihren Betrieb kennen.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">02</div>
-        <div class="step-icon">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-        </div>
-        <div>
-          <h3>Individuelles Angebot</h3>
-          <p style="margin-top:8px;">Nach unserem Gespräch unterbreiten wir Ihnen ein auf Ihren Betrieb zugeschnittenes Angebot.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">03</div>
-        <div class="step-icon">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </div>
-        <div>
-          <h3>Los geht's</h3>
-          <p style="margin-top:8px;">Wir richten alles ein — Sie behalten Ihre Nummer und verpassen ab sofort keinen Anruf mehr.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── VORTEILE ── -->
-<section class="benefits" id="vorteile" data-screen-label="04 Vorteile">
-  <div class="wrap">
-    <div class="section-head fade-in">
-      <div class="section-label">Vorteile</div>
-      <h2 class="section-title">Was wir für Sie tun.</h2>
-    </div>
-
-    <div class="benefits-grid stagger">
-      <div class="benefit">
-        <div class="benefit-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path><circle cx="19" cy="5" r="2.4" fill="currentColor" stroke="none" opacity="0.9"></circle></svg>
-        </div>
-        <h3>Sie verpassen nie wieder einen Anruf</h3>
-        <p>Wir gehen für Sie ans Telefon — auch in der Mittagspause, am Feierabend oder am Wochenende.</p>
-      </div>
-
-      <div class="benefit">
-        <div class="benefit-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 0l-7 7a3 3 0 0 0 0 4.2l4.2 4.2a3 3 0 0 0 4.2 0l7-7a4 4 0 0 0 0-5.4z"></path><path d="M9.5 14.5l-3 3"></path><path d="M16 2l1.5 1.5L16 5l1.5 1.5L19 5l-1.5-1.5L19 2l-1.5-1.5z" opacity="0.7"></path><circle cx="21" cy="10" r="1" fill="currentColor" stroke="none"></circle></svg>
-        </div>
-        <h3>Sie haben mehr Zeit für Ihr Handwerk</h3>
-        <p>Wir kümmern uns ums Telefon, Sie um Ihre Arbeit — ohne ständige Unterbrechungen am Tag.</p>
-      </div>
-
-      <div class="benefit">
-        <div class="benefit-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 5 6 .9-4.5 4.2 1.1 6.1L12 15.8 6.4 18.2l1.1-6.1L3 7.9 9 7z"></path><path d="M9 21h6" opacity="0.6"></path></svg>
-        </div>
-        <h3>Sie wirken jederzeit professionell</h3>
-        <p>Ihre Kunden hören eine klare, freundliche Stimme — egal ob morgens um 7 oder abends um 22 Uhr.</p>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- ── KONTAKT (Test-Anruf + Formular) ── -->
-<section class="contact" id="kontakt" data-screen-label="05 Kontakt">
-  <div class="wrap">
-    <div class="section-head fade-in">
-      <div class="section-label">Loslegen</div>
-      <h2 class="section-title">Testen Sie uns — oder schreiben Sie uns kurz.</h2>
-    </div>
-
-    <div class="contact-grid">
-      <!-- Test-Anruf-Karte -->
-      <div class="testcall-card">
-        <div>
-          <span class="testcall-eyebrow"><span class="live"></span> Live testen</span>
-          <h3>Rufen Sie unsere KI direkt an.</h3>
-          <p>Hören Sie selbst, wie sich der Assistent anhört. Stellen Sie ihm Fragen, vereinbaren Sie einen Test-Termin — kostenlos und unverbindlich.</p>
-        </div>
-        <div>
-          <div class="testcall-number">
-            <div class="label">Test-Nummer</div>
-            <div class="num"><span class="placeholder">+49 — wird in Kürze freigeschaltet</span></div>
-          </div>
-          <div class="testcall-meta">Verfügbar 24/7 · Keine Anmeldung nötig</div>
-        </div>
-      </div>
-
-      <!-- Beratungs-Formular -->
-      <div id="form-mount"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ── FOOTER ── -->
+<!-- ===== 14. FOOTER ===== -->
 <footer>
-  <div class="wrap footer-simple">
-    <div>© 2026 AK-Assistance</div>
-    <div class="footer-links">
-      <a href="mailto:AK-Assistance@protonmail.com">E-Mail</a>
-      <a href="impressum.html">Impressum</a>
-      <a href="agb.html">AGB</a>
-      <a href="datenschutz.html">Datenschutz</a>
+  <div class="container">
+    <div class="footer-grid">
+      <!-- PLATZHALTER: Finales Logo SVG -->
+      <a href="#" class="nav-logo" aria-label="AK Assistance">
+        <svg width="140" height="32" viewBox="0 0 140 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <text x="0" y="24" font-family="DM Sans, sans-serif" font-weight="700" font-size="22" fill="currentColor">AK</text>
+          <polygon points="49,6 55,18 43,18" fill="#e8622a"/>
+          <text x="62" y="24" font-family="DM Sans, sans-serif" font-weight="700" font-size="22" fill="currentColor">ASSISTANCE</text>
+        </svg>
+      </a>
+
+      <div class="footer-links">
+        <!-- PLATZHALTER: Impressum-Seite — deutsche Pflichtangaben folgen -->
+        <a href="impressum.html">Impressum</a>
+        <!-- PLATZHALTER: Datenschutzerklärung — DSGVO-konforme Erklärung folgt -->
+        <a href="datenschutz.html">Datenschutz</a>
+      </div>
+
+      <div class="footer-social">
+        <a href="https://instagram.com/ak_assistance" target="_blank" rel="noopener">
+          <i class="fa-brands fa-instagram"></i> @ak_assistance
+        </a>
+      </div>
     </div>
+
+    <p class="footer-copy">© 2026 AK Assistance. Alle Rechte vorbehalten.</p>
   </div>
 </footer>
 
-<script type="text/babel" src="assets/script_2.js"></script>
-<script type="text/babel" src="assets/script_3.js"></script>
+<!-- ===== COOKIE-BANNER ===== -->
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Cookie-Einstellungen">
+  <div class="cookie-inner">
+    <p class="cookie-text">
+      Diese Website verwendet Cookies, um Ihnen die bestmögliche Nutzung zu ermöglichen.
+      Mehr dazu in unserer <a href="datenschutz.html">Datenschutzerklärung</a>.
+    </p>
+    <div class="cookie-actions">
+      <button class="cookie-decline" onclick="setCookie('declined')">Ablehnen</button>
+      <button class="cookie-accept" onclick="setCookie('accepted')">Akzeptieren</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
 <script>
-  // Menü per Escape-Taste schließen
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') document.body.classList.remove('nav-open');
+  /* ---- Theme Toggle ---- */
+  (function initTheme() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeIcon(saved);
+  })();
+
+  function updateThemeIcon(theme) {
+    const icon = document.getElementById('themeIcon');
+    if (!icon) return;
+    icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  }
+
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeIcon(next);
   });
-  // Scroll fade-in via IntersectionObserver
-  var fadeObs = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        fadeObs.unobserve(e.target);
+
+  /* ---- Mobile Nav ---- */
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  hamburger.addEventListener('click', function() {
+    const isOpen = mobileMenu.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+      mobileMenu.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  mobileMenu.querySelectorAll('a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      mobileMenu.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* ---- Smooth Scroll ---- */
+  document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+    anchor.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
       }
     });
-  }, { threshold: 0.12 });
-  document.querySelectorAll('.fade-in, .stagger').forEach(function(el) {
-    fadeObs.observe(el);
   });
+
+  /* ---- Intersection Observer (Scroll Reveal) ---- */
+  const revealObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(function(el) {
+    revealObserver.observe(el);
+  });
+
+  /* ---- Hero Scroll Effekt ---- */
+  const chaosIcons = document.getElementById('chaosIcons');
+  const heroHeadline = document.getElementById('heroHeadline');
+  const heroLogoReveal = document.getElementById('heroLogoReveal');
+  const heroSub = document.getElementById('heroSub');
+  let heroTransformed = false;
+
+  window.addEventListener('scroll', function() {
+    const scrollY = window.scrollY;
+    if (scrollY > 200 && !heroTransformed) {
+      heroTransformed = true;
+      chaosIcons.classList.add('faded');
+      heroLogoReveal.classList.add('visible');
+      heroHeadline.style.opacity = '0';
+      setTimeout(function() {
+        heroHeadline.innerHTML = 'Unsere Lösung: <span>Ihr KI-Agent.</span>';
+        heroHeadline.style.opacity = '1';
+      }, 400);
+    } else if (scrollY <= 60 && heroTransformed) {
+      heroTransformed = false;
+      chaosIcons.classList.remove('faded');
+      heroLogoReveal.classList.remove('visible');
+      heroHeadline.style.opacity = '0';
+      setTimeout(function() {
+        heroHeadline.innerHTML = 'Ihr Problem: <span>Verpasste Anrufe.</span>';
+        heroHeadline.style.opacity = '1';
+      }, 400);
+    }
+  });
+
+  /* ---- Sparrechner ---- */
+  const slider = document.getElementById('mitarbeiterSlider');
+  const mitarbeiterZahl = document.getElementById('mitarbeiterZahl');
+  const sparStunden = document.getElementById('sparStunden');
+  const sparEinsparung = document.getElementById('sparEinsparung');
+  const sparrechnerResult = document.getElementById('sparrechnerResult');
+
+  function updateSparrechner() {
+    const n = parseInt(slider.value, 10);
+    mitarbeiterZahl.textContent = n;
+    const verlust = n * 3;
+    const einsparung = Math.round(verlust * 0.8);
+    sparStunden.textContent = verlust + 'h';
+    sparEinsparung.textContent = einsparung + 'h';
+    sparrechnerResult.classList.add('visible');
+  }
+
+  slider.addEventListener('input', updateSparrechner);
+  updateSparrechner();
+
+  /* ---- FAQ Accordion ---- */
+  document.querySelectorAll('.faq-question').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const item = this.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+
+      document.querySelectorAll('.faq-item').forEach(function(i) {
+        i.classList.remove('open');
+        i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+      });
+
+      if (!isOpen) {
+        item.classList.add('open');
+        this.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  /* ---- Custom Audio Player ---- */
+  const audioEl = document.getElementById('audioElement');
+  const playBtn = document.getElementById('audioPlayBtn');
+  const playIcon = document.getElementById('audioPlayIcon');
+  const progressBar = document.getElementById('audioProgressBar');
+  const currentTimeEl = document.getElementById('audioCurrentTime');
+  const durationEl = document.getElementById('audioDuration');
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  playBtn.addEventListener('click', function() {
+    if (!audioEl.src || audioEl.src === window.location.href) {
+      return; /* Platzhalter: keine Audio-Datei geladen */
+    }
+    if (audioEl.paused) {
+      audioEl.play();
+      playIcon.className = 'fa-solid fa-pause';
+    } else {
+      audioEl.pause();
+      playIcon.className = 'fa-solid fa-play';
+    }
+  });
+
+  audioEl.addEventListener('timeupdate', function() {
+    if (audioEl.duration) {
+      progressBar.style.width = (audioEl.currentTime / audioEl.duration * 100) + '%';
+      currentTimeEl.textContent = formatTime(audioEl.currentTime);
+    }
+  });
+
+  audioEl.addEventListener('loadedmetadata', function() {
+    durationEl.textContent = formatTime(audioEl.duration);
+  });
+
+  audioEl.addEventListener('ended', function() {
+    playIcon.className = 'fa-solid fa-play';
+    progressBar.style.width = '0%';
+    currentTimeEl.textContent = '0:00';
+  });
+
+  /* ---- Formular-Validierung & Submit ---- */
+  function validateField(fieldId, value, type) {
+    const field = document.getElementById(fieldId + 'Field');
+    if (!field) return true;
+
+    let valid = true;
+    if (type === 'text' && value.trim() === '') valid = false;
+    if (type === 'tel' && !/^[\d\s+\-()/]{6,}$/.test(value.trim())) valid = false;
+    if (type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) valid = false;
+
+    if (!valid) {
+      field.classList.add('has-error');
+    } else {
+      field.classList.remove('has-error');
+    }
+    return valid;
+  }
+
+  function submitForm(prefix) {
+    const name  = document.getElementById(prefix + 'Name').value;
+    const firma = document.getElementById(prefix + 'Firma').value;
+    const tel   = document.getElementById(prefix + 'Tel').value;
+    const email = document.getElementById(prefix + 'Email').value;
+    const nachricht = document.getElementById(prefix + 'Nachricht') ? document.getElementById(prefix + 'Nachricht').value : '';
+    const dsgvo = document.getElementById(prefix + 'Datenschutz').checked;
+
+    const v1 = validateField(prefix + 'Name', name, 'text');
+    const v2 = validateField(prefix + 'Firma', firma, 'text');
+    const v3 = validateField(prefix + 'Tel', tel, 'tel');
+    const v4 = validateField(prefix + 'Email', email, 'email');
+
+    if (!dsgvo) {
+      alert('Bitte stimmen Sie der Datenschutzerklärung zu.');
+      return;
+    }
+
+    if (!v1 || !v2 || !v3 || !v4) return;
+
+    const subject = encodeURIComponent(
+      prefix === 'pilot'
+        ? 'Pilot-Programm Bewerbung: ' + firma
+        : 'Kontaktanfrage: ' + firma
+    );
+    const body = encodeURIComponent(
+      'Name: ' + name + '\n' +
+      'Firma: ' + firma + '\n' +
+      'Telefon: ' + tel + '\n' +
+      'E-Mail: ' + email + '\n\n' +
+      (nachricht ? 'Nachricht:\n' + nachricht : '')
+    );
+
+    window.location.href = 'mailto:ak-assistance@protonmail.com?subject=' + subject + '&body=' + body;
+
+    document.getElementById(prefix + 'FormWrap').style.display = 'none';
+    const success = document.getElementById(prefix + 'Success');
+    success.classList.add('visible');
+  }
+
+  /* ---- Cookie Banner ---- */
+  function setCookie(choice) {
+    localStorage.setItem('cookieConsent', choice);
+    document.getElementById('cookieBanner').classList.remove('visible');
+    document.getElementById('cookieBanner').style.display = 'none';
+  }
+
+  (function initCookieBanner() {
+    if (!localStorage.getItem('cookieConsent')) {
+      document.getElementById('cookieBanner').classList.add('visible');
+    }
+  })();
+
+  /* ---- Blog: Platzhalter für spätere blogs.json Integration ----
+     Sobald blogs.json vorhanden:
+     fetch('blogs.json')
+       .then(r => r.json())
+       .then(posts => {
+         const grid = document.getElementById('blogGrid');
+         grid.innerHTML = posts.slice(0, 3).map(p => `
+           <div class="card blog-card">
+             <span class="blog-badge">${p.category}</span>
+             <span class="blog-date">${p.date}</span>
+             <h3>${p.title}</h3>
+             <p>${p.excerpt}</p>
+             <a href="blog/${p.slug}.html" class="blog-link">Weiterlesen <i class="fa-solid fa-arrow-right"></i></a>
+           </div>
+         `).join('');
+       });
+  ---- */
 </script>
-</body></html>
+</body>
+</html>

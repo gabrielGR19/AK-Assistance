@@ -10,7 +10,7 @@
 
 ## Projektbeschreibung
 
-**AK-Assistance** ist ein Startup von Gabriel Adam und Partner mit dem Ziel, das Handwerk vollständig zu digitalisieren.
+**AK-Assistance** ist ein Startup von Gabriel Adam und Moritz Koch mit dem Ziel, das Handwerk vollständig zu digitalisieren.
 
 Der Assistent übernimmt eingehende Anrufe, vereinbart Termine, beantwortet häufige Kundenfragen und entlastet damit Handwerker im stressigen Arbeitsalltag — damit sie sich auf ihre eigentliche Arbeit konzentrieren können, ohne wichtige Kundenanfragen zu verpassen.
 
@@ -43,7 +43,7 @@ Kleine und mittelständische Handwerksbetriebe, z.B. Elektriker, Klempner, Maler
 
 ### Inhaber
 
-Gabriel Adam und Partner
+Gabriel Adam und moritz koch
 
 ---
 
