@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import logoUrl from "/logo.png";
+import HeroAnimation from "./HeroAnimation";
 
 const BOOKING_URL = "https://calendar.app.google/RcAojPDZwf15KeAD9";
 
@@ -168,32 +169,15 @@ function NavBar({
 /* ── Hero ───────────────────────────────────────────────── */
 function HeroSection() {
   return (
-    <section
-      className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6"
-      style={{ paddingTop: "90px", paddingBottom: "60px", background: "#ffffff" }}
-    >
-      <div className="w-full max-w-4xl mx-auto flex flex-col items-center text-center gap-10">
-        <div className="animate-in">
-          <img src={logoUrl} alt="AK-Assistance" style={{ height: 80, maxWidth: "260px" }} />
-        </div>
+    <>
+      {/* Scroll-driven animation — takes up 300vh of scroll space */}
+      <div style={{ paddingTop: "72px" }}>
+        <HeroAnimation />
+      </div>
 
-        <div
-          className="animate-in delay-1 w-full rounded-2xl flex flex-col items-center justify-center gap-4 py-16 px-6 img-placeholder"
-          style={{ minHeight: "280px", background: "#f5f5f5", border: "2px dashed #cccccc" }}
-        >
-          <span className="text-base font-semibold" style={{ color: "#888" }}>[ HERO ANIMATION PLACEHOLDER ]</span>
-          <span className="text-sm" style={{ color: "#aaa" }}>Ihr Problem: [ PLATZHALTER ]</span>
-          <span className="text-sm" style={{ color: "#aaa" }}>Unsere Lösung: [ PLATZHALTER ]</span>
-        </div>
-
-        <div
-          className="animate-in delay-2 w-full max-w-sm rounded-2xl flex items-center justify-center img-placeholder"
-          style={{ height: "180px" }}
-        >
-          <span>[ Bild: Team / Produkt ]</span>
-        </div>
-
-        <div className="animate-in delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
+      {/* CTA buttons below the animation */}
+      <section className="py-16 px-4 sm:px-6" style={{ background: "#ffffff" }}>
+        <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href={BOOKING_URL}
             target="_blank"
@@ -209,8 +193,8 @@ function HeroSection() {
             Demo anhören
           </button>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 

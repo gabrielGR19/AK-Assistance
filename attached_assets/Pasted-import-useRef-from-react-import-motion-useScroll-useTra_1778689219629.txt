@@ -1,0 +1,207 @@
+import { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
+import { ImageWithFallback } from './components/figma/ImageWithFallback';
+import logoImage from '../imports/at.png';
+import excelImage1 from '../imports/1_S7paZxoR-j1F1SWW8-_VFg.jpg';
+import wordImage from '../imports/101_creating_a_publication_with_word-01_zoom65.png';
+import datevImage from '../imports/datev_15_1_gross.gif';
+import docsImage from '../imports/Title-and-Copyright-Pages.png';
+import calendarImage from '../imports/pbf8SDxD5u4VQuDuC3QG4DXHf2SzV6O9STOJtpM2.png';
+import excelImage2 from '../imports/00.000_DatenlaborGeographie_2014-04-17_07-59.jpg';
+
+export default function App() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  // HIER KÖNNEN SIE IHRE EIGENEN BILDER EINFÜGEN
+  // Ersetzen Sie die URL mit Bildern von verschiedenen Apps/Dokumenten
+  const windows = [
+    {
+      url: excelImage1,
+      title: 'Excel - Datenanalyse.xlsx',
+      startX: -240,
+      startY: -80,
+      width: 500,
+      height: 350
+    },
+    {
+      url: wordImage,
+      title: 'Dokument1 - Word',
+      startX: 220,
+      startY: -60,
+      width: 450,
+      height: 320
+    },
+    {
+      url: datevImage,
+      title: 'DATEV - Prüfungsbericht',
+      startX: -260,
+      startY: 180,
+      width: 480,
+      height: 340
+    },
+    {
+      url: docsImage,
+      title: 'Google Docs - Bericht',
+      startX: 250,
+      startY: 190,
+      width: 520,
+      height: 360
+    },
+    {
+      url: calendarImage,
+      title: 'Kalender - März 2015',
+      startX: 30,
+      startY: -100,
+      width: 420,
+      height: 300
+    },
+    {
+      url: excelImage2,
+      title: 'Excel - Pivot-Tabelle.xlsx',
+      startX: -80,
+      startY: 200,
+      width: 460,
+      height: 330
+    }
+  ];
+
+  const totalWindows = windows.length;
+
+  return (
+    <div ref={containerRef} className="h-[300vh] relative">
+      <div className="sticky top-0 h-screen overflow-hidden">
+        {/* Windows Desktop Hintergrund */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700"
+          style={{
+            opacity: useTransform(scrollYProgress, [0, 0.5, 0.7], [1, 1, 0])
+          }}
+        />
+
+        {/* Weißer Hintergrund für Logo */}
+        <motion.div
+          className="absolute inset-0 bg-white"
+          style={{
+            opacity: useTransform(scrollYProgress, [0.5, 0.7], [0, 1])
+          }}
+        />
+
+        <div className="relative w-full h-full">
+          {/* Windows Taskleiste */}
+          <motion.div
+            className="absolute bottom-0 left-0 right-0 h-12 bg-gray-800/95 backdrop-blur-sm border-t border-gray-700/50 z-50"
+            style={{
+              opacity: useTransform(scrollYProgress, [0, 0.3], [1, 0])
+            }}
+          >
+            <div className="flex items-center h-full px-2 gap-1">
+              <div className="w-12 h-9 bg-blue-600 hover:bg-blue-500 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white"></div>
+              </div>
+              <div className="flex-1"></div>
+              <div className="text-white text-xs px-3">12:34</div>
+            </div>
+          </motion.div>
+
+          {/* Windows-Fenster */}
+          {windows.map((window, index) => {
+            // X-Position: von verteilt zur Mitte (0), dann zentriert bleiben
+            const x = useTransform(
+              scrollYProgress,
+              [0, 0.4, 0.7, 1],
+              [window.startX, window.startX * 0.3, 0, 0]
+            );
+
+            // Y-Position: von verteilt zur Mitte, dann zum Logo (das von unten kommt)
+            const y = useTransform(
+              scrollYProgress,
+              [0, 0.4, 0.7, 0.9],
+              [window.startY, window.startY * 0.3, 100, 100]
+            );
+
+            // Scale: auf Logo-Größe schrumpfen (ca. 320px / 500px = 0.64)
+            const scale = useTransform(
+              scrollYProgress,
+              [0, 0.4, 0.7, 0.9],
+              [1, 0.8, 0.65, 0.65]
+            );
+
+            // Opacity: verschwinden gestaffelt beim Einfließen ins Logo
+            const fadeStart = 0.75 + (index / totalWindows) * 0.1;
+            const fadeEnd = fadeStart + 0.08;
+            const opacity = useTransform(
+              scrollYProgress,
+              [0, fadeStart, fadeEnd],
+              [1, 1, 0]
+            );
+
+            return (
+              <motion.div
+                key={index}
+                style={{
+                  x,
+                  y,
+                  scale,
+                  opacity,
+                  position: 'absolute',
+                  left: '50%',
+                  top: '45%',
+                  translateX: '-50%',
+                  translateY: '-50%',
+                  width: window.width,
+                  height: window.height,
+                  zIndex: 10 + index
+                }}
+                className="origin-center"
+              >
+                {/* Windows-Fenster mit Titelleiste */}
+                <div className="w-full h-full bg-white rounded-lg shadow-2xl overflow-hidden border border-gray-300">
+                  {/* Titelleiste */}
+                  <div className="h-8 bg-white border-b border-gray-200 flex items-center justify-between px-3">
+                    <span className="text-xs text-gray-700 truncate">{window.title}</span>
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600"></div>
+                    </div>
+                  </div>
+                  {/* Fenster-Inhalt */}
+                  <div className="w-full h-[calc(100%-2rem)] bg-gray-50">
+                    <img
+                      src={window.url}
+                      alt={window.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+
+          {/* Logo - scrollt von unten rein */}
+          <motion.div
+            style={{
+              opacity: useTransform(scrollYProgress, [0.5, 0.7], [0, 1]),
+              y: useTransform(scrollYProgress, [0.5, 0.7, 0.9], [600, 100, 100]),
+              position: 'absolute',
+              left: '50%',
+              top: '45%',
+              translateX: '-50%',
+              translateY: '-50%'
+            }}
+          >
+            <img
+              src={logoImage}
+              alt="AK ASSISTANCE Logo"
+              className="w-80 h-80 rounded-2xl shadow-2xl"
+            />
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
