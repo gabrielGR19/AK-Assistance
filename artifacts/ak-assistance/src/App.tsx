@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import emailjs from "@emailjs/browser";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
 
@@ -456,25 +455,28 @@ function PilotSection() {
     setStatus("sending");
     setErrorMsg("");
 
-    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID as string;
-    const notificationTemplate = import.meta.env.VITE_EMAILJS_NOTIFICATION_TEMPLATE as string;
-    const confirmationTemplate = import.meta.env.VITE_EMAILJS_CONFIRMATION_TEMPLATE as string;
-    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY as string;
+    const accessKey = import.meta.env.VITE_WEB3FORMS_KEY as string;
 
-    const templateParams = {
-      company: fields.company,
-      full_name: fields.name,
-      email: fields.email,
-      phone: fields.phone,
+    const body = {
+      access_key: accessKey,
+      subject: `Neue Pilot-Bewerbung: ${fields.company}`,
+      from_name: fields.name,
+      replyto: fields.email,
+      message: `Neue Bewerbung eingegangen:\n\nUnternehmen: ${fields.company}\nName: ${fields.name}\nE-Mail: ${fields.email}\nTelefon: ${fields.phone}`,
     };
 
     try {
-      await emailjs.send(serviceId, notificationTemplate, templateParams, publicKey);
-      await emailjs.send(serviceId, confirmationTemplate, templateParams, publicKey);
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json() as { success: boolean };
+      if (!data.success) throw new Error("Submission failed");
       setStatus("success");
       setFields({ company: "", name: "", email: "", phone: "" });
     } catch (err) {
-      console.error("EmailJS error:", err);
+      console.error("Web3Forms error:", err);
       setStatus("error");
       setErrorMsg("Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt.");
     }
