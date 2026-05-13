@@ -515,6 +515,142 @@ function WieEsFunktioniertSection() {
   );
 }
 
+/* ── Kundenbewertungen ──────────────────────────────────── */
+const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=DEINE_PLACE_ID";
+
+const TESTIMONIALS = [
+  {
+    name: "Thomas B.",
+    firma: "Heizung & Sanitär Braun",
+    sterne: 5,
+    text: "Seit wir AK-Assistance nutzen, verpassen wir keine Anfrage mehr. Der Assistent antwortet sofort — auch abends und am Wochenende.",
+  },
+  {
+    name: "Sandra K.",
+    firma: "Elektriker Kovac GmbH",
+    sterne: 5,
+    text: "Die Einrichtung war in wenigen Tagen erledigt. Kein technisches Wissen nötig. Unsere Kunden sind begeistert.",
+  },
+  {
+    name: "Markus R.",
+    firma: "Malerbetrieb Richter",
+    sterne: 5,
+    text: "Ich kann mich endlich auf die Arbeit konzentrieren, statt ständig ans Telefon zu müssen. Absolut empfehlenswert.",
+  },
+];
+
+function StarRow({ count }: { count: number }) {
+  return (
+    <div style={{ display: "flex", gap: 3 }}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill={i < count ? "#e8622a" : "none"} stroke="#e8622a" strokeWidth="1.8">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function BewertungenSection() {
+  return (
+    <section className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
+      <div className="max-w-6xl mx-auto">
+
+        {/* Headline */}
+        <div className="text-center mb-16">
+          <span className="section-label animate-in">Was unsere Kunden sagen</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mt-3 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
+            Kundenstimmen
+          </h2>
+        </div>
+
+        {/* Review cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          {TESTIMONIALS.map((t, i) => (
+            <div
+              key={i}
+              className={`animate-in delay-${i + 1}`}
+              style={{
+                background: "var(--background)",
+                borderRadius: 20,
+                padding: "28px 28px 24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+                boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              {/* Stars + Google badge */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <StarRow count={t.sterne} />
+                <svg width="22" height="22" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
+                  <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.1 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.5-4z"/>
+                  <path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 16.1 19.3 13 24 13c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/>
+                  <path fill="#FBBC05" d="M24 44c5.9 0 11-2 14.7-5.4l-6.8-5.6C29.8 34.9 27 36 24 36c-6.1 0-10.7-2.9-11.8-7.5l-7 5.4C8 40.1 15.3 44 24 44z"/>
+                  <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.2-2.3 4-4.3 5.3l6.8 5.6C42.5 35.7 45 30.2 45 24c0-1.3-.2-2.7-.5-4z"/>
+                </svg>
+              </div>
+
+              {/* Quote */}
+              <p style={{ margin: 0, color: "var(--muted-foreground)", lineHeight: 1.65, fontSize: "0.95rem" }}>
+                „{t.text}"
+              </p>
+
+              {/* Author */}
+              <div style={{ marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--foreground)" }}>{t.name}</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: 2 }}>{t.firma}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Google review CTA */}
+        <div
+          className="animate-in"
+          style={{
+            background: "var(--background)",
+            borderRadius: 24,
+            padding: "40px 32px",
+            textAlign: "center",
+            border: "1px solid var(--border)",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
+            {/* Google G logo */}
+            <svg width="28" height="28" viewBox="0 0 48 48">
+              <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.1 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.5-4z"/>
+              <path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 16.1 19.3 13 24 13c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/>
+              <path fill="#FBBC05" d="M24 44c5.9 0 11-2 14.7-5.4l-6.8-5.6C29.8 34.9 27 36 24 36c-6.1 0-10.7-2.9-11.8-7.5l-7 5.4C8 40.1 15.3 44 24 44z"/>
+              <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.2-2.3 4-4.3 5.3l6.8 5.6C42.5 35.7 45 30.2 45 24c0-1.3-.2-2.7-.5-4z"/>
+            </svg>
+            <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--foreground)" }}>
+              Zufrieden mit AK-Assistance?
+            </h3>
+          </div>
+          <p style={{ margin: "0 0 24px", color: "var(--muted-foreground)", fontSize: "0.98rem", maxWidth: 480, marginInline: "auto" }}>
+            Helfen Sie anderen Handwerksbetrieben mit Ihrer Erfahrung — hinterlassen Sie uns eine Bewertung direkt auf Google.
+          </p>
+          <a
+            href={GOOGLE_REVIEW_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange"
+          >
+            Jetzt bei Google bewerten
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
 /* ── Demo ───────────────────────────────────────────────── */
 function DemoSection() {
   return (
@@ -1156,6 +1292,7 @@ export default function App() {
       <ProblemSection />
       <LösungSection />
       <WieEsFunktioniertSection />
+      <BewertungenSection />
       <DemoSection />
       <PilotSection />
       <TeamSection />
