@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 
-const logoImage = "/logo-transparent.png";
+const logoImage = "/logo.png";
 
 const WINDOWS = [
   {

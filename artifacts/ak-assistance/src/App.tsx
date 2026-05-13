@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import logoUrl from "/logo-transparent.png";
+import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
 
 const BOOKING_URL = "https://calendar.app.google/RcAojPDZwf15KeAD9";
