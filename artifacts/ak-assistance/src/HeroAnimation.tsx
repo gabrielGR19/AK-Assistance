@@ -101,21 +101,21 @@ function WindowItem({
 }) {
   const x = useTransform(
     scrollYProgress,
-    [0, 0.4, 0.7, 1],
+    [0, 0.4, 0.62, 1],
     [win.startX, win.startX * 0.3, 0, 0]
   );
   const y = useTransform(
     scrollYProgress,
-    [0, 0.4, 0.7, 0.9],
+    [0, 0.4, 0.62, 0.8],
     [win.startY, win.startY * 0.3, 80, 80]
   );
   const scale = useTransform(
     scrollYProgress,
-    [0, 0.4, 0.7, 0.9],
+    [0, 0.4, 0.62, 0.8],
     [1, 0.82, 0.66, 0.66]
   );
-  const fadeStart = 0.75 + (index / TOTAL) * 0.1;
-  const fadeEnd = fadeStart + 0.08;
+  const fadeStart = 0.66 + (index / TOTAL) * 0.07;
+  const fadeEnd = fadeStart + 0.06;
   const opacity = useTransform(
     scrollYProgress,
     [0, fadeStart, fadeEnd],
@@ -195,8 +195,8 @@ function WindowItem({
 }
 
 function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.5, 0.72], [0, 1]);
-  const y = useTransform(scrollYProgress, [0.5, 0.72, 0.9], [500, 80, 80]);
+  const opacity = useTransform(scrollYProgress, [0.5, 0.65], [0, 1]);
+  const y = useTransform(scrollYProgress, [0.5, 0.65, 0.8], [500, 80, 80]);
   return (
     <motion.div
       style={{
@@ -226,7 +226,7 @@ function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> })
 
 
 function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0, 0.5, 0.72], [1, 1, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5, 0.65], [1, 1, 0]);
   return (
     <motion.div
       style={{
@@ -240,7 +240,7 @@ function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
 }
 
 function WhiteBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.5, 0.72], [0, 1]);
+  const opacity = useTransform(scrollYProgress, [0.5, 0.65], [0, 1]);
   return (
     <motion.div
       style={{ opacity, position: "absolute", inset: 0, background: "var(--background)" }}
@@ -256,7 +256,7 @@ export default function HeroAnimation() {
   });
 
   return (
-    <div ref={containerRef} style={{ height: "300vh", position: "relative" }}>
+    <div ref={containerRef} style={{ height: "260vh", position: "relative" }}>
       <div
         style={{
           position: "sticky",
