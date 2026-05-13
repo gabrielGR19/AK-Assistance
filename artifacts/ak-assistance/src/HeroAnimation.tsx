@@ -141,53 +141,84 @@ function WindowItem({
       }}
       className="origin-center"
     >
-      {/* macOS-style window chrome */}
+      {/* Windows-style window chrome */}
       <div
         style={{
           width: "100%",
           height: "100%",
-          borderRadius: "10px",
+          borderRadius: "8px",
           overflow: "hidden",
           boxShadow: "0 20px 60px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.2)",
           border: "1px solid rgba(0,0,0,0.18)",
         }}
       >
-        {/* macOS title bar */}
+        {/* Windows title bar */}
         <div
           style={{
-            height: "28px",
-            background: "linear-gradient(180deg, #ececec 0%, #d8d8d8 100%)",
-            borderBottom: "1px solid #bbb",
+            height: "32px",
+            background: "#f3f3f3",
+            borderBottom: "1px solid #d0d0d0",
             display: "flex",
             alignItems: "center",
-            paddingLeft: "10px",
-            gap: "6px",
+            paddingLeft: "12px",
             flexShrink: 0,
           }}
         >
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "0.5px solid #e0443e" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e", border: "0.5px solid #dea123" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#28c940", border: "0.5px solid #1aab29" }} />
-          <span
-            style={{
-              flex: 1,
-              textAlign: "center",
-              fontSize: "11px",
-              fontWeight: 500,
-              color: "#444",
-              marginRight: "40px",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              fontFamily: "-apple-system, sans-serif",
-            }}
-          >
+          {/* App icon placeholder */}
+          <div style={{
+            width: 16, height: 16, marginRight: 6, flexShrink: 0,
+            background: "#0078d4", borderRadius: "2px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{ width: 8, height: 8, border: "1.5px solid white", borderRadius: "1px" }} />
+          </div>
+
+          {/* Title */}
+          <span style={{
+            flex: 1,
+            fontSize: "12px",
+            fontWeight: 400,
+            color: "#1a1a1a",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            fontFamily: "'Segoe UI', sans-serif",
+          }}>
             {win.title}
           </span>
+
+          {/* Windows control buttons */}
+          <div style={{ display: "flex", height: "100%", flexShrink: 0 }}>
+            {/* Minimize */}
+            <div style={{
+              width: 46, height: "100%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <div style={{ width: 10, height: 1, background: "#333" }} />
+            </div>
+            {/* Maximize */}
+            <div style={{
+              width: 46, height: "100%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <div style={{ width: 10, height: 10, border: "1px solid #333", borderRadius: "1px" }} />
+            </div>
+            {/* Close */}
+            <div style={{
+              width: 46, height: "100%",
+              background: "#c42b1c",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <line x1="1" y1="1" x2="9" y2="9" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="9" y1="1" x2="1" y2="9" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         {/* App content — fills remaining height */}
-        <div style={{ width: "100%", height: "calc(100% - 28px)", overflow: "hidden" }}>
+        <div style={{ width: "100%", height: "calc(100% - 32px)", overflow: "hidden" }}>
           <WindowContent win={win} />
         </div>
       </div>
