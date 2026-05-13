@@ -137,6 +137,7 @@ function WindowItem({
         width: win.width,
         height: win.height,
         zIndex: 10 + index,
+        willChange: "transform, opacity",
       }}
       className="origin-center"
     >
@@ -208,6 +209,7 @@ function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> })
         translateX: "-50%",
         translateY: "-50%",
         zIndex: 60,
+        willChange: "transform, opacity",
       }}
     >
       <img
@@ -234,6 +236,7 @@ function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
         position: "absolute",
         inset: 0,
         background: "linear-gradient(135deg, #1565c0 0%, #1976d2 40%, #42a5f5 100%)",
+        willChange: "opacity",
       }}
     />
   );
@@ -243,7 +246,7 @@ function WhiteBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) 
   const opacity = useTransform(scrollYProgress, [0.5, 0.65], [0, 1]);
   return (
     <motion.div
-      style={{ opacity, position: "absolute", inset: 0, background: "var(--background)" }}
+      style={{ opacity, position: "absolute", inset: 0, background: "var(--background)", willChange: "opacity" }}
     />
   );
 }
@@ -257,12 +260,21 @@ export default function HeroAnimation() {
 
   return (
     <div ref={containerRef} style={{ height: "260vh", position: "relative" }}>
+      {/* Preload all images to prevent jank on first scroll-in */}
+      <div style={{ display: "none" }} aria-hidden="true">
+        {WINDOWS.map((win) => (
+          <img key={win.url} src={win.url} alt="" />
+        ))}
+        <img src={logoImage} alt="" />
+      </div>
+
       <div
         style={{
           position: "sticky",
           top: 0,
           height: "100vh",
           overflow: "hidden",
+          transform: "translateZ(0)",
         }}
       >
         <BlueBg scrollYProgress={scrollYProgress} />
