@@ -313,8 +313,6 @@ function SolutionLabel({ scrollYProgress }: { scrollYProgress: MotionValue<numbe
 function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const opacity = useTransform(scrollYProgress, [0.5, 0.65], [0, 1]);
   const y = useTransform(scrollYProgress, [0.5, 0.65, 0.8], [500, 80, 80]);
-  const catchOpacity = useTransform(scrollYProgress, [0.72, 0.84], [0, 1]);
-  const catchY = useTransform(scrollYProgress, [0.72, 0.84], [16, 0]);
 
   return (
     <motion.div
@@ -345,24 +343,6 @@ function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> })
           flexShrink: 0,
         }}
       />
-      {/* Catchphrase — eingeblendet nachdem das Logo steht */}
-      <motion.p
-        style={{
-          opacity: catchOpacity,
-          y: catchY,
-          margin: 0,
-          fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-          fontSize: "clamp(1rem, 2.2vw, 1.45rem)",
-          fontWeight: 700,
-          letterSpacing: "-0.01em",
-          color: "var(--foreground)",
-          textAlign: "center",
-          whiteSpace: "nowrap",
-          willChange: "transform, opacity",
-        }}
-      >
-        100&nbsp;% Arbeit,&nbsp;&nbsp;0&nbsp;% Verwaltung
-      </motion.p>
     </motion.div>
   );
 }
