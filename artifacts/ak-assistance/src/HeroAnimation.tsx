@@ -248,18 +248,21 @@ function ProblemLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number
         style={{
           display: "inline-block",
           fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-          fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
+          fontSize: "clamp(2.2rem, 5vw, 3.4rem)",
           fontWeight: 800,
           letterSpacing: "-0.03em",
-          color: "rgba(255,255,255,0.95)",
-          textShadow: "0 2px 20px rgba(0,0,0,0.35)",
+          color: "#000000",
+          background: "rgba(255,255,255,0.82)",
+          backdropFilter: "blur(4px)",
+          padding: "6px 24px 8px",
+          borderRadius: "8px",
           textDecoration: "underline",
-          textUnderlineOffset: "6px",
+          textUnderlineOffset: "8px",
           textDecorationThickness: "3px",
-          textDecorationColor: "rgba(255,255,255,0.7)",
+          textDecorationColor: "rgba(0,0,0,0.5)",
         }}
       >
-        Das Problem
+        Das Problem:
       </span>
     </motion.div>
   );
@@ -272,7 +275,7 @@ function SolutionLabel({ scrollYProgress }: { scrollYProgress: MotionValue<numbe
       style={{
         opacity,
         position: "absolute",
-        top: "26%",
+        top: "24%",
         left: "50%",
         translateX: "-50%",
         zIndex: 70,
@@ -282,22 +285,27 @@ function SolutionLabel({ scrollYProgress }: { scrollYProgress: MotionValue<numbe
         width: "100%",
       }}
     >
-      <span
-        style={{
-          display: "inline-block",
-          fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-          fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-          fontWeight: 800,
-          letterSpacing: "-0.03em",
-          color: "var(--foreground)",
-          textDecoration: "underline",
-          textUnderlineOffset: "6px",
-          textDecorationThickness: "3px",
-          textDecorationColor: "#e8622a",
-        }}
-      >
-        Die Lösung
-      </span>
+      <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+        <span
+          style={{
+            fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontSize: "clamp(2.2rem, 5vw, 3.4rem)",
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            color: "var(--foreground)",
+            lineHeight: 1,
+          }}
+        >
+          Die Lösung
+        </span>
+        {/* Durchgehende Linie */}
+        <div style={{
+          width: "100%",
+          height: "4px",
+          background: "#e8622a",
+          borderRadius: "2px",
+        }} />
+      </div>
     </motion.div>
   );
 }
