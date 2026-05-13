@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import emailjs from "@emailjs/browser";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
 
@@ -436,6 +437,49 @@ function DemoSection() {
 
 /* ── Pilot Programm ──────────────────────────────────────── */
 function PilotSection() {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [fields, setFields] = useState({
+    company: "",
+    name: "",
+    email: "",
+    phone: "",
+  });
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFields((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("sending");
+    setErrorMsg("");
+
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID as string;
+    const notificationTemplate = import.meta.env.VITE_EMAILJS_NOTIFICATION_TEMPLATE as string;
+    const confirmationTemplate = import.meta.env.VITE_EMAILJS_CONFIRMATION_TEMPLATE as string;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY as string;
+
+    const templateParams = {
+      company: fields.company,
+      full_name: fields.name,
+      email: fields.email,
+      phone: fields.phone,
+    };
+
+    try {
+      await emailjs.send(serviceId, notificationTemplate, templateParams, publicKey);
+      await emailjs.send(serviceId, confirmationTemplate, templateParams, publicKey);
+      setStatus("success");
+      setFields({ company: "", name: "", email: "", phone: "" });
+    } catch (err) {
+      console.error("EmailJS error:", err);
+      setStatus("error");
+      setErrorMsg("Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt.");
+    }
+  }
+
   return (
     <section id="pilot" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--background)" }}>
       <div className="max-w-5xl mx-auto">
@@ -449,7 +493,7 @@ function PilotSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-14">
           {[
             { title: "Persönliche Betreuung", text: "Direkte Zusammenarbeit mit unserem Team während der Einrichtungsphase." },
             { title: "Früher Zugang", text: "Als Pilot-Partner erhalten Sie als Erste neue Funktionen und Verbesserungen." },
@@ -468,15 +512,169 @@ function PilotSection() {
           ))}
         </div>
 
-        <div className="text-center animate-in delay-3">
-          <a
-            href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange"
-          >
-            Jetzt bewerben
-          </a>
+        {/* Application Form */}
+        <div
+          className="animate-in delay-3 rounded-2xl p-8 sm:p-10 max-w-2xl mx-auto"
+          style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+        >
+          {status === "success" ? (
+            <div className="text-center py-8">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+                style={{ background: "rgba(232,98,42,0.12)" }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3" style={{ color: "var(--foreground)" }}>
+                Vielen Dank!
+              </h3>
+              <p className="text-base leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+                Ihre Bewerbung wurde eingereicht. Eine Bestätigung wurde an Ihre E-Mail-Adresse gesendet.
+              </p>
+            </div>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold mb-6" style={{ color: "var(--foreground)" }}>
+                Jetzt bewerben
+              </h3>
+              <form ref={formRef} onSubmit={handleSubmit} noValidate>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      htmlFor="company"
+                      className="block text-sm font-medium mb-1.5"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      Unternehmensname *
+                    </label>
+                    <input
+                      id="company"
+                      name="company"
+                      type="text"
+                      required
+                      value={fields.company}
+                      onChange={handleChange}
+                      placeholder="Muster GmbH"
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid var(--border)",
+                        background: "var(--background)",
+                        color: "var(--foreground)",
+                        fontSize: "0.95rem",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium mb-1.5"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      Vor- & Nachname *
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      required
+                      value={fields.name}
+                      onChange={handleChange}
+                      placeholder="Max Mustermann"
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid var(--border)",
+                        background: "var(--background)",
+                        color: "var(--foreground)",
+                        fontSize: "0.95rem",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium mb-1.5"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      E-Mail-Adresse *
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={fields.email}
+                      onChange={handleChange}
+                      placeholder="max@musterfirma.de"
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid var(--border)",
+                        background: "var(--background)",
+                        color: "var(--foreground)",
+                        fontSize: "0.95rem",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium mb-1.5"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      Telefonnummer *
+                    </label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      value={fields.phone}
+                      onChange={handleChange}
+                      placeholder="+49 123 456789"
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid var(--border)",
+                        background: "var(--background)",
+                        color: "var(--foreground)",
+                        fontSize: "0.95rem",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {status === "error" && (
+                  <p className="text-sm mb-4" style={{ color: "#e53e3e" }}>
+                    {errorMsg}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={status === "sending"}
+                  className="w-full btn-orange rounded-xl py-3.5 text-base font-semibold"
+                  style={{ opacity: status === "sending" ? 0.7 : 1, cursor: status === "sending" ? "wait" : "pointer" }}
+                >
+                  {status === "sending" ? "Wird gesendet…" : "Bewerbung einreichen"}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </section>
