@@ -359,7 +359,7 @@ function DasProblemIntro({ scrollYProgress }: { scrollYProgress: MotionValue<num
         opacity: bgOpacity,
         position: "absolute",
         inset: 0,
-        background: "var(--background)",
+        background: "#ffffff",
         zIndex: 80,
         willChange: "opacity",
         pointerEvents: "none",
@@ -426,7 +426,7 @@ function WhiteBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) 
   const opacity = useTransform(scrollYProgress, [0.64, 0.75], [0, 1]);
   return (
     <motion.div
-      style={{ opacity, position: "absolute", inset: 0, background: "var(--background)", willChange: "opacity" }}
+      style={{ opacity, position: "absolute", inset: 0, background: "#ffffff", willChange: "opacity" }}
     />
   );
 }
