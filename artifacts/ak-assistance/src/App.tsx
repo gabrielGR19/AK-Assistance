@@ -5,6 +5,13 @@ import HeroAnimation from "./HeroAnimation";
 
 const BOOKING_URL = "https://calendar.app.google/RcAojPDZwf15KeAD9";
 
+// ── Demo-Audio ────────────────────────────────────────────────────────────────
+// Trage hier die URL zur Audiodatei des Demo-Agenten ein, sobald diese bereit ist.
+// Beispiel: "/demo-agent.mp3"  oder  "https://dein-server.de/demo.mp3"
+// Solange null, zeigt der Button einen Platzhalter-Hinweis.
+const DEMO_AUDIO_URL: string | null = null;
+// ─────────────────────────────────────────────────────────────────────────────
+
 function useScrollAnimation() {
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -196,45 +203,78 @@ function NavBar({
 /* ── Landing Hero ───────────────────────────────────────── */
 function AudioDemo() {
   const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleClick = () => {
+    if (!DEMO_AUDIO_URL) return; // Platzhalter — noch keine Datei
+    if (!audioRef.current) {
+      audioRef.current = new Audio(DEMO_AUDIO_URL);
+      audioRef.current.onended = () => setPlaying(false);
+    }
+    if (playing) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setPlaying(false);
+    } else {
+      audioRef.current.play();
+      setPlaying(true);
+    }
+  };
+
+  const isPlaceholder = !DEMO_AUDIO_URL;
+
   return (
-    <button
-      onClick={() => setPlaying((p) => !p)}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "14px 24px",
-        borderRadius: 100,
-        border: "2px solid var(--foreground)",
-        background: "transparent",
-        cursor: "pointer",
-        color: "var(--foreground)",
-        fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-        fontSize: "0.95rem",
-        fontWeight: 600,
-        transition: "background 0.18s, color 0.18s",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--foreground)";
-        e.currentTarget.style.color = "var(--background)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "var(--foreground)";
-      }}
-    >
-      {playing ? (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <rect x="6" y="4" width="4" height="16" rx="1" />
-          <rect x="14" y="4" width="4" height="16" rx="1" />
-        </svg>
-      ) : (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <polygon points="5 3 19 12 5 21 5 3" />
-        </svg>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+      <button
+        onClick={handleClick}
+        title={isPlaceholder ? "Demo-Agent wird noch eingerichtet" : undefined}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "14px 28px",
+          borderRadius: 100,
+          border: `2px solid ${isPlaceholder ? "var(--border)" : "var(--foreground)"}`,
+          background: "transparent",
+          cursor: isPlaceholder ? "default" : "pointer",
+          color: isPlaceholder ? "var(--muted-foreground)" : "var(--foreground)",
+          fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          opacity: isPlaceholder ? 0.6 : 1,
+          transition: "background 0.18s, color 0.18s",
+        }}
+        onMouseEnter={(e) => {
+          if (!isPlaceholder) {
+            e.currentTarget.style.background = "var(--foreground)";
+            e.currentTarget.style.color = "var(--background)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isPlaceholder) {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--foreground)";
+          }
+        }}
+      >
+        {playing ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1" />
+            <rect x="14" y="4" width="4" height="16" rx="1" />
+          </svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+        )}
+        Demo anhören
+      </button>
+      {isPlaceholder && (
+        <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", fontFamily: "'Segoe UI', sans-serif" }}>
+          Demo-Agent wird noch eingerichtet
+        </span>
       )}
-      Demo anhören
-    </button>
+    </div>
   );
 }
 
