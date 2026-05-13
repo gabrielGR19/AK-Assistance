@@ -182,12 +182,17 @@ function NavBar({
 }
 
 /* ── Landing Hero ───────────────────────────────────────── */
-function LandingHero() {
+function LandingHero({ darkMode }: { darkMode: boolean }) {
+  const bg = darkMode ? "#0d2d3e" : "#ffffff";
+  const titleColor = darkMode ? "#ffffff" : "#0d2d3e";
+  const subColor = darkMode ? "rgba(255,255,255,0.72)" : "rgba(13,45,62,0.65)";
+  const arrowColor = darkMode ? "rgba(255,255,255,0.5)" : "rgba(13,45,62,0.4)";
+
   return (
     <section
       style={{
         height: "100vh",
-        background: "linear-gradient(135deg, #1565c0 0%, #1976d2 40%, #42a5f5 100%)",
+        background: bg,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -196,13 +201,15 @@ function LandingHero() {
         overflow: "hidden",
       }}
     >
-      {/* Subtle radial glow */}
-      <div style={{
-        position: "absolute",
-        inset: 0,
-        background: "radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255,255,255,0.10) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
+      {/* Subtle radial glow — only in dark mode */}
+      {darkMode && (
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255,255,255,0.06) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+      )}
 
       {/* Content */}
       <motion.div
@@ -231,9 +238,9 @@ function LandingHero() {
             fontSize: "clamp(2.6rem, 7vw, 5rem)",
             fontWeight: 800,
             letterSpacing: "-0.04em",
-            color: "#ffffff",
+            color: titleColor,
             lineHeight: 1.05,
-            textShadow: "0 2px 24px rgba(0,0,0,0.18)",
+            textShadow: darkMode ? "0 2px 24px rgba(0,0,0,0.3)" : "none",
           }}>
             AK-Assistance
           </h1>
@@ -249,7 +256,7 @@ function LandingHero() {
             fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
             fontSize: "clamp(1.1rem, 3vw, 1.7rem)",
             fontWeight: 600,
-            color: "rgba(255,255,255,0.88)",
+            color: subColor,
             letterSpacing: "-0.01em",
           }}
         >
@@ -271,7 +278,7 @@ function LandingHero() {
           flexDirection: "column",
           alignItems: "center",
           gap: 6,
-          color: "rgba(255,255,255,0.65)",
+          color: arrowColor,
           fontSize: "0.75rem",
           fontFamily: "'Segoe UI', sans-serif",
           letterSpacing: "0.06em",
@@ -1156,7 +1163,7 @@ export default function App() {
     <>
       <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
       <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
-      <LandingHero />
+      <LandingHero darkMode={darkMode} />
       <HeroSection darkMode={darkMode} />
       <ProblemSection />
       <LösungSection />
