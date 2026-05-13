@@ -39,7 +39,7 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
   const scrollTo = (id: string) => {
     onClose();
     setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
     }, 320);
   };
 
