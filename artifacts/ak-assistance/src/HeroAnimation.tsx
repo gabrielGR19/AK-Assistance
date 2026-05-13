@@ -359,7 +359,7 @@ function DasProblemIntro({ scrollYProgress }: { scrollYProgress: MotionValue<num
         opacity: bgOpacity,
         position: "absolute",
         inset: 0,
-        background: "#ffffff",
+        background: "var(--background)",
         zIndex: 80,
         willChange: "opacity",
         pointerEvents: "none",
