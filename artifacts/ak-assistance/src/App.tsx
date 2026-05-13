@@ -180,14 +180,14 @@ function NavBar({
 }
 
 /* ── Hero ───────────────────────────────────────────────── */
-function HeroSection() {
+function HeroSection({ darkMode }: { darkMode: boolean }) {
   return (
     <>
       {/* Scroll-driven animation — takes up 300vh of scroll space, starts behind navbar */}
       <HeroAnimation />
 
       {/* CTA buttons below the animation */}
-      <section className="py-16 px-4 sm:px-6" style={{ background: "#0d2d3e" }}>
+      <section className="py-16 px-4 sm:px-6" style={{ background: darkMode ? "#0d2d3e" : "#ffffff" }}>
         <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href={BOOKING_URL}
@@ -200,8 +200,8 @@ function HeroSection() {
           <button
             className="w-full sm:w-auto px-8 py-4 rounded-full text-base flex items-center justify-center gap-2"
             style={{
-              background: "transparent",
-              border: "1.5px solid rgba(255,255,255,0.6)",
+              background: darkMode ? "transparent" : "#e8622a",
+              border: darkMode ? "1.5px solid rgba(255,255,255,0.6)" : "none",
               color: "#ffffff",
               fontWeight: 600,
               cursor: "pointer",
@@ -896,7 +896,7 @@ export default function App() {
     <>
       <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
       <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
-      <HeroSection />
+      <HeroSection darkMode={darkMode} />
       <ProblemSection />
       <LösungSection />
       <WieEsFunktioniertSection />
