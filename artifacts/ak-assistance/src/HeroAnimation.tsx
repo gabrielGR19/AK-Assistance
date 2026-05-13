@@ -5,88 +5,100 @@ const logoImage = "/logo.png";
 
 const WINDOWS = [
   {
-    url: "/imports/excel1.png",
-    bg: "#e8f5e9",
+    url: "/imports/excel1.jpg",
+    bg: "#f0f4e8",
     label: "Excel",
     title: "Excel - Datenanalyse.xlsx",
-    startX: -240,
-    startY: -80,
-    width: 500,
-    height: 350,
+    startX: -280,
+    startY: -100,
+    width: 520,
+    height: 340,
   },
   {
     url: "/imports/word.png",
-    bg: "#e3f2fd",
+    bg: "#e8f0fb",
     label: "Word",
     title: "Dokument1 - Word",
-    startX: 220,
-    startY: -60,
-    width: 450,
+    startX: 240,
+    startY: -80,
+    width: 460,
     height: 320,
   },
   {
-    url: "/imports/datev.png",
-    bg: "#fff3e0",
+    url: "/imports/datev.gif",
+    bg: "#fdf5e6",
     label: "DATEV",
     title: "DATEV - Prüfungsbericht",
-    startX: -260,
-    startY: 180,
-    width: 480,
-    height: 340,
+    startX: -300,
+    startY: 160,
+    width: 500,
+    height: 360,
   },
   {
     url: "/imports/docs.png",
     bg: "#fce4ec",
     label: "Google Docs",
     title: "Google Docs - Bericht",
-    startX: 250,
-    startY: 190,
-    width: 520,
-    height: 360,
+    startX: 260,
+    startY: 180,
+    width: 480,
+    height: 340,
   },
   {
     url: "/imports/kalender.png",
-    bg: "#f3e5f5",
+    bg: "#f5f0f8",
     label: "Kalender",
     title: "Kalender - März 2025",
-    startX: 30,
-    startY: -100,
-    width: 420,
-    height: 300,
+    startX: 20,
+    startY: -120,
+    width: 540,
+    height: 360,
   },
   {
-    url: "/imports/excel2.png",
-    bg: "#e0f7fa",
-    label: "Excel 2",
-    title: "Excel - Pivot-Tabelle.xlsx",
-    startX: -80,
-    startY: 200,
+    url: "/imports/excel2.jpg",
+    bg: "#e0f4fa",
+    label: "Tabelle",
+    title: "Pivot-Tabelle.xlsx",
+    startX: -60,
+    startY: 190,
     width: 460,
-    height: 330,
+    height: 320,
   },
 ];
 
 const TOTAL = WINDOWS.length;
-
 type WinData = (typeof WINDOWS)[number];
 
 function WindowContent({ win }: { win: WinData }) {
   return (
-    <div
-      className="w-full h-full flex items-center justify-center"
-      style={{ background: win.bg }}
-    >
+    <div className="relative w-full h-full overflow-hidden" style={{ background: win.bg }}>
       <img
         src={win.url}
         alt={win.title}
-        className="w-full h-full object-cover"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "top left",
+          display: "block",
+        }}
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = "none";
         }}
       />
       <span
-        className="absolute text-lg font-bold"
-        style={{ color: "rgba(0,0,0,0.25)", pointerEvents: "none" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "1.1rem",
+          fontWeight: 700,
+          color: "rgba(0,0,0,0.18)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
       >
         {win.label}
       </span>
@@ -111,12 +123,12 @@ function WindowItem({
   const y = useTransform(
     scrollYProgress,
     [0, 0.4, 0.7, 0.9],
-    [win.startY, win.startY * 0.3, 100, 100]
+    [win.startY, win.startY * 0.3, 80, 80]
   );
   const scale = useTransform(
     scrollYProgress,
     [0, 0.4, 0.7, 0.9],
-    [1, 0.8, 0.65, 0.65]
+    [1, 0.82, 0.66, 0.66]
   );
   const fadeStart = 0.75 + (index / TOTAL) * 0.1;
   const fadeEnd = fadeStart + 0.08;
@@ -144,16 +156,53 @@ function WindowItem({
       }}
       className="origin-center"
     >
-      <div className="w-full h-full bg-white rounded-lg shadow-2xl overflow-hidden border border-gray-300">
-        <div className="h-8 bg-white border-b border-gray-200 flex items-center justify-between px-3">
-          <span className="text-xs text-gray-700 truncate">{win.title}</span>
-          <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-gray-300" />
-            <div className="w-3 h-3 rounded-full bg-gray-300" />
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-          </div>
+      {/* macOS-style window chrome */}
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: "10px",
+          overflow: "hidden",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.2)",
+          border: "1px solid rgba(0,0,0,0.18)",
+        }}
+      >
+        {/* macOS title bar */}
+        <div
+          style={{
+            height: "28px",
+            background: "linear-gradient(180deg, #ececec 0%, #d8d8d8 100%)",
+            borderBottom: "1px solid #bbb",
+            display: "flex",
+            alignItems: "center",
+            paddingLeft: "10px",
+            gap: "6px",
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "0.5px solid #e0443e" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e", border: "0.5px solid #dea123" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#28c940", border: "0.5px solid #1aab29" }} />
+          <span
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontSize: "11px",
+              fontWeight: 500,
+              color: "#444",
+              marginRight: "40px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              fontFamily: "-apple-system, sans-serif",
+            }}
+          >
+            {win.title}
+          </span>
         </div>
-        <div className="relative w-full h-[calc(100%-2rem)]">
+
+        {/* App content — fills remaining height */}
+        <div style={{ width: "100%", height: "calc(100% - 28px)", overflow: "hidden" }}>
           <WindowContent win={win} />
         </div>
       </div>
@@ -162,9 +211,8 @@ function WindowItem({
 }
 
 function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.5, 0.7], [0, 1]);
-  const y = useTransform(scrollYProgress, [0.5, 0.7, 0.9], [600, 100, 100]);
-
+  const opacity = useTransform(scrollYProgress, [0.5, 0.72], [0, 1]);
+  const y = useTransform(scrollYProgress, [0.5, 0.72, 0.9], [500, 80, 80]);
   return (
     <motion.div
       style={{
@@ -175,50 +223,73 @@ function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> })
         top: "45%",
         translateX: "-50%",
         translateY: "-50%",
-        zIndex: 50,
+        zIndex: 60,
       }}
     >
       <img
         src={logoImage}
         alt="AK ASSISTANCE Logo"
-        className="w-80 h-80 rounded-2xl shadow-2xl"
+        style={{
+          width: 280,
+          height: 280,
+          borderRadius: "24px",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
+        }}
       />
     </motion.div>
   );
 }
 
 function TaskbarItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
   return (
     <motion.div
-      className="absolute bottom-0 left-0 right-0 h-12 bg-gray-800/95 backdrop-blur-sm border-t border-gray-700/50 z-50"
-      style={{ opacity }}
+      style={{
+        opacity,
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 44,
+        background: "rgba(30,30,30,0.92)",
+        backdropFilter: "blur(12px)",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        paddingLeft: 8,
+        gap: 4,
+      }}
     >
-      <div className="flex items-center h-full px-2 gap-1">
-        <div className="w-12 h-9 bg-blue-600 flex items-center justify-center">
-          <div className="w-5 h-5 border-2 border-white" />
-        </div>
-        <div className="flex-1" />
-        <div className="text-white text-xs px-3">12:34</div>
+      <div style={{ width: 44, height: 36, background: "#0078d4", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 18, height: 18, border: "2px solid white" }} />
       </div>
+      <div style={{ flex: 1 }} />
+      <span style={{ color: "white", fontSize: 11, paddingRight: 12, fontFamily: "sans-serif" }}>12:34</span>
     </motion.div>
   );
 }
 
-function BlueBgItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0, 0.5, 0.7], [1, 1, 0]);
+function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
+  const opacity = useTransform(scrollYProgress, [0, 0.5, 0.72], [1, 1, 0]);
   return (
     <motion.div
-      className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700"
-      style={{ opacity }}
+      style={{
+        opacity,
+        position: "absolute",
+        inset: 0,
+        background: "linear-gradient(135deg, #1565c0 0%, #1976d2 40%, #42a5f5 100%)",
+      }}
     />
   );
 }
 
-function WhiteBgItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.5, 0.7], [0, 1]);
+function WhiteBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
+  const opacity = useTransform(scrollYProgress, [0.5, 0.72], [0, 1]);
   return (
-    <motion.div className="absolute inset-0 bg-white" style={{ opacity }} />
+    <motion.div
+      style={{ opacity, position: "absolute", inset: 0, background: "#ffffff" }}
+    />
   );
 }
 
@@ -231,11 +302,18 @@ export default function HeroAnimation() {
 
   return (
     <div ref={containerRef} style={{ height: "300vh", position: "relative" }}>
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <BlueBgItem scrollYProgress={scrollYProgress} />
-        <WhiteBgItem scrollYProgress={scrollYProgress} />
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
+        <BlueBg scrollYProgress={scrollYProgress} />
+        <WhiteBg scrollYProgress={scrollYProgress} />
 
-        <div className="relative w-full h-full">
+        <div style={{ position: "relative", width: "100%", height: "100%" }}>
           <TaskbarItem scrollYProgress={scrollYProgress} />
 
           {WINDOWS.map((win, index) => (
