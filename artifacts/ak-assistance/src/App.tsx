@@ -121,7 +121,15 @@ function NavBar({
         <div className="px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
             <a href="#" className="flex items-center gap-3">
-              <img src={logoUrl} alt="AK-Assistance" style={{ height: 55 }} />
+              <img
+                src={logoUrl}
+                alt="AK-Assistance"
+                style={{
+                  height: 55,
+                  borderRadius: 8,
+                  background: darkMode ? "#0d2d3e" : "#ffffff",
+                }}
+              />
               <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "1.15rem" }}>
                 AK-assistance
               </span>
