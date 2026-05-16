@@ -1,0 +1,175 @@
+Please make the following improvements to the website. 
+All changes should be implemented immediately without 
+requiring any external accounts, API keys, or data from me.
+
+1. EMOJIS ENTFERNEN
+Remove all emojis from the entire website, especially 
+the trust badges (🔒 🇩🇪). Replace them with clean 
+SVG icons:
+- Lock icon for "DSGVO-konform"
+- Clean text or flag SVG for "Made in Germany"
+
+2. HERO HEADLINE
+Change the hero headline from "Dein KI-Mitarbeiter fürs Büro" 
+to "Ihr KI-Assistent für professionelle Kundenkommunikation"
+Change all "Du/Dein" to "Sie/Ihr" consistently throughout 
+the entire website. Check every single text element.
+
+3. FAVICON
+Export the logo as a favicon and add it to the browser tab:
+- Create a simple favicon using the AK brand colors 
+  (#0d2d3e background, #e8622a orange accent)
+- Add <link rel="icon"> tag to index.html
+
+4. DARK MODE
+Go through every single section and ensure dark mode 
+is fully consistent:
+- All backgrounds switch correctly
+- All text has proper contrast (minimum 4.5:1 ratio)
+- No white boxes appearing on dark background
+- Cards, borders, inputs all switch correctly
+- Test and fix every section
+
+5. FAKE TESTIMONIALS ENTFERNEN
+Remove the fake testimonials (Thomas B., Sandra K., 
+Markus R.) completely. Replace with a clean placeholder:
+"Kundenstimmen folgen in Kürze — wir befinden uns 
+aktuell in der Pilotphase."
+Style it nicely with the AK brand colors, 
+keep the section structure but without fake reviews.
+
+6. SOCIAL PROOF TEXT
+Change the social proof text from the placeholder 
+to something professional:
+"Aktuell in der Pilotphase — seien Sie einer der Ersten"
+Style cleanly without emojis.
+
+7. META TAGS SEO
+Add the following to the <head> section:
+- <title>AK-Assistance — KI-Sprachagenten für Unternehmen</title>
+- <meta name="description" content="Nie wieder einen Anruf verpassen. 
+  Ihr KI-Assistent nimmt Anrufe an, bucht Termine und entlastet Sie 
+  bei der Büroarbeit — automatisch, 24/7.">
+- <meta name="keywords" content="KI-Assistent, Sprachagent, 
+  Terminbuchung, Automatisierung, Handwerk, Kundenservice">
+- <meta property="og:title" content="AK-Assistance — KI-Sprachagenten">
+- <meta property="og:description" content="Nie wieder einen Anruf 
+  verpassen. Automatisch, 24/7.">
+- <meta property="og:type" content="website">
+- <meta name="robots" content="index, follow">
+
+8. ALT TEXTE
+Add descriptive alt attributes to every single image:
+- Logo: alt="AK-Assistance Logo"
+- Any other images: appropriate descriptions
+
+9. ROBOTS.TXT
+Create a robots.txt file:
+User-agent: *
+Allow: /
+Sitemap: https://ak-assistance.de/sitemap.xml
+
+10. SITEMAP
+Create a simple sitemap.xml file with all page sections.
+
+11. STRUKTURIERTE DATEN
+Add Schema.org JSON-LD structured data in the <head>:
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "AK-Assistance",
+  "description": "KI-Sprachagenten für Unternehmen",
+  "url": "https://ak-assistance.de",
+  "email": "ak-assistance@protonmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Nürnberg",
+    "addressCountry": "DE"
+  },
+  "serviceType": "KI-Sprachagent",
+  "areaServed": "DE"
+}
+
+12. 404 SEITE
+Create a clean 404.html page with:
+- AK-Assistance logo
+- Text: "Diese Seite existiert nicht."
+- Button: "Zurück zur Startseite" linking to index
+- Same brand colors and style as the main page
+
+13. COOKIE BANNER
+Add a simple DSGVO-compliant cookie banner at the bottom:
+- Text: "Wir verwenden technisch notwendige Cookies. 
+  Weitere Informationen finden Sie in unserer 
+  Datenschutzerklärung."
+- Two buttons: "Akzeptieren" and "Ablehnen"
+- Stores choice in localStorage
+- Only shows once
+- Styled in AK brand colors
+
+14. DSGVO FORMULAR CHECKBOX
+Add a required checkbox below the pilot program form:
+"Ich habe die Datenschutzerklärung gelesen und 
+stimme der Verarbeitung meiner Daten zu. *"
+Link text "Datenschutzerklärung" links to #datenschutz
+Form cannot be submitted without checking this box.
+
+15. IMPRESSUM & DATENSCHUTZ PLATZHALTER
+Create two clean placeholder pages/sections:
+- Section id="impressum" with text: 
+  "Das Impressum wird nach Anmeldung der GbR ergänzt."
+- Section id="datenschutz" with text:
+  "Die Datenschutzerklärung wird in Kürze ergänzt."
+Both linked from the footer. Styled consistently.
+
+16. LOADING PERFORMANCE
+- Add loading="lazy" to all images
+- Add font-display: swap to Google Fonts
+- Minimize any render-blocking resources
+- Add preconnect tags for Google Fonts
+
+17. MOBILE OPTIMIERUNG
+Check and fix every section for mobile:
+- All buttons minimum 44px touch target
+- Text readable without zooming (minimum 16px)
+- No horizontal scrolling
+- Cards stack properly on small screens
+- Navigation hamburger menu works smoothly
+- Hero animation works on mobile
+
+18. ACCESSIBILITY
+- Add aria-labels to all icon buttons
+- Ensure proper heading hierarchy (h1, h2, h3)
+- Add focus styles for keyboard navigation
+- Ensure all interactive elements are keyboard accessible
+
+19. FORMULAR VALIDIERUNG
+Improve form validation in the pilot program form:
+- Show clear error messages in German below each field
+- Email format validation with message: 
+  "Bitte geben Sie eine gültige E-Mail-Adresse ein."
+- Phone validation with message:
+  "Bitte geben Sie eine gültige Telefonnummer ein."
+- Required field messages: "Dieses Feld ist erforderlich."
+- Highlight invalid fields with red border
+
+20. SMOOTH SCROLL VERBESSERUNG
+Ensure all navigation links (in side panel and footer) 
+scroll smoothly to the correct section with proper 
+offset for the fixed navbar height.
+
+21. ANIMATION PERFORMANCE
+- Add will-change: transform to animated elements
+- Ensure animations are disabled for users who prefer 
+  reduced motion (prefers-reduced-motion media query)
+- Optimize scroll animations to not cause layout shifts
+
+22. KONSISTENTE TYPOGRAPHIE
+Check the entire website for typography consistency:
+- Same font family throughout
+- Consistent heading sizes
+- Consistent line-height and letter-spacing
+- Remove any inconsistent font sizes
+
+Please implement all 22 improvements and confirm 
+when done with a summary of what was changed.

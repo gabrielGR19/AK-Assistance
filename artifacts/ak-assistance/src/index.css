@@ -187,6 +187,26 @@
   to   { transform: rotate(360deg); }
 }
 
+.animate-in { will-change: transform, opacity; }
+.animate-in.visible { will-change: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .wave-ring { animation: none !important; }
+  @keyframes soundwave { 0%, 100%, 50% { transform: scaleY(1); opacity: 1; } }
+  @keyframes spin { from, to { transform: rotate(0deg); } }
+}
+
+:focus-visible {
+  outline: 2px solid #e8622a;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 .side-panel-overlay {
   position: fixed;
   inset: 0;

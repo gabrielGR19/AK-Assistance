@@ -51,7 +51,11 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
   const scrollTo = (id: string) => {
     onClose();
     setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
+      const el = document.getElementById(id);
+      if (!el) return;
+      const navbarHeight = 72;
+      const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
+      window.scrollTo({ top, behavior: "smooth" });
     }, 320);
   };
 
@@ -149,8 +153,9 @@ function NavBar({
             <a href="#" className="flex items-center gap-3">
               <img
                 src={logoUrl}
-                alt="AK-Assistance"
+                alt="AK-Assistance Logo"
                 style={{ height: 55 }}
+                loading="lazy"
               />
               <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "1.15rem" }}>
                 AK-assistance
@@ -361,7 +366,7 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
             color: "var(--foreground)",
           }}
         >
-          Dein KI-Mitarbeiter fürs Büro
+          Ihr KI-Assistent für professionelle Kundenkommunikation
         </h1>
 
         {/* Subheadline */}
@@ -379,7 +384,7 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
             maxWidth: 600,
           }}
         >
-          Der Assistent beantwortet Kundenanrufe, bucht Termine und entlastet dich bei der Büroarbeit&nbsp;— automatisch, 24/7.
+          Der Assistent beantwortet Kundenanrufe, bucht Termine und entlastet Sie bei der Büroarbeit&nbsp;— automatisch, 24/7.
         </motion.p>
 
         {/* Audio Demo */}
@@ -396,11 +401,20 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "center" }}
+          style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "center" }}
         >
-          {["🔒 DSGVO-konform", "🇩🇪 Made in Germany"].map((badge) => (
+          {[
+            {
+              label: "DSGVO-konform",
+              path: "M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4",
+            },
+            {
+              label: "Made in Germany",
+              path: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+            },
+          ].map(({ label, path }) => (
             <span
-              key={badge}
+              key={label}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -415,7 +429,10 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
                 color: "var(--muted-foreground)",
               }}
             >
-              {badge}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <path d={path} />
+              </svg>
+              {label}
             </span>
           ))}
         </motion.div>
@@ -444,7 +461,7 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
           </span>
           {SOCIAL_PROOF_COUNT
             ? `Bereits über ${SOCIAL_PROOF_COUNT} Betriebe vertrauen AK\u2011Assistance`
-            : "Demnächst verfügbar — seien Sie einer der Ersten"}
+            : "Aktuell in der Pilotphase — seien Sie einer der Ersten"}
         </motion.p>
       </motion.div>
     </section>
@@ -667,45 +684,10 @@ function WieEsFunktioniertSection() {
 /* ── Kundenbewertungen ──────────────────────────────────── */
 const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=DEINE_PLACE_ID";
 
-const TESTIMONIALS = [
-  {
-    name: "Thomas B.",
-    firma: "Heizung & Sanitär Braun",
-    sterne: 5,
-    text: "Seit wir AK-Assistance nutzen, verpassen wir keine Anfrage mehr. Der Assistent antwortet sofort — auch abends und am Wochenende.",
-  },
-  {
-    name: "Sandra K.",
-    firma: "Elektriker Kovac GmbH",
-    sterne: 5,
-    text: "Die Einrichtung war in wenigen Tagen erledigt. Kein technisches Wissen nötig. Unsere Kunden sind begeistert.",
-  },
-  {
-    name: "Markus R.",
-    firma: "Malerbetrieb Richter",
-    sterne: 5,
-    text: "Ich kann mich endlich auf die Arbeit konzentrieren, statt ständig ans Telefon zu müssen. Absolut empfehlenswert.",
-  },
-];
-
-function StarRow({ count }: { count: number }) {
-  return (
-    <div style={{ display: "flex", gap: 3 }}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill={i < count ? "#e8622a" : "none"} stroke="#e8622a" strokeWidth="1.8">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ))}
-    </div>
-  );
-}
-
 function BewertungenSection() {
   return (
     <section id="bewertungen" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-6xl mx-auto">
-
-        {/* Headline */}
         <div className="text-center mb-16">
           <span className="section-label animate-in">Was unsere Kunden sagen</span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mt-3 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
@@ -713,63 +695,31 @@ function BewertungenSection() {
           </h2>
         </div>
 
-        {/* Review cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {TESTIMONIALS.map((t, i) => (
-            <div
-              key={i}
-              className={`animate-in delay-${i + 1}`}
-              style={{
-                background: "var(--background)",
-                borderRadius: 20,
-                padding: "28px 28px 24px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-                boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              {/* Stars + Google badge */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <StarRow count={t.sterne} />
-                <svg width="22" height="22" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
-                  <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.1 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.5-4z"/>
-                  <path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 16.1 19.3 13 24 13c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/>
-                  <path fill="#FBBC05" d="M24 44c5.9 0 11-2 14.7-5.4l-6.8-5.6C29.8 34.9 27 36 24 36c-6.1 0-10.7-2.9-11.8-7.5l-7 5.4C8 40.1 15.3 44 24 44z"/>
-                  <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.2-2.3 4-4.3 5.3l6.8 5.6C42.5 35.7 45 30.2 45 24c0-1.3-.2-2.7-.5-4z"/>
-                </svg>
-              </div>
-
-              {/* Quote */}
-              <p style={{ margin: 0, color: "var(--muted-foreground)", lineHeight: 1.65, fontSize: "0.95rem" }}>
-                „{t.text}"
-              </p>
-
-              {/* Author */}
-              <div style={{ marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--border)" }}>
-                <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--foreground)" }}>{t.name}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: 2 }}>{t.firma}</div>
-              </div>
-            </div>
-          ))}
+        {/* Placeholder */}
+        <div
+          className="animate-in delay-1 rounded-2xl p-10 sm:p-14 text-center mb-12"
+          style={{ background: "var(--card)", border: "1.5px dashed var(--border)" }}
+        >
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: "rgba(232,98,42,0.1)" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <p className="text-lg font-semibold mb-3" style={{ color: "var(--foreground)" }}>
+            Kundenstimmen folgen in Kürze
+          </p>
+          <p className="text-sm sm:text-base leading-relaxed" style={{ color: "var(--muted-foreground)", maxWidth: 520, margin: "0 auto" }}>
+            Wir befinden uns aktuell in der Pilotphase. Als einer unserer ersten Partner tragen Sie dazu bei, diese Seite mit echten Erfahrungen zu füllen.
+          </p>
         </div>
 
         {/* Google review CTA */}
         <div
-          className="animate-in"
-          style={{
-            background: "var(--background)",
-            borderRadius: 24,
-            padding: "40px 32px",
-            textAlign: "center",
-            border: "1px solid var(--border)",
-            boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
-          }}
+          className="animate-in delay-2"
+          style={{ background: "var(--background)", borderRadius: 24, padding: "40px 32px", textAlign: "center", border: "1px solid var(--border)" }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
-            {/* Google G logo */}
-            <svg width="28" height="28" viewBox="0 0 48 48">
+            <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
               <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.1 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.5-4z"/>
               <path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 16.1 19.3 13 24 13c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/>
               <path fill="#FBBC05" d="M24 44c5.9 0 11-2 14.7-5.4l-6.8-5.6C29.8 34.9 27 36 24 36c-6.1 0-10.7-2.9-11.8-7.5l-7 5.4C8 40.1 15.3 44 24 44z"/>
@@ -780,21 +730,15 @@ function BewertungenSection() {
             </h3>
           </div>
           <p style={{ margin: "0 0 24px", color: "var(--muted-foreground)", fontSize: "0.98rem", maxWidth: 480, marginInline: "auto" }}>
-            Helfen Sie anderen Handwerksbetrieben mit Ihrer Erfahrung — hinterlassen Sie uns eine Bewertung direkt auf Google.
+            Helfen Sie anderen Betrieben mit Ihrer Erfahrung — hinterlassen Sie uns eine Bewertung direkt auf Google.
           </p>
-          <a
-            href={GOOGLE_REVIEW_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange"
-          >
+          <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange">
             Jetzt bei Google bewerten
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
             </svg>
           </a>
         </div>
-
       </div>
     </section>
   );
@@ -881,24 +825,43 @@ function DemoSection() {
 /* ── Pilot Programm ──────────────────────────────────────── */
 function PilotSection() {
   const formRef = useRef<HTMLFormElement>(null);
-  const [fields, setFields] = useState({
-    company: "",
-    name: "",
-    email: "",
-    phone: "",
-  });
+  const [fields, setFields] = useState({ company: "", name: "", email: "", phone: "" });
+  const [fieldErrors, setFieldErrors] = useState({ company: "", name: "", email: "", phone: "" });
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [privacyError, setPrivacyError] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFields((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFields((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  }
+
+  function validate() {
+    const errors = { company: "", name: "", email: "", phone: "" };
+    let valid = true;
+    if (!fields.company.trim()) { errors.company = "Bitte geben Sie Ihren Unternehmensnamen ein."; valid = false; }
+    if (!fields.name.trim()) { errors.name = "Bitte geben Sie Ihren Namen ein."; valid = false; }
+    if (!fields.email.trim()) {
+      errors.email = "Bitte geben Sie Ihre E-Mail-Adresse ein."; valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) {
+      errors.email = "Bitte geben Sie eine gültige E-Mail-Adresse ein."; valid = false;
+    }
+    if (!fields.phone.trim()) { errors.phone = "Bitte geben Sie Ihre Telefonnummer ein."; valid = false; }
+    setFieldErrors(errors);
+    if (!privacyAccepted) { setPrivacyError("Bitte stimmen Sie der Datenschutzerklärung zu."); valid = false; }
+    else setPrivacyError("");
+    return valid;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validate()) return;
     setStatus("sending");
     setErrorMsg("");
-
     try {
       const res = await fetch("/api/pilot", {
         method: "POST",
@@ -909,7 +872,8 @@ function PilotSection() {
       if (!res.ok) throw new Error(data.error ?? "Fehler beim Speichern");
       setStatus("success");
       setFields({ company: "", name: "", email: "", phone: "" });
-    } catch (err) {
+      setPrivacyAccepted(false);
+    } catch (_err) {
       setStatus("error");
       setErrorMsg("Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt.");
     }
@@ -976,127 +940,80 @@ function PilotSection() {
               </h3>
               <form ref={formRef} onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  {/* Unternehmensname */}
                   <div>
-                    <label
-                      htmlFor="company"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
+                    <label htmlFor="company" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
                       Unternehmensname *
                     </label>
                     <input
-                      id="company"
-                      name="company"
-                      type="text"
-                      required
-                      value={fields.company}
-                      onChange={handleChange}
-                      placeholder="Muster GmbH"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="company" name="company" type="text" value={fields.company} onChange={handleChange}
+                      placeholder="Muster GmbH" aria-describedby={fieldErrors.company ? "err-company" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.company ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.company && <p id="err-company" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.company}</p>}
                   </div>
+                  {/* Name */}
                   <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
-                      Vor- & Nachname *
+                    <label htmlFor="name" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+                      Vor- &amp; Nachname *
                     </label>
                     <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      value={fields.name}
-                      onChange={handleChange}
-                      placeholder="Max Mustermann"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="name" name="name" type="text" value={fields.name} onChange={handleChange}
+                      placeholder="Max Mustermann" aria-describedby={fieldErrors.name ? "err-name" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.name ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.name && <p id="err-name" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.name}</p>}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                  {/* E-Mail */}
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
+                    <label htmlFor="email" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
                       E-Mail-Adresse *
                     </label>
                     <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      value={fields.email}
-                      onChange={handleChange}
-                      placeholder="max@musterfirma.de"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="email" name="email" type="email" value={fields.email} onChange={handleChange}
+                      placeholder="max@musterfirma.de" aria-describedby={fieldErrors.email ? "err-email" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.email ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.email && <p id="err-email" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.email}</p>}
                   </div>
+                  {/* Telefon */}
                   <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
+                    <label htmlFor="phone" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
                       Telefonnummer *
                     </label>
                     <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      value={fields.phone}
-                      onChange={handleChange}
-                      placeholder="+49 123 456789"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="phone" name="phone" type="tel" value={fields.phone} onChange={handleChange}
+                      placeholder="+49 123 456789" aria-describedby={fieldErrors.phone ? "err-phone" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.phone ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.phone && <p id="err-phone" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.phone}</p>}
                   </div>
                 </div>
 
+                {/* DSGVO Checkbox */}
+                <div className="mb-5">
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={privacyAccepted}
+                      onChange={(e) => { setPrivacyAccepted(e.target.checked); if (e.target.checked) setPrivacyError(""); }}
+                      aria-describedby={privacyError ? "err-privacy" : undefined}
+                      style={{ marginTop: 3, accentColor: "#e8622a", width: 16, height: 16, flexShrink: 0 }}
+                    />
+                    <span className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+                      Ich stimme der Verarbeitung meiner Daten gemäß der{" "}
+                      <a href="#datenschutz" style={{ color: "#e8622a", textDecoration: "underline" }}>Datenschutzerklärung</a>{" "}
+                      zu. *
+                    </span>
+                  </label>
+                  {privacyError && <p id="err-privacy" role="alert" className="text-xs mt-1.5" style={{ color: "#e53e3e" }}>{privacyError}</p>}
+                </div>
+
                 {status === "error" && (
-                  <p className="text-sm mb-4" style={{ color: "#e53e3e" }}>
-                    {errorMsg}
-                  </p>
+                  <p className="text-sm mb-4" style={{ color: "#e53e3e" }}>{errorMsg}</p>
                 )}
 
                 <button
@@ -1393,17 +1310,108 @@ function CTASection() {
   );
 }
 
+/* ── Cookie Banner ───────────────────────────────────────── */
+function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem("ak_cookie_choice")) setVisible(true);
+  }, []);
+  if (!visible) return null;
+  const choose = (choice: "accepted" | "rejected") => {
+    localStorage.setItem("ak_cookie_choice", choice);
+    setVisible(false);
+  };
+  return (
+    <div
+      role="dialog"
+      aria-modal="false"
+      aria-label="Cookie-Einstellungen"
+      style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
+        padding: "20px 24px", background: "#0d2d3e", color: "#fff",
+        display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+        boxShadow: "0 -4px 32px rgba(0,0,0,0.3)",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <p style={{ margin: 0, flex: 1, fontSize: "0.88rem", lineHeight: 1.65, minWidth: 240 }}>
+        Wir verwenden technisch notwendige Cookies. Weitere Informationen finden Sie in unserer{" "}
+        <a href="#datenschutz" style={{ color: "#e8622a", textDecoration: "underline" }} onClick={() => setVisible(false)}>
+          Datenschutzerklärung
+        </a>.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <button
+          onClick={() => choose("rejected")}
+          style={{ padding: "9px 20px", borderRadius: 100, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}
+        >
+          Ablehnen
+        </button>
+        <button
+          onClick={() => choose("accepted")}
+          className="btn-orange"
+          style={{ padding: "9px 20px", borderRadius: 100, fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", border: "none" }}
+        >
+          Akzeptieren
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Impressum ───────────────────────────────────────────── */
+function ImpressumSection() {
+  return (
+    <section id="impressum" style={{ background: "var(--background)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 16 }}>Impressum</h2>
+        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem" }}>
+          Das Impressum wird nach Anmeldung der GbR ergänzt.
+        </p>
+        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem", marginTop: 12 }}>
+          Bei Fragen wenden Sie sich bitte an:{" "}
+          <a href="mailto:ak-assistance@protonmail.com" style={{ color: "#e8622a", textDecoration: "underline" }}>
+            ak-assistance@protonmail.com
+          </a>
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ── Datenschutz ─────────────────────────────────────────── */
+function DatenschutzSection() {
+  return (
+    <section id="datenschutz" style={{ background: "var(--muted)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 16 }}>Datenschutzerklärung</h2>
+        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem" }}>
+          Die Datenschutzerklärung wird in Kürze ergänzt.
+        </p>
+        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem", marginTop: 12 }}>
+          Bei datenschutzbezogenen Anfragen wenden Sie sich bitte an:{" "}
+          <a href="mailto:ak-assistance@protonmail.com" style={{ color: "#e8622a", textDecoration: "underline" }}>
+            ak-assistance@protonmail.com
+          </a>
+        </p>
+      </div>
+    </section>
+  );
+}
+
 /* ── Footer ──────────────────────────────────────────────── */
 function Footer() {
   return (
     <footer className="py-10 px-4 sm:px-6" style={{ background: "#0d2d3e", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <img src={logoUrl} alt="AK-Assistance" style={{ height: 44 }} />
+          <img src={logoUrl} alt="AK-Assistance Logo" style={{ height: 44 }} loading="lazy" />
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm" style={{ color: "#a0b4c0" }}>
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
             <a href="#pilot" className="hover:text-white transition-colors">Pilot Programm</a>
             <a href="#kontakt" className="hover:text-white transition-colors">Kontakt</a>
+            <a href="#impressum" className="hover:text-white transition-colors">Impressum</a>
+            <a href="#datenschutz" className="hover:text-white transition-colors">Datenschutz</a>
           </div>
           <a
             href={BOOKING_URL}
@@ -1469,8 +1477,11 @@ export default function App() {
       <NewsSection />
       <FAQSection />
       <CTASection />
+      <ImpressumSection />
+      <DatenschutzSection />
       <Footer />
       <ChatbotWidget />
+      <CookieBanner />
     </RetellProvider>
   );
 }
