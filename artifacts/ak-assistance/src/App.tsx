@@ -1119,8 +1119,16 @@ function PilotSection() {
 /* ── Unser Team ──────────────────────────────────────────── */
 function TeamSection() {
   const members = [
-    { name: "Team Mitglied 1", role: "Gründer & KI-Spezialist" },
-    { name: "Team Mitglied 2", role: "Kundenbetreuung & Onboarding" },
+    {
+      name: "Team Mitglied 1",
+      role: "Gründer & KI-Spezialist",
+      bio: "Hier steht das Motivationsschreiben des ersten Teammitglieds — ein kurzer Text über Hintergrund, Antrieb und Leidenschaft für das Projekt. Warum dieses Thema, was treibt diese Person an, und was bringt sie ins Team ein.",
+    },
+    {
+      name: "Team Mitglied 2",
+      role: "Kundenbetreuung & Onboarding",
+      bio: "Hier steht das Motivationsschreiben des zweiten Teammitglieds — persönliche Geschichte, Expertise und Vision. Was macht diese Person besonders und warum ist sie der ideale Ansprechpartner für unsere Kunden.",
+    },
   ];
 
   return (
@@ -1137,16 +1145,27 @@ function TeamSection() {
           {members.map((m, i) => (
             <div
               key={i}
-              className={`animate-in delay-${i + 1} rounded-2xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-5`}
+              className={`animate-in delay-${i + 1} rounded-2xl p-7 flex flex-col gap-5`}
               style={{ background: "var(--card)", border: "1px solid var(--border)" }}
             >
-              <div className="img-placeholder shrink-0" style={{ width: 90, height: 90, borderRadius: "50%", fontSize: "0.75rem" }}>
-                [ Foto ]
+              {/* Header: Foto + Name + Rolle */}
+              <div className="flex items-center gap-4">
+                <div className="img-placeholder shrink-0" style={{ width: 72, height: 72, borderRadius: "50%", fontSize: "0.7rem" }}>
+                  [ Foto ]
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold leading-tight" style={{ color: "var(--foreground)" }}>{m.name}</h3>
+                  <p className="text-sm mt-0.5 font-medium" style={{ color: "#e8622a" }}>{m.role}</p>
+                </div>
               </div>
-              <div className="text-center sm:text-left">
-                <h3 className="text-lg font-bold" style={{ color: "var(--foreground)" }}>{m.name}</h3>
-                <p className="text-sm mt-1" style={{ color: "var(--muted-foreground)" }}>{m.role}</p>
-              </div>
+
+              {/* Trennlinie */}
+              <div style={{ height: 1, background: "var(--border)" }} />
+
+              {/* Motivationsschreiben */}
+              <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+                {m.bio}
+              </p>
             </div>
           ))}
         </div>
