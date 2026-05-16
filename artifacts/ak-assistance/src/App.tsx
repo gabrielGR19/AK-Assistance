@@ -1118,17 +1118,10 @@ function PilotSection() {
 
 /* ── Unser Team ──────────────────────────────────────────── */
 function TeamSection() {
-  const members = [
-    {
-      name: "Team Mitglied 1",
-      role: "Gründer & KI-Spezialist",
-      bio: "Hier steht das Motivationsschreiben des ersten Teammitglieds — ein kurzer Text über Hintergrund, Antrieb und Leidenschaft für das Projekt. Warum dieses Thema, was treibt diese Person an, und was bringt sie ins Team ein.",
-    },
-    {
-      name: "Team Mitglied 2",
-      role: "Kundenbetreuung & Onboarding",
-      bio: "Hier steht das Motivationsschreiben des zweiten Teammitglieds — persönliche Geschichte, Expertise und Vision. Was macht diese Person besonders und warum ist sie der ideale Ansprechpartner für unsere Kunden.",
-    },
+  const values = [
+    { icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5", label: "Expertise", text: "Tiefes Fachwissen in KI, Automatisierung und den Anforderungen des deutschen Handwerks." },
+    { icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75", label: "Kundennähe", text: "Wir arbeiten eng mit unseren Partnerbetrieben zusammen und entwickeln Lösungen, die wirklich funktionieren." },
+    { icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", label: "Vertrauen", text: "DSGVO-konform, Made in Germany — Ihre Daten bleiben sicher und in guten Händen." },
   ];
 
   return (
@@ -1139,33 +1132,30 @@ function TeamSection() {
           <h2 className="text-3xl sm:text-4xl font-black mt-3 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
             Unser Team
           </h2>
+          <p className="mt-5 text-lg max-w-2xl mx-auto animate-in delay-2" style={{ color: "var(--muted-foreground)" }}>
+            Hier steht das Motivationsschreiben des Teams — warum wir AK-Assistance gegründet haben, was uns antreibt und welche Vision wir gemeinsam verfolgen. Ein ehrlicher Einblick in unsere Geschichte und unsere Leidenschaft für das Handwerk.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-          {members.map((m, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {values.map((v, i) => (
             <div
               key={i}
-              className={`animate-in delay-${i + 1} rounded-2xl p-7 flex flex-col gap-5`}
+              className={`animate-in delay-${i + 1} rounded-2xl p-7 flex flex-col gap-4`}
               style={{ background: "var(--card)", border: "1px solid var(--border)" }}
             >
-              {/* Header: Foto + Name + Rolle */}
-              <div className="flex items-center gap-4">
-                <div className="img-placeholder shrink-0" style={{ width: 72, height: 72, borderRadius: "50%", fontSize: "0.7rem" }}>
-                  [ Foto ]
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold leading-tight" style={{ color: "var(--foreground)" }}>{m.name}</h3>
-                  <p className="text-sm mt-0.5 font-medium" style={{ color: "#e8622a" }}>{m.role}</p>
-                </div>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "rgba(232,98,42,0.12)" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={v.icon} />
+                </svg>
               </div>
-
-              {/* Trennlinie */}
-              <div style={{ height: 1, background: "var(--border)" }} />
-
-              {/* Motivationsschreiben */}
-              <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
-                {m.bio}
-              </p>
+              <div>
+                <h3 className="text-base font-bold mb-1" style={{ color: "var(--foreground)" }}>{v.label}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>{v.text}</p>
+              </div>
             </div>
           ))}
         </div>
