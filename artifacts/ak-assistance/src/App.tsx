@@ -1430,70 +1430,6 @@ function Footer() {
   );
 }
 
-/* ── Chatbot Widget ──────────────────────────────────────── */
-function ChatbotWidget() {
-  const { callState, errorMsg, startCall, endCall } = useRetell();
-  const isActive  = callState === "active";
-  const isLoading = callState === "loading";
-  const isError   = callState === "error";
-
-  function handleClick() {
-    if (isLoading) return;
-    if (isActive) endCall();
-    else startCall();
-  }
-
-  const btnClass = [
-    "chatbot-btn",
-    isActive  ? "is-active"  : "",
-    isLoading ? "is-loading" : "",
-  ].filter(Boolean).join(" ");
-
-  return (
-    <>
-      {/* Error toast */}
-      {isError && (
-        <div className="chatbot-error-toast" role="alert">
-          Verbindung fehlgeschlagen — bitte erneut versuchen
-        </div>
-      )}
-
-      <button
-        className={btnClass}
-        aria-label={isActive ? "Gespräch beenden" : "Mit KI-Assistent sprechen"}
-        onClick={handleClick}
-      >
-        {/* Hover tooltip */}
-        {!isActive && !isLoading && (
-          <span className="chatbot-tooltip" aria-hidden="true">
-            Mit KI-Assistent sprechen
-          </span>
-        )}
-
-        {/* Icon states */}
-        {isLoading ? (
-          /* Spinner */
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "spin 0.9s linear infinite" }}>
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
-        ) : isActive ? (
-          /* Sound wave bars + end-call hint */
-          <div className="chatbot-soundwave" aria-hidden="true">
-            <span /><span /><span /><span /><span />
-          </div>
-        ) : (
-          /* Chat bubble with dots */
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            <circle cx="9"  cy="10" r="1" fill="white" stroke="none" />
-            <circle cx="12" cy="10" r="1" fill="white" stroke="none" />
-            <circle cx="15" cy="10" r="1" fill="white" stroke="none" />
-          </svg>
-        )}
-      </button>
-    </>
-  );
-}
 
 /* ── App ─────────────────────────────────────────────────── */
 export default function App() {
@@ -1526,7 +1462,7 @@ export default function App() {
       <ImpressumSection />
       <DatenschutzSection />
       <Footer />
-      <ChatbotWidget />
+
       <CookieBanner />
     </RetellProvider>
   );
