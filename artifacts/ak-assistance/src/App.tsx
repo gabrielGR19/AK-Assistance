@@ -899,28 +899,17 @@ function PilotSection() {
     setStatus("sending");
     setErrorMsg("");
 
-    const accessKey = import.meta.env.VITE_WEB3FORMS_KEY as string;
-
-    const body = {
-      access_key: accessKey,
-      subject: `Neue Pilot-Bewerbung: ${fields.company}`,
-      from_name: fields.name,
-      replyto: fields.email,
-      message: `Neue Bewerbung eingegangen:\n\nUnternehmen: ${fields.company}\nName: ${fields.name}\nE-Mail: ${fields.email}\nTelefon: ${fields.phone}`,
-    };
-
     try {
-      const res = await fetch("https://api.web3forms.com/submit", {
+      const res = await fetch("/api/pilot", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
       });
-      const data = await res.json() as { success: boolean };
-      if (!data.success) throw new Error("Submission failed");
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Fehler beim Speichern");
       setStatus("success");
       setFields({ company: "", name: "", email: "", phone: "" });
     } catch (err) {
-      console.error("Web3Forms error:", err);
       setStatus("error");
       setErrorMsg("Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt.");
     }
