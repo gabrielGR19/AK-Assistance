@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "VsmEVWRI_oSSo46giqz_P"
+uri = "file://AK-Assistance_Website_Code.txt"
+type = "text"
+title = "AK-Assistance — Vollständiger Website-Code"
