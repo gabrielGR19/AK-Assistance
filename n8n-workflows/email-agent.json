@@ -1,0 +1,187 @@
+{
+  "name": "Lead Agent - Automatisierte E-Mails",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Manuell starten",
+      "type": "n8n-nodes-base.manualTrigger",
+      "parameters": {}
+    },
+    {
+      "id": "sheets-read",
+      "name": "Leads aus Google Sheets laden",
+      "type": "n8n-nodes-base.googleSheets",
+      "parameters": {
+        "operation": "getAll",
+        "documentId": "HIER_GOOGLE_SHEET_ID_EINTRAGEN",
+        "sheetName": "Tabelle1",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1",
+          "name": "Google Sheets Account"
+        }
+      }
+    },
+    {
+      "id": "filter-leads",
+      "name": "Filter - Angerufen mit Interesse",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['Anruf Status'] }}",
+              "operation": "equal",
+              "value2": "angerufen"
+            }
+          ],
+          "boolean": [
+            {
+              "value1": "={{ ['Interesse', 'Unsicherheit'].includes($json['Interesse']) }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-website",
+      "name": "Website abrufen",
+      "type": "n8n-nodes-base.httpRequest",
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.Website.startsWith('http') ? $json.Website : 'https://' + $json.Website }}",
+        "options": {
+          "timeout": 15000,
+          "ignoreResponseCode": true,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 5
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "extract-email",
+      "name": "E-Mail extrahieren und Prompt aufbauen",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "// Lead-Daten aus dem Filter-Knoten (Datenpaar)\nconst lead = $('Filter - Angerufen mit Interesse').item.json;\n\n// Website-HTML aus HTTP Response\nconst response = $input.first().json;\nconst html = response.data || response.body || JSON.stringify(response);\n\n// E-Mail-Adressen per Regex extrahieren\nconst emailRegex = /[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}/gi;\nlet emails = [...new Set(html.match(emailRegex) || [])];\n\n// Irrelevante Adressen herausfiltern\nemails = emails.filter(e => {\n  const l = e.toLowerCase();\n  return !l.includes('noreply') && !l.includes('no-reply') &&\n         !l.includes('.png') && !l.includes('.jpg') && !l.includes('.gif') &&\n         !l.includes('example.com') && !l.includes('sentry') &&\n         !l.includes('wix.com') && !l.includes('schema.org') &&\n         !l.includes('wordpress') && !l.includes('google.com');\n});\n\n// Priorisierung: Geschäftsführer > Inhaber > Info > Kontakt\nconst prioritaeten = [\n  'geschaeftsfuehrer', 'geschaeftsfuehrung', 'inhaber', 'chef', 'ceo',\n  'info', 'kontakt', 'contact', 'hallo', 'hello', 'mail', 'office', 'anfrage', 'service'\n];\nlet besteEmail = '';\nfor (const p of prioritaeten) {\n  const gefunden = emails.find(e => e.toLowerCase().includes(p));\n  if (gefunden) { besteEmail = gefunden; break; }\n}\nif (!besteEmail && emails.length > 0) besteEmail = emails[0];\n\n// Seitentext für Kontext bereinigen\nconst seitentext = html\n  .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<[^>]*>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .substring(0, 1500);\n\n// Claude-Prompt aufbauen\nconst claudePrompt = `Du bist ein professioneller Vertriebs-Assistent für AK-Assistance.\n\nAK-Assistance bietet KI-Telefonassistenten speziell für Handwerksbetriebe an. Der Assistent übernimmt eingehende Anrufe, vereinbart Termine und beantwortet Kundenfragen – damit Handwerker keine Anfrage mehr verpassen und sich voll auf ihre Arbeit konzentrieren können.\n\nEin Telefonat mit folgendem Unternehmen hat bereits stattgefunden:\n- Firmenname: ${lead.Firmenname}\n- Branche: ${lead.Branche || 'nicht angegeben'}\n- Beschreibung: ${lead.Beschreibung || 'nicht angegeben'}\n- Reaktion im Gespräch: ${lead.Interesse}\n- Website-Kontext: ${seitentext.substring(0, 500)}\n\nSchreibe eine professionelle Nachfass-E-Mail auf Deutsch.\nAnforderungen:\n- Beziehe dich direkt auf das stattgefundene Telefonat\n- Erkläre den konkreten Nutzen von AK-Assistance für genau diesen Betrieb\n- Sei überzeugend, persönlich und auf den Punkt – nicht aufdringlich\n- Schlage einen kurzen Telefontermin oder Demo vor\n- Füge am Ende einen Abmeldehinweis ein (UWG-konform): \"Falls Sie keine weiteren E-Mails erhalten möchten, antworten Sie bitte mit 'Abmelden'.\"\n- Maximal 4-5 kurze Absätze\n\nAntworte NUR mit validem JSON, kein Markdown, kein Kommentar davor oder danach:\n{\"betreff\": \"<E-Mail Betreff>\", \"text\": \"<vollständiger E-Mail-Text mit Anrede und Grußformel>\"}`;\n\nreturn [{ json: {\n  ...lead,\n  empfaengerEmail: besteEmail,\n  alleEmails: emails.slice(0, 5),\n  emailGefunden: besteEmail !== '',\n  claudePrompt\n}}];"
+      }
+    },
+    {
+      "id": "check-email",
+      "name": "E-Mail-Adresse gefunden?",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.empfaengerEmail }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "claude-generate",
+      "name": "Personalisierte E-Mail via Claude erstellen",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "HIER_ANTHROPIC_API_KEY_EINTRAGEN"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "raw",
+        "body": "={{ JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1024, messages: [{ role: 'user', content: $json.claudePrompt }] }) }}"
+      }
+    },
+    {
+      "id": "parse-claude",
+      "name": "Claude-Antwort verarbeiten",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "// Lead-Daten aus vorherigem Schritt\nconst leadDaten = $('E-Mail-Adresse gefunden?').item.json;\n\n// Claude API Antwort verarbeiten\nconst apiResponse = $input.first().json;\nconst claudeText = apiResponse.content?.[0]?.text ||\n                   apiResponse.data?.content?.[0]?.text || '';\n\nlet emailBetreff = `Ihr persönlicher KI-Telefonassistent – AK-Assistance`;\nlet emailText = claudeText;\n\ntry {\n  // JSON aus Claude-Antwort parsen\n  const parsed = JSON.parse(claudeText.trim());\n  emailBetreff = parsed.betreff || emailBetreff;\n  emailText = parsed.text || claudeText;\n} catch (e) {\n  // Fallback: Claude-Text direkt verwenden\n  console.log('JSON-Parse fehlgeschlagen, nutze Rohtext');\n}\n\nreturn [{ json: {\n  ...leadDaten,\n  emailBetreff,\n  emailText,\n  gesendetAm: new Date().toISOString()\n}}];"
+      }
+    },
+    {
+      "id": "gmail-send",
+      "name": "E-Mail senden",
+      "type": "n8n-nodes-base.gmail",
+      "parameters": {
+        "operation": "send",
+        "sendTo": "={{ $json.empfaengerEmail }}",
+        "subject": "={{ $json.emailBetreff }}",
+        "emailType": "text",
+        "message": "={{ $json.emailText }}",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1",
+          "name": "Gmail - AK-Assistance Business"
+        }
+      }
+    },
+    {
+      "id": "sheets-update",
+      "name": "Status in Google Sheets aktualisieren",
+      "type": "n8n-nodes-base.googleSheets",
+      "parameters": {
+        "operation": "update",
+        "documentId": "HIER_GOOGLE_SHEET_ID_EINTRAGEN",
+        "sheetName": "Tabelle1",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Anruf Status": "E-Mail gesendet"
+          },
+          "matchingColumns": ["row_number"]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1",
+          "name": "Google Sheets Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "trigger": { "main": [["sheets-read"]] },
+    "sheets-read": { "main": [["filter-leads"]] },
+    "filter-leads": { "true": [["fetch-website"]], "false": [] },
+    "fetch-website": { "main": [["extract-email"]] },
+    "extract-email": { "main": [["check-email"]] },
+    "check-email": { "true": [["claude-generate"]], "false": [] },
+    "claude-generate": { "main": [["parse-claude"]] },
+    "parse-claude": { "main": [["gmail-send"]] },
+    "gmail-send": { "main": [["sheets-update"]] }
+  },
+  "active": false,
+  "settings": {}
+}
