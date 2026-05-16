@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, pilotApplicationsTable } from "@workspace/db";
 import { insertPilotApplicationSchema } from "@workspace/db";
+import { appendPilotApplication } from "../google-sheets";
 
 const router = Router();
 
@@ -17,6 +18,12 @@ router.post("/pilot", async (req, res) => {
       .values(parsed.data)
       .returning();
     req.log.info({ id: row.id, company: row.company }, "Pilot-Bewerbung gespeichert");
+
+    // Sync to Google Sheets (non-blocking — don't fail the request if Sheets is unavailable)
+    appendPilotApplication(row).catch((err) => {
+      req.log.warn({ err }, "Google Sheets sync fehlgeschlagen");
+    });
+
     res.status(201).json({ success: true, id: row.id });
   } catch (err) {
     req.log.error({ err }, "Fehler beim Speichern der Pilot-Bewerbung");
