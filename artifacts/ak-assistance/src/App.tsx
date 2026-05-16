@@ -1432,19 +1432,60 @@ function Footer() {
 
 /* ── Chatbot Widget ──────────────────────────────────────── */
 function ChatbotWidget() {
+  const { callState, startCall, endCall } = useRetell();
+  const isActive = callState === "active";
+  const isLoading = callState === "loading";
+
+  function handleClick() {
+    if (isLoading) return;
+    if (isActive) endCall();
+    else startCall();
+  }
+
   return (
     <button
       className="chatbot-btn"
-      aria-label="KI-Assistent starten"
-      onClick={() => {
-        /* RETELL AI CHATBOT WIDGET - insert agent ID: YOUR_AGENT_ID_HERE */
-        /* retellWebClient.startCall({ agentId: "YOUR_AGENT_ID_HERE" }) */
-        alert("Retell AI — Agent ID noch nicht konfiguriert.");
+      aria-label={isActive ? "Gespräch beenden" : "KI-Assistent starten"}
+      title={isActive ? "Gespräch beenden" : "KI-Assistent starten"}
+      onClick={handleClick}
+      style={{
+        position: "relative",
+        opacity: isLoading ? 0.7 : 1,
+        cursor: isLoading ? "wait" : "pointer",
+        background: isActive ? "#c0392b" : undefined,
+        transition: "background 0.3s ease",
       }}
     >
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.39 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.06 6.06l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-      </svg>
+      {/* Pulsing ring when active */}
+      {isActive && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: -6,
+            borderRadius: "50%",
+            border: "2.5px solid rgba(192,57,43,0.6)",
+            animation: "wave-ring 1.4s ease-out infinite",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+      {isLoading ? (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
+        </svg>
+      ) : isActive ? (
+        /* Phone hang-up icon */
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.69 12" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </svg>
+      ) : (
+        /* Phone icon */
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.39 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.06 6.06l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      )}
     </button>
   );
 }

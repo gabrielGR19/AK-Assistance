@@ -3,7 +3,7 @@ import { Router } from "express";
 const router = Router();
 
 const RETELL_API_KEY = process.env.RETELL_API_KEY || "";
-const AGENT_ID = process.env.RETELL_AGENT_ID || "";
+const AGENT_ID = process.env.RETELL_AGENT_ID || "agent_60ad635e387246bfcdc4d4fda9";
 
 router.post("/create-call", async (req, res) => {
   if (!RETELL_API_KEY || !AGENT_ID) {
