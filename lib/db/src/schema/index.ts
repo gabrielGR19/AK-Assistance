@@ -18,3 +18,4 @@
 //   export type Post = typeof postsTable.$inferSelect;
 
 export * from "./pilot-applications";
+export * from "./newsletter-subscribers";

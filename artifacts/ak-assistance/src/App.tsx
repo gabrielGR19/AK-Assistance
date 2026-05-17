@@ -713,31 +713,32 @@ function BewertungenSection() {
           </p>
         </div>
 
-        {/* Google review CTA */}
+        {/* ProvenExpert Widget + Bewertungs-CTA */}
         <div
-          className="animate-in delay-2"
-          style={{ background: "var(--background)", borderRadius: 24, padding: "40px 32px", textAlign: "center", border: "1px solid var(--border)" }}
+          className="animate-in delay-2 rounded-2xl"
+          style={{ background: "var(--card)", border: "1px solid var(--border)", padding: "40px 32px", textAlign: "center" }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
-            <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
-              <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.1 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.5-4z"/>
-              <path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 16.1 19.3 13 24 13c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/>
-              <path fill="#FBBC05" d="M24 44c5.9 0 11-2 14.7-5.4l-6.8-5.6C29.8 34.9 27 36 24 36c-6.1 0-10.7-2.9-11.8-7.5l-7 5.4C8 40.1 15.3 44 24 44z"/>
-              <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.2-2.3 4-4.3 5.3l6.8 5.6C42.5 35.7 45 30.2 45 24c0-1.3-.2-2.7-.5-4z"/>
-            </svg>
-            <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--foreground)" }}>
-              Zufrieden mit AK-Assistance?
-            </h3>
+          <div
+            className="pe-richsnippets"
+            data-page-url="https://www.provenexpert.com/de-de/ak-assistance/"
+            data-size="large"
+          />
+          <div style={{ marginTop: 28 }}>
+            <p style={{ margin: "0 0 20px", color: "var(--muted-foreground)", fontSize: "0.98rem" }}>
+              Zufrieden mit AK-Assistance? Helfen Sie anderen Betrieben mit Ihrer Erfahrung.
+            </p>
+            <a
+              href="https://www.provenexpert.com/de-de/ak-assistance/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange"
+            >
+              Uns auf Proven Expert bewerten
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
           </div>
-          <p style={{ margin: "0 0 24px", color: "var(--muted-foreground)", fontSize: "0.98rem", maxWidth: 480, marginInline: "auto" }}>
-            Helfen Sie anderen Betrieben mit Ihrer Erfahrung — hinterlassen Sie uns eine Bewertung direkt auf Google.
-          </p>
-          <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange">
-            Jetzt bei Google bewerten
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
         </div>
       </div>
     </section>
@@ -1041,19 +1042,73 @@ function TeamSection() {
     { icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", label: "Vertrauen", text: "DSGVO-konform, Made in Germany — Ihre Daten bleiben sicher und in guten Händen." },
   ];
 
+  const team = [
+    { name: "Moritz Koch", title: "Co-Founder & KI-Strategie" },
+    { name: "Gabriel Adam", title: "Co-Founder & Technologie" },
+  ];
+
   return (
     <section id="team" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <span className="section-label animate-in">Das Team</span>
           <h2 className="text-3xl sm:text-4xl font-black mt-3 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
-            Unser Team
+            Hinter AK-Assistance
           </h2>
-          <p className="mt-5 text-lg max-w-2xl mx-auto animate-in delay-2" style={{ color: "var(--muted-foreground)" }}>
-            Hier steht das Motivationsschreiben des Teams — warum wir AK-Assistance gegründet haben, was uns antreibt und welche Vision wir gemeinsam verfolgen. Ein ehrlicher Einblick in unsere Geschichte und unsere Leidenschaft für das Handwerk.
+        </div>
+
+        {/* Team Member Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+          {team.map((member, i) => (
+            <div
+              key={i}
+              className={`animate-in delay-${i + 1} rounded-2xl p-8 flex flex-col items-center text-center gap-5`}
+              style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+            >
+              {/* FOTO MORITZ PLATZHALTER / FOTO GABRIEL PLATZHALTER */}
+              <div
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: "50%",
+                  background: "var(--muted)",
+                  border: "2px solid var(--border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-1" style={{ color: "var(--foreground)" }}>{member.name}</h3>
+                <p className="text-sm font-semibold" style={{ color: "#e8622a" }}>{member.title}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Unsere Geschichte */}
+        {/* MOTIVATIONSSCHREIBEN PLATZHALTER */}
+        <div
+          className="animate-in delay-3 rounded-2xl p-8 mb-8"
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            borderLeft: "4px solid #0d2d3e",
+          }}
+        >
+          <h3 className="text-xl font-bold mb-4" style={{ color: "var(--foreground)" }}>Unsere Geschichte</h3>
+          <p className="leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+            Hier folgt unser Motivationsschreiben — warum wir AK-Assistance gegründet haben, was uns antreibt und welche Vision wir gemeinsam verfolgen.
           </p>
         </div>
 
+        {/* Values */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {values.map((v, i) => (
             <div
@@ -1083,11 +1138,20 @@ function TeamSection() {
 
 /* ── News ────────────────────────────────────────────────── */
 
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  AUTOMATISIERUNG: Blog-Posts hier eintragen                 ║
-// ║  Jeder Eintrag hat: id, date, category, title,              ║
-// ║  excerpt, readTime, imageUrl (optional), link (optional)    ║
-// ╚══════════════════════════════════════════════════════════════╝
+/*
+ * HOW TO ADD A BLOG POST:
+ * Add a new object to the BLOG_POSTS array like this:
+ * {
+ *   id: 1,
+ *   date: "17. Mai 2026",
+ *   category: "KI-Trends",
+ *   title: "Ihr Artikel-Titel hier",
+ *   excerpt: "Kurze Zusammenfassung des Artikels (2-3 Sätze).",
+ *   readTime: "3 Min",
+ *   imageUrl: "/imports/blog-image.jpg", // optional
+ *   link: "https://ihr-artikel-link.de"  // optional
+ * }
+ */
 const BLOG_POSTS: {
   id: number;
   date: string;
@@ -1165,6 +1229,26 @@ function BlogCard({ post }: { post: (typeof BLOG_POSTS)[number] }) {
 
 function NewsSection() {
   const hasPosts = BLOG_POSTS.length > 0;
+  const [nlEmail, setNlEmail] = useState("");
+  const [nlStatus, setNlStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  async function handleNewsletter(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nlEmail.trim()) return;
+    setNlStatus("sending");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: nlEmail }),
+      });
+      if (!res.ok) throw new Error();
+      setNlStatus("success");
+      setNlEmail("");
+    } catch {
+      setNlStatus("error");
+    }
+  }
 
   return (
     <section id="news" className="py-20 px-4 sm:px-6" style={{ background: "var(--background)" }}>
@@ -1180,7 +1264,7 @@ function NewsSection() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: "var(--foreground)" }}>
             News in der KI-Welt
           </h2>
-          <p className="text-base" style={{ color: "var(--foreground-muted)", maxWidth: 520 }}>
+          <p className="text-base" style={{ color: "var(--muted-foreground)", maxWidth: 520 }}>
             Aktuelle Entwicklungen, Praxistipps und Branchentrends rund um Künstliche Intelligenz — speziell für Unternehmen und Dienstleister.
           </p>
         </div>
@@ -1193,9 +1277,9 @@ function NewsSection() {
             ))}
           </div>
         ) : (
-          /* Platzhalter — wird ersetzt sobald erste Beiträge vorhanden sind */
+          /* Platzhalter mit Newsletter-Anmeldung */
           <div
-            className="rounded-2xl flex flex-col items-center justify-center text-center py-16 px-8 gap-4"
+            className="rounded-2xl flex flex-col items-center justify-center text-center py-14 px-8 gap-6"
             style={{ border: "1.5px dashed var(--border)", background: "var(--muted)" }}
           >
             <div
@@ -1203,17 +1287,67 @@ function NewsSection() {
               style={{ background: "rgba(232,98,42,0.1)" }}
             >
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
             <div>
               <p className="font-semibold text-base mb-1" style={{ color: "var(--foreground)" }}>
                 Beiträge folgen in Kürze
               </p>
-              <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
-                Hier werden regelmäßig neue Artikel rund um KI, Automatisierung und den digitalen Wandel im Handwerk veröffentlicht.
+              <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                Wir informieren Sie, wenn neue Artikel erscheinen.
               </p>
             </div>
+
+            {nlStatus === "success" ? (
+              <div
+                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
+                style={{ background: "rgba(232,98,42,0.1)", color: "#e8622a" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Vielen Dank! Wir melden uns.
+              </div>
+            ) : (
+              <form
+                onSubmit={handleNewsletter}
+                style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", width: "100%", maxWidth: 420 }}
+              >
+                <input
+                  type="email"
+                  placeholder="Ihre E-Mail-Adresse"
+                  value={nlEmail}
+                  onChange={(e) => setNlEmail(e.target.value)}
+                  required
+                  style={{
+                    flex: 1,
+                    minWidth: 200,
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    border: nlStatus === "error" ? "1px solid #e53e3e" : "1px solid var(--border)",
+                    background: "var(--background)",
+                    color: "var(--foreground)",
+                    fontSize: "0.93rem",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={nlStatus === "sending"}
+                  className="btn-orange px-5 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ opacity: nlStatus === "sending" ? 0.7 : 1, cursor: nlStatus === "sending" ? "wait" : "pointer", whiteSpace: "nowrap" }}
+                >
+                  {nlStatus === "sending" ? "…" : "Benachrichtigen"}
+                </button>
+                {nlStatus === "error" && (
+                  <p className="w-full text-xs mt-1" style={{ color: "#e53e3e" }}>
+                    Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.
+                  </p>
+                )}
+              </form>
+            )}
           </div>
         )}
       </div>
@@ -1229,7 +1363,7 @@ function FAQSection() {
     { q: "Für welche Betriebe ist AK-Assistance geeignet?", a: "Für alle Unternehmen und Dienstleister, die regelmäßig Anrufe erhalten und Termine vereinbaren." },
     { q: "Muss ich technisches Wissen mitbringen?", a: "Nein. Wir übernehmen die gesamte Einrichtung. Sie brauchen nichts zu installieren oder zu konfigurieren." },
     { q: "Was passiert, wenn der Assistent eine Frage nicht beantworten kann?", a: "Der Assistent leitet den Anruf weiter oder hinterlässt eine Nachricht. Kein Anruf geht verloren." },
-    { q: "Wie lange dauert die Einrichtung?", a: "In der Regel ist Ihr KI-Assistent innerhalb weniger Tage nach dem ersten Gespräch einsatzbereit." },
+    { q: "Wie lange dauert die Einrichtung?", a: "Wir kümmern uns um den gesamten Einrichtungsprozess. Nach dem ersten Gespräch stimmen wir alles gemeinsam ab und gehen erst live, wenn Sie vollständig zufrieden sind." },
     { q: "Kann ich den Assistenten jederzeit anpassen?", a: "Ja. Wenn sich Ihre Leistungen oder Öffnungszeiten ändern, passen wir den Assistenten entsprechend an." },
     { q: "Kostet das erste Gespräch etwas?", a: "Nein. Das erste Gespräch ist völlig kostenlos und unverbindlich." },
   ];
@@ -1293,7 +1427,7 @@ function CTASection() {
           Bereit für Ihren<br />KI-Assistenten?
         </h2>
         <p className="text-lg mb-12 max-w-xl mx-auto leading-relaxed animate-in delay-2" style={{ color: "#a0b4c0" }}>
-          Buchen Sie ein kostenloses Gespräch. Kein Risiko, keine Verpflichtung.
+          Kein langer Onboarding-Prozess, kein technisches Vorwissen nötig. Buchen Sie ein kostenloses Gespräch und sehen Sie, wie Ihr KI-Assistent Ihren Betrieb entlasten kann.
         </p>
         <div className="animate-in delay-3">
           <a
@@ -1412,6 +1546,8 @@ function Footer() {
             <a href="#kontakt" className="hover:text-white transition-colors">Kontakt</a>
             <a href="#impressum" className="hover:text-white transition-colors">Impressum</a>
             <a href="#datenschutz" className="hover:text-white transition-colors">Datenschutz</a>
+            <a href="https://www.instagram.com/ak.assistance/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
+            <a href="https://www.provenexpert.com/de-de/ak-assistance/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Proven Expert</a>
           </div>
           <a
             href={BOOKING_URL}
@@ -1462,6 +1598,36 @@ export default function App() {
       <ImpressumSection />
       <DatenschutzSection />
       <Footer />
+
+      {/* Floating "Bewerten Sie uns" tab — desktop only */}
+      <div
+        className="hidden md:block"
+        style={{ position: "fixed", left: 0, top: "50%", transform: "translateY(-50%)", zIndex: 300 }}
+      >
+        <a
+          href="https://www.provenexpert.com/de-de/ak-assistance/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="AK-Assistance auf Proven Expert bewerten"
+          style={{
+            display: "block",
+            background: "#e8622a",
+            color: "white",
+            textDecoration: "none",
+            padding: "14px 10px",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            borderRadius: "0 8px 8px 0",
+            boxShadow: "2px 0 16px rgba(232,98,42,0.35)",
+            writingMode: "vertical-rl",
+            transform: "rotate(180deg)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          ★ Bewerten Sie uns
+        </a>
+      </div>
 
       <CookieBanner />
     </RetellProvider>
