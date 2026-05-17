@@ -101,24 +101,24 @@ function WindowItem({
 }) {
   const x = useTransform(
     scrollYProgress,
-    [0.28, 0.40, 0.52],
+    [0.38, 0.52, 0.66],
     [win.startX, win.startX * 0.3, 0]
   );
   const y = useTransform(
     scrollYProgress,
-    [0.28, 0.40, 0.52],
+    [0.38, 0.52, 0.66],
     [win.startY, win.startY * 0.3, 80]
   );
   const scale = useTransform(
     scrollYProgress,
-    [0.28, 0.40, 0.52],
-    [1, 0.82, 0.66]
+    [0.38, 0.52, 0.66],
+    [1, 0.82, 0.56]
   );
-  const fadeStart = 0.54 + (index / TOTAL) * 0.04;
-  const fadeEnd = fadeStart + 0.04;
+  const fadeStart = 0.67 + (index / TOTAL) * 0.04;
+  const fadeEnd = fadeStart + 0.05;
   const opacity = useTransform(
     scrollYProgress,
-    [0.28, fadeStart, fadeEnd],
+    [0.38, fadeStart, fadeEnd],
     [1, 1, 0]
   );
 
@@ -227,7 +227,7 @@ function WindowItem({
 }
 
 function ProblemLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.28, 0.29, 0.48, 0.58], [1, 1, 1, 0]);
+  const opacity = useTransform(scrollYProgress, [0.38, 0.39, 0.56, 0.68], [1, 1, 1, 0]);
   return (
     <motion.div
       style={{
@@ -269,7 +269,7 @@ function ProblemLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number
 }
 
 function SolutionLabel({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.76, 0.83], [0, 1]);
+  const opacity = useTransform(scrollYProgress, [0.83, 0.90], [0, 1]);
   return (
     <motion.div
       style={{
@@ -311,8 +311,8 @@ function SolutionLabel({ scrollYProgress }: { scrollYProgress: MotionValue<numbe
 }
 
 function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.64, 0.75], [0, 1]);
-  const y = useTransform(scrollYProgress, [0.64, 0.75, 0.86], [500, 80, 80]);
+  const opacity = useTransform(scrollYProgress, [0.58, 0.66], [0, 1]);
+  const y = useTransform(scrollYProgress, [0.58, 0.66, 0.88], [500, 80, 80]);
 
   return (
     <motion.div
@@ -349,9 +349,9 @@ function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> })
 
 
 function DasProblemIntro({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.20, 0.28], [1, 1, 0]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.14, 0.23], [1, 1, 0]);
-  const textY = useTransform(scrollYProgress, [0.14, 0.28], [0, -24]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.22, 0.38], [1, 1, 0]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.15, 0.30], [1, 1, 0]);
+  const textY = useTransform(scrollYProgress, [0.15, 0.38], [0, -24]);
 
   return (
     <motion.div
@@ -408,7 +408,7 @@ function DasProblemIntro({ scrollYProgress }: { scrollYProgress: MotionValue<num
 }
 
 function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.28, 0.64, 0.75], [1, 1, 0]);
+  const opacity = useTransform(scrollYProgress, [0.38, 0.72, 0.82], [1, 1, 0]);
   return (
     <motion.div
       style={{
@@ -423,7 +423,7 @@ function BlueBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
 }
 
 function WhiteBg({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.64, 0.75], [0, 1]);
+  const opacity = useTransform(scrollYProgress, [0.72, 0.82], [0, 1]);
   return (
     <motion.div
       style={{ opacity, position: "absolute", inset: 0, background: "var(--background)", willChange: "opacity" }}
