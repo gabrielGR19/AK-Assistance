@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 
 const logoImage = "/logo.png";
@@ -438,6 +438,16 @@ export default function HeroAnimation() {
     offset: ["start start", "end end"],
   });
 
+  const [animScale, setAnimScale] = useState(1);
+  useEffect(() => {
+    const update = () => {
+      setAnimScale(Math.min(1, window.innerWidth / 720));
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   return (
     <div ref={containerRef} style={{ height: "360vh", position: "relative" }}>
       {/* Preload all images to prevent jank on first scroll-in */}
@@ -457,11 +467,20 @@ export default function HeroAnimation() {
           transform: "translateZ(0)",
         }}
       >
+        {/* Full-screen backgrounds — always fill the viewport */}
         <BlueBg scrollYProgress={scrollYProgress} />
         <WhiteBg scrollYProgress={scrollYProgress} />
         <DasProblemIntro scrollYProgress={scrollYProgress} />
 
-        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        {/* Scaled animation layer — windows + logo shrink on narrow screens */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${animScale})`,
+            transformOrigin: "center center",
+          }}
+        >
           <SolutionLabel scrollYProgress={scrollYProgress} />
           {WINDOWS.map((win, index) => (
             <WindowItem
@@ -471,7 +490,6 @@ export default function HeroAnimation() {
               scrollYProgress={scrollYProgress}
             />
           ))}
-
           <LogoItem scrollYProgress={scrollYProgress} />
         </div>
       </div>

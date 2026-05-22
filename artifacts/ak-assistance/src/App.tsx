@@ -101,7 +101,7 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
-            className="w-full px-6 py-3 rounded-full text-sm btn-orange"
+            className="flex w-full items-center justify-center px-6 py-3 rounded-full text-sm btn-orange"
           >
             Termin buchen
           </a>
@@ -150,14 +150,13 @@ function NavBar({
       >
         <div className="px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
-            <a href="#" className="flex items-center gap-3">
+            <a href="#" className="flex items-center gap-2 sm:gap-3">
               <img
                 src={logoUrl}
                 alt="AK-Assistance Logo"
-                style={{ height: 55 }}
-                loading="lazy"
+                style={{ height: 38, width: "auto", objectFit: "contain", flexShrink: 0 }}
               />
-              <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "1.15rem" }}>
+              <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "clamp(0.9rem, 3.5vw, 1.1rem)", lineHeight: 1, whiteSpace: "nowrap" }}>
                 AK-assistance
               </span>
             </a>
@@ -188,6 +187,7 @@ function NavBar({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden sm:inline-flex px-5 py-2.5 rounded-full text-sm btn-orange"
+            style={{ flexShrink: 0 }}
               >
                 Termin buchen
               </a>
@@ -344,7 +344,7 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "120px 24px 80px",
+        padding: "clamp(80px, 18vw, 140px) 20px 60px",
         textAlign: "center",
       }}
     >
@@ -359,7 +359,7 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
           style={{
             margin: 0,
             fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontSize: "clamp(2.4rem, 6vw, 4.2rem)",
+            fontSize: "clamp(1.85rem, 7vw, 4.2rem)",
             fontWeight: 900,
             letterSpacing: "-0.04em",
             lineHeight: 1.08,
@@ -489,7 +489,7 @@ function HeroSection({ darkMode }: { darkMode: boolean }) {
             href={BOOKING_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto px-8 py-4 rounded-full text-base btn-orange"
+            className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 rounded-full text-base btn-orange"
           >
             Kostenloses Gespräch buchen
           </a>
@@ -806,7 +806,7 @@ function DemoSection() {
         <div className="animate-in delay-3 flex flex-col items-center gap-6">
           <DemoMicButton />
           <button
-            className="px-10 py-4 rounded-full text-base btn-orange"
+            className="inline-flex items-center justify-center px-10 py-4 rounded-full text-base btn-orange"
             style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}
             disabled={isLoading}
             onClick={() => { if (isLoading) return; isActive ? endCall() : startCall(); }}
@@ -1020,7 +1020,7 @@ function PilotSection() {
                 <button
                   type="submit"
                   disabled={status === "sending"}
-                  className="w-full btn-orange rounded-xl py-3.5 text-base font-semibold"
+                  className="flex w-full items-center justify-center btn-orange rounded-xl py-3.5 text-base font-semibold"
                   style={{ opacity: status === "sending" ? 0.7 : 1, cursor: status === "sending" ? "wait" : "pointer" }}
                 >
                   {status === "sending" ? "Wird gesendet…" : "Bewerbung einreichen"}
@@ -1336,7 +1336,7 @@ function NewsSection() {
                 <button
                   type="submit"
                   disabled={nlStatus === "sending"}
-                  className="btn-orange px-5 py-2.5 rounded-xl text-sm font-semibold"
+                  className="inline-flex items-center justify-center btn-orange px-5 py-2.5 rounded-xl text-sm font-semibold"
                   style={{ opacity: nlStatus === "sending" ? 0.7 : 1, cursor: nlStatus === "sending" ? "wait" : "pointer", whiteSpace: "nowrap" }}
                 >
                   {nlStatus === "sending" ? "…" : "Benachrichtigen"}
@@ -1483,7 +1483,7 @@ function CookieBanner() {
         </button>
         <button
           onClick={() => choose("accepted")}
-          className="btn-orange"
+          className="inline-flex items-center justify-center btn-orange"
           style={{ padding: "9px 20px", borderRadius: 100, fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", border: "none" }}
         >
           Akzeptieren
@@ -1553,7 +1553,7 @@ function Footer() {
             href={BOOKING_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-6 py-2.5 rounded-full text-sm btn-orange"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm btn-orange"
           >
             Termin buchen
           </a>
