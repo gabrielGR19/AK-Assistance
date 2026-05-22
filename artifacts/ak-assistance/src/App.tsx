@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
 
-const BOOKING_URL = "https://calendar.app.google/emxJvrnuFuTGj3hv6";
+const BOOKING_URL = "https://calendar.app.google/kdijYkWJyTSL5MA5A";
 
 // ── Social Proof ──────────────────────────────────────────────────────────────
 // Trage hier die aktuelle Anzahl der Betriebe ein, die AK-Assistance nutzen.
