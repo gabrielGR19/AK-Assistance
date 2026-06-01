@@ -72,7 +72,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"query\": \"\\\"künstliche Intelligenz\\\" OR \\\"artificial intelligence\\\" OR \\\"AI\\\" OR \\\"OpenAI\\\" OR \\\"ChatGPT\\\"\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 15,\n  \"search_depth\": \"basic\"\n}",
+        "jsonBody": "{\n  \"query\": \"künstliche Intelligenz OR artificial intelligence OR AI OR OpenAI OR ChatGPT\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 15,\n  \"search_depth\": \"basic\"\n}",
         "options": {
           "timeout": 30000
         }
@@ -120,7 +120,7 @@
           },
           "conditions": [
             {
-              "id": "c-61522",
+              "id": "c-2617",
               "leftValue": "={{ $json.enough_sources }}",
               "rightValue": "",
               "operator": {
@@ -208,7 +208,7 @@
           },
           "conditions": [
             {
-              "id": "c-50291",
+              "id": "c-64877",
               "leftValue": "={{ $json.article_valid }}",
               "rightValue": "",
               "operator": {
@@ -242,7 +242,7 @@
           },
           "conditions": [
             {
-              "id": "c-67776",
+              "id": "c-40378",
               "leftValue": "={{ $('Einstellungen').first().json.dry_run }}",
               "rightValue": "",
               "operator": {
