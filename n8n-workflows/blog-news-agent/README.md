@@ -153,10 +153,15 @@ der Archiv-Teil funktioniert). Nach abgeschlossenem Test `dry_run` wieder auf `f
 
 ## 7. Bekannte Grenzen / bewusste Vereinfachungen
 
-- **Tiefer-Query-Fallback (Plan Node 3) noch nicht umgesetzt:** Aktuell gilt — sind alle Top-10
-  Themen bereits im Archiv, meldet der Workflow „kein neues Thema" und endet. Der im Plan
-  beschriebene zweite, tiefere Suchlauf vor dem Abbruch fehlt noch. Erweiterbar durch eine zweite
-  Tavily-Node + Dedup im „nein"-Zweig von „Neues Thema gefunden?".
+- **Wochenrückblick statt Einzelthema:** Bewusste Abkehr vom ursprünglichen „ein Thema tief
+  recherchieren"-Plan. Grund: Tavily lieferte oben oft eine starke, aber nischige Einzelmeldung,
+  zu der die Nachrecherche keine 3 unabhängigen Domains fand → ständiger Abbruch. Der Rückblick
+  über die Top-Meldungen einer breiten Suche erfüllt die 3-Domains-Regel praktisch immer und ist
+  für wöchentliches SEO sogar das bessere Format. Alle harten Regeln bleiben (echte Quellen,
+  Quellenliste, ≥3 Domains, Review-Gate).
+- **Kein Cross-Wochen-Themen-Dedup:** Da jede Woche frische News (letzte 7 Tage) verarbeitet
+  werden, ist Wiederholung gering. Das Archiv dient v.a. der Freigabe-/Publish-Verwaltung.
+  Bei Bedarf nachrüstbar (Quell-URLs im Archiv speichern und in „Quellen aufbereiten" abgleichen).
 - **CMS ist Platzhalter:** Sobald das CMS feststeht (WordPress/Headless auf Hetzner/IONOS), die
   Nodes „CMS-Entwurf anlegen", „CMS: Veröffentlichen", „CMS: Entwurf löschen" durch den nativen
   Node oder angepasste HTTP-Calls ersetzen. Erwartete Draft-Response: `{ "post_id", "preview_url" }`.
