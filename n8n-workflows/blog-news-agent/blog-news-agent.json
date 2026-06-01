@@ -1,0 +1,953 @@
+{
+  "name": "AK Blog-Agent — Wöchentlicher KI-News-Entwurf",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Wöchentlicher Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        380
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "config",
+      "name": "Einstellungen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        60,
+        380
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s1",
+              "name": "dry_run",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "s2",
+              "name": "telegram_chat_id",
+              "value": "8740574505",
+              "type": "string"
+            },
+            {
+              "id": "s3",
+              "name": "claude_model",
+              "value": "claude-sonnet-4-6",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "tavily-search",
+      "name": "Themen-Recherche (Tavily)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"query\": \"\\\"künstliche Intelligenz\\\" OR \\\"AI\\\" OR \\\"LLM\\\" news\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 10,\n  \"search_depth\": \"basic\"\n}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLATZHALTER_TAVILY",
+          "name": "Tavily API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "archive-load",
+      "name": "Archiv laden",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        380
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "blog_archive"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": []
+        },
+        "returnAll": true,
+        "orderBy": false
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "dedup",
+      "name": "Themen-Dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        380
+      ],
+      "parameters": {
+        "jsCode": "// Themen-Dedup: erstes Thema wählen, das noch nicht im Archiv steht.\n// Top-Ergebnisse der Themen-Recherche aus Tavily\nconst search = $('Themen-Recherche (Tavily)').first().json;\nconst results = Array.isArray(search.results) ? search.results : [];\n\n// Bereits behandelte Themen aus dem Archiv (Data Table)\nconst archiv = $('Archiv laden').all().map(i => i.json);\n\n// Normalisierung: Kleinschreibung, nur aussagekräftige Tokens\nconst tokenize = (s) => (s || '')\n  .toLowerCase()\n  .replace(/[^a-z0-9äöüß ]/gi, ' ')\n  .split(/\\s+/)\n  .filter(t => t.length > 3);\n\nconst stop = new Set(['oder','und','news','letzte','tage','eine','einen','einer','mit',\n  'für','von','das','der','die','dem','den','ein','ist','wird','neue','neuer','neues','beim','über']);\nconst keyset = (s) => new Set(tokenize(s).filter(t => !stop.has(t)));\n\n// Jaccard-Ähnlichkeit zweier Token-Mengen (0..1)\nconst jaccard = (a, b) => {\n  if (a.size === 0 || b.size === 0) return 0;\n  let inter = 0;\n  for (const t of a) if (b.has(t)) inter++;\n  return inter / (a.size + b.size - inter);\n};\n\n// Archiv-Themen als Token-Mengen (Titel + Keywords)\nconst archivKeys = archiv.map(row => keyset(`${row.title || ''} ${row.keywords || ''}`));\n\n// Erstes Ergebnis finden, das thematisch noch nicht behandelt wurde\nlet chosen = null;\nfor (const r of results) {\n  const k = keyset(r.title);\n  const istDuplikat = archivKeys.some(ak => jaccard(k, ak) >= 0.4);\n  if (!istDuplikat) { chosen = r; break; }\n}\n\n// Kein neues Thema gefunden -> Workflow meldet das und bricht sauber ab\nif (!chosen) {\n  return [{ json: { has_new_topic: false } }];\n}\n\nreturn [{ json: {\n  has_new_topic: true,\n  topic_title: chosen.title,\n  topic_url: chosen.url,\n  topic_query: chosen.title,\n  candidate_count: results.length\n}}];\n"
+      }
+    },
+    {
+      "id": "if-new-topic",
+      "name": "Neues Thema gefunden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        940,
+        380
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-77543",
+              "leftValue": "={{ $json.has_new_topic }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "deep-research",
+      "name": "Tiefen-Recherche (Tavily)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1160,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: $json.topic_query, topic: 'news', days: 7, max_results: 8, search_depth: 'advanced', include_raw_content: true }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLATZHALTER_TAVILY",
+          "name": "Tavily API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "check-sources",
+      "name": "Quellen prüfen (≥3 Domains)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Quellen prüfen (min. 3 unabhängige Domains) + Claude-Prompt aufbauen.\n// Ergebnisse der Tiefen-Recherche\nconst deep = $('Tiefen-Recherche (Tavily)').first().json;\nconst results = Array.isArray(deep.results) ? deep.results : [];\nconst topic = $('Themen-Dedup').first().json.topic_title || 'KI-News der Woche';\n\n// Domain aus URL extrahieren\nconst domainOf = (url) => {\n  try { return new URL(url).hostname.replace(/^www\\./, ''); }\n  catch (e) { return ''; }\n};\n\n// Quellen aufbereiten, Duplikate je URL entfernen\nconst seen = new Set();\nconst sources = [];\nfor (const r of results) {\n  if (!r.url || seen.has(r.url)) continue;\n  seen.add(r.url);\n  const content = (r.raw_content || r.content || '').replace(/\\s+/g, ' ').trim().substring(0, 2000);\n  sources.push({\n    url: r.url,\n    title: r.title || '',\n    published_date: r.published_date || '',\n    domain: domainOf(r.url),\n    snippet: content\n  });\n}\n\n// Mindestens 3 verschiedene Domains erforderlich (Anti-Halluzination)\nconst domains = new Set(sources.map(s => s.domain).filter(Boolean));\nconst enough_sources = domains.size >= 3 && sources.length >= 3;\n\n// Exakter System-Prompt gemäß Vorgabe\nconst claude_system = \"Du bist Redakteur für den AK-Assistance-Blog. Zielgruppe: deutsche Handwerksbetriebe,\\ndie wissen wollen, was in der KI-Welt passiert und was es für sie bedeutet.\\n\\nStrikte Regeln:\\n- Verwende AUSSCHLIESSLICH die unten gelieferten Recherche-Quellen. Keine Information,\\n  die dort nicht steht, darf in den Artikel.\\n- Wenn die Quellen widersprüchlich oder unklar sind, benenne das im Artikel.\\n- Keine Zahlen, Zitate, Studien oder Personen erfinden.\\n- Schreibe auf Deutsch, sachlich, klar, ohne Marketing-Floskeln.\\n- Länge: 600–900 Wörter.\\n- Struktur: H1-Titel, kurze Einleitung (2–3 Sätze), 3–5 H2-Abschnitte, Fazit, Quellenliste.\\n- Quellenliste am Ende als nummerierte Liste: [Nr] Titel — Domain (Datum) — URL.\\n- Wenn weniger als 3 Quellen verwertbar sind, antworte ausschließlich mit:\\n  \\\"INSUFFICIENT_SOURCES\\\".\\n\\nGib das Ergebnis als JSON zurück:\\n{\\n  \\\"title\\\": \\\"...\\\",\\n  \\\"slug\\\": \\\"...\\\",\\n  \\\"meta_description\\\": \\\"... (max 155 Zeichen, SEO-tauglich)\\\",\\n  \\\"keywords\\\": [\\\"...\\\", \\\"...\\\"],\\n  \\\"body_markdown\\\": \\\"...\\\",\\n  \\\"sources_used\\\": [{\\\"url\\\": \\\"...\\\", \\\"title\\\": \\\"...\\\", \\\"date\\\": \\\"...\\\"}]\\n}\";\n\n// User-Message: Thema + komplette Recherche-Quellen (URL, Titel, Datum, Inhalt)\nconst quellenText = sources.map((s, i) =>\n  `[${i + 1}] ${s.title}\\nDomain: ${s.domain}\\nDatum: ${s.published_date || 'unbekannt'}\\nURL: ${s.url}\\nInhalt: ${s.snippet}`\n).join('\\n\\n');\n\nconst claude_user = `Thema des Artikels: ${topic}\\n\\n`\n  + `Recherche-Quellen (ausschließlich diese verwenden):\\n\\n${quellenText}`;\n\nreturn [{ json: {\n  enough_sources,\n  sources_count: sources.length,\n  domains_count: domains.size,\n  sources,\n  topic_title: topic,\n  claude_system,\n  claude_user\n}}];\n"
+      }
+    },
+    {
+      "id": "if-enough-sources",
+      "name": "Genug Quellen?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-46653",
+              "leftValue": "={{ $json.enough_sources }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "claude-generate",
+      "name": "Artikel generieren (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        220
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $('Einstellungen').first().json.claude_model, max_tokens: 4096, system: $json.claude_system, messages: [{ role: 'user', content: $json.claude_user }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLATZHALTER_ANTHROPIC",
+          "name": "Anthropic API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "parse-article",
+      "name": "Claude-Antwort parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2040,
+        220
+      ],
+      "parameters": {
+        "jsCode": "// Claude-Antwort parsen und auf Verwertbarkeit prüfen.\nconst resp = $input.first().json;\nconst text = (resp.content && resp.content[0] && resp.content[0].text) ? resp.content[0].text : '';\n\n// Anti-Halluzination: zu wenige Quellen -> klares Abbruchsignal\nif (text.trim().includes('INSUFFICIENT_SOURCES')) {\n  return [{ json: { article_valid: false, reason: 'INSUFFICIENT_SOURCES' } }];\n}\n\n// JSON aus der Antwort extrahieren (robust gegen umschließenden Text)\nlet parsed = null;\ntry {\n  parsed = JSON.parse(text.trim());\n} catch (e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  if (m) { try { parsed = JSON.parse(m[0]); } catch (e2) {} }\n}\n\n// Pflichtfelder müssen vorhanden sein, sonst gilt der Artikel als ungültig\nif (!parsed || !parsed.title || !parsed.body_markdown) {\n  return [{ json: { article_valid: false, reason: 'PARSE_ERROR' } }];\n}\n\n// Slug absichern (falls Claude keinen liefert)\nconst slug = parsed.slug || parsed.title.toLowerCase()\n  .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n\nreturn [{ json: {\n  article_valid: true,\n  title: parsed.title,\n  slug,\n  meta_description: parsed.meta_description || '',\n  keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],\n  body_markdown: parsed.body_markdown,\n  sources_used: Array.isArray(parsed.sources_used) ? parsed.sources_used : []\n}}];\n"
+      }
+    },
+    {
+      "id": "if-article-valid",
+      "name": "Artikel valide?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2260,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-81206",
+              "leftValue": "={{ $json.article_valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "if-dryrun",
+      "name": "Dry-Run aktiv?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2480,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-28168",
+              "leftValue": "={{ $('Einstellungen').first().json.dry_run }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "set-dummy-cms",
+      "name": "Dummy-CMS-Antwort (Dry-Run)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2700,
+        120
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1",
+              "name": "post_id",
+              "value": "=dry-run-{{ $now.toUnixInteger() }}",
+              "type": "string"
+            },
+            {
+              "id": "d2",
+              "name": "preview_url",
+              "value": "https://PLATZHALTER-CMS-DOMAIN.de/preview/dry-run",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cms-create",
+      "name": "CMS-Entwurf anlegen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2700,
+        320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CMS_API_URL }}/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.CMS_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: $('Claude-Antwort parsen').first().json.title, slug: $('Claude-Antwort parsen').first().json.slug, content_markdown: $('Claude-Antwort parsen').first().json.body_markdown, meta_description: $('Claude-Antwort parsen').first().json.meta_description, status: 'draft', keywords: $('Claude-Antwort parsen').first().json.keywords }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "archive-insert",
+      "name": "Archiv-Eintrag anlegen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2920,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "blog_archive"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "topic_slug": "={{ $('Claude-Antwort parsen').first().json.slug }}",
+            "title": "={{ $('Claude-Antwort parsen').first().json.title }}",
+            "url_cms": "={{ $json.preview_url }}",
+            "keywords": "={{ ($('Claude-Antwort parsen').first().json.keywords || []).join(', ') }}",
+            "published_at": "",
+            "post_id": "={{ $json.post_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "telegram-notify",
+      "name": "Telegram: Entwurf-Benachrichtigung",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3140,
+        220
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
+        "text": "=*Neuer Blog-Entwurf bereit*\n\n*Titel:* {{ $('Claude-Antwort parsen').first().json.title }}\n*Keywords:* {{ ($('Claude-Antwort parsen').first().json.keywords || []).join(', ') }}\n*Quellen verwendet:* {{ ($('Claude-Antwort parsen').first().json.sources_used || []).length }}\n\nVorschau: {{ $json.url_cms }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Veröffentlichen",
+                    "additionalFields": {
+                      "callback_data": "=approve:{{ $json.post_id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Verwerfen",
+                    "additionalFields": {
+                      "callback_data": "=reject:{{ $json.post_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLATZHALTER_TELEGRAM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "tg-no-topic",
+      "name": "Telegram: Kein neues Thema",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        520
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
+        "text": "=ℹ️ *Blog-Agent:* Diese Woche wurde kein neues KI-Thema gefunden, das nicht bereits im Archiv steht. Es wurde kein Entwurf erstellt.",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLATZHALTER_TELEGRAM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "tg-insufficient",
+      "name": "Telegram: Zu wenige Quellen",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1820,
+        520
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
+        "text": "=⚠️ *Blog-Agent abgebrochen:* Für das Thema \"{{ $('Themen-Dedup').first().json.topic_title }}\" wurden weniger als 3 unabhängige Quellen-Domains gefunden. Kein Artikel erstellt (Anti-Halluzination).",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLATZHALTER_TELEGRAM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "tg-no-article",
+      "name": "Telegram: Artikel ungültig",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2480,
+        520
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
+        "text": "=⚠️ *Blog-Agent abgebrochen:* Claude konnte aus den Quellen keinen verwertbaren Artikel erstellen (Grund: {{ $json.reason }}). Kein Entwurf angelegt.",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLATZHALTER_TELEGRAM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "tg-error",
+      "name": "Telegram: Technischer Fehler",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        940,
+        700
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
+        "text": "=❌ *Blog-Agent — technischer Fehler:* Ein API-Aufruf ist fehlgeschlagen.\nNode: {{ $json.error?.node?.name || 'unbekannt' }}\nMeldung: {{ $json.error?.message || $json.error || 'siehe n8n-Execution-Log' }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLATZHALTER_TELEGRAM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "note-1",
+      "name": "Notiz Trigger",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        120
+      ],
+      "parameters": {
+        "content": "## 1–2 · Trigger & Einstellungen\nLäuft jeden **Montag 08:00** (Europe/Berlin).\nIn **Einstellungen** den `dry_run`-Schalter umlegen, um ohne echten CMS-Call zu testen.",
+        "height": 200,
+        "width": 420,
+        "color": 4
+      }
+    },
+    {
+      "id": "note-2",
+      "name": "Notiz Recherche",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        120
+      ],
+      "parameters": {
+        "content": "## 3–4 · Recherche & Dedup\nTavily liefert echte URLs+Snippets. **Themen-Dedup** vergleicht mit dem Archiv (Data Table `blog_archive`) und wählt das erste neue Thema.\n⚠️ Fallback \"tiefere Query, falls alle Top-10 belegt\" ist noch NICHT umgesetzt — siehe README.",
+        "height": 220,
+        "width": 420,
+        "color": 4
+      }
+    },
+    {
+      "id": "note-3",
+      "name": "Notiz Quellen",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        60
+      ],
+      "parameters": {
+        "content": "## 4–5 · Tiefen-Recherche & Quellen-Check\nMind. **3 verschiedene Domains** Pflicht, sonst Abbruch (Anti-Halluzination).",
+        "height": 160,
+        "width": 380,
+        "color": 4
+      }
+    },
+    {
+      "id": "note-4",
+      "name": "Notiz Claude",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        40
+      ],
+      "parameters": {
+        "content": "## 5–6 · Artikel & CMS\nClaude schreibt streng aus den Quellen. `INSUFFICIENT_SOURCES` → Abbruch.\n**CMS-Node ist PLATZHALTER** (`$env.CMS_API_URL`). Response muss `post_id` + `preview_url` liefern.",
+        "height": 200,
+        "width": 420,
+        "color": 4
+      }
+    },
+    {
+      "id": "note-5",
+      "name": "Notiz Telegram",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        60
+      ],
+      "parameters": {
+        "content": "## 7–8 · Archiv & Freigabe\nEintrag ins Archiv (status offen, `published_at` leer), dann Telegram mit **✅/❌-Buttons**. Die Buttons werden vom zweiten Workflow (`blog-approval-handler`) verarbeitet.",
+        "height": 180,
+        "width": 420,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Wöchentlicher Trigger": {
+      "main": [
+        [
+          {
+            "node": "Einstellungen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Einstellungen": {
+      "main": [
+        [
+          {
+            "node": "Themen-Recherche (Tavily)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Themen-Recherche (Tavily)": {
+      "main": [
+        [
+          {
+            "node": "Archiv laden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archiv laden": {
+      "main": [
+        [
+          {
+            "node": "Themen-Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Themen-Dedup": {
+      "main": [
+        [
+          {
+            "node": "Neues Thema gefunden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neues Thema gefunden?": {
+      "main": [
+        [
+          {
+            "node": "Tiefen-Recherche (Tavily)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Kein neues Thema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiefen-Recherche (Tavily)": {
+      "main": [
+        [
+          {
+            "node": "Quellen prüfen (≥3 Domains)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quellen prüfen (≥3 Domains)": {
+      "main": [
+        [
+          {
+            "node": "Genug Quellen?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genug Quellen?": {
+      "main": [
+        [
+          {
+            "node": "Artikel generieren (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Zu wenige Quellen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Artikel generieren (Claude)": {
+      "main": [
+        [
+          {
+            "node": "Claude-Antwort parsen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude-Antwort parsen": {
+      "main": [
+        [
+          {
+            "node": "Artikel valide?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Artikel valide?": {
+      "main": [
+        [
+          {
+            "node": "Dry-Run aktiv?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Artikel ungültig",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dry-Run aktiv?": {
+      "main": [
+        [
+          {
+            "node": "Dummy-CMS-Antwort (Dry-Run)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CMS-Entwurf anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dummy-CMS-Antwort (Dry-Run)": {
+      "main": [
+        [
+          {
+            "node": "Archiv-Eintrag anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CMS-Entwurf anlegen": {
+      "main": [
+        [
+          {
+            "node": "Archiv-Eintrag anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archiv-Eintrag anlegen": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Entwurf-Benachrichtigung",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  },
+  "meta": {
+    "templateId": "ak-blog-news-agent"
+  },
+  "tags": []
+}
