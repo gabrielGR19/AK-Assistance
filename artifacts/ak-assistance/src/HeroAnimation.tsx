@@ -336,8 +336,9 @@ function LogoItem({ scrollYProgress }: { scrollYProgress: MotionValue<number> })
         src={logoImage}
         alt="AK ASSISTANCE Logo"
         style={{
-          width: 280,
-          height: 280,
+          width: 220,
+          height: "auto",
+          objectFit: "contain",
           borderRadius: "24px",
           boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
           flexShrink: 0,
