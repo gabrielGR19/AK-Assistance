@@ -17,29 +17,35 @@ eines Workflows stehen — er empfängt keine Daten von einem Vorgänger. Der Sc
 bis zur Telegram-Nachricht durch und **endet dann**. Der Button-Klick kommt später als separates
 `callback_query`-Ereignis an. Deshalb sind es **zwei Workflows**:
 
-| Datei | Inhalt | Aktiv? |
-|---|---|---|
-| `blog-news-agent.json` | Nodes 1–8: Schedule → Recherche → Dedup → Tiefen-Recherche → Claude → CMS-Draft → Archiv → Telegram (Buttons) | nach Test aktivieren |
-| `blog-approval-handler.json` | Nodes 9–10: Telegram-Trigger (callback_query) → Approve/Reject → CMS publish/delete + Archiv-Update | **muss dauerhaft aktiv sein** |
+| Datei | Workflow-Name in n8n | Inhalt | Aktiv? |
+|---|---|---|---|
+| `blog-news-agent.json` | **AK Blog-Agent — KI-Wochenrückblick** | Schedule → 1× Tavily-Suche → Quellen aufbereiten → Claude (Wochenrückblick) → CMS-Draft → Archiv → Telegram (Buttons) | nach Test aktivieren |
+| `blog-approval-handler.json` | **AK Blog-Agent — Approval-Handler (Telegram)** | Telegram-Trigger (callback_query) → Approve/Reject → CMS publish/delete + Archiv-Update | **muss dauerhaft aktiv sein** |
+
+> **Designprinzip (wichtig):** Statt EIN Thema auszuwählen und nachzurecherchieren (fragil — fand
+> oft keine 3 unabhängigen Quellen → Abbruch), erstellt der Workflow einen **Wochenrückblick** aus
+> EINER breiten KI-News-Suche. Aus den 15 Treffern wird je Domain die beste Meldung genommen
+> (max. 7), so sind **≥3 unabhängige Domains praktisch immer erfüllt** — kein Abbruch-Loop, und
+> trotzdem strikt quellenbasiert.
 
 ```
-blog-news-agent.json
+blog-news-agent.json  (AK Blog-Agent — KI-Wochenrückblick)
   [1] Wöchentlicher Trigger (Mo 08:00 Europe/Berlin)
   [2] Einstellungen (dry_run, chat_id, claude_model)
-  [3] Themen-Recherche (Tavily) ──┐ Fehler → Telegram
-  [ ] Archiv laden (Data Table) ──┘
-  [3] Themen-Dedup (Code) → Neues Thema? ──nein──→ Telegram "kein neues Thema"
-  [4] Tiefen-Recherche (Tavily) → Quellen prüfen (≥3 Domains?) ──nein──→ Telegram "zu wenige Quellen"
-  [5] Artikel generieren (Claude) → Antwort parsen → Artikel valide? ──nein──→ Telegram "ungültig"
+  [3] Themen-Recherche (Tavily, 1× breit) ──Fehler──→ Telegram
+  [4] Quellen aufbereiten (Code: je Domain beste Meldung, max 7)
+       → Genug Quellen (≥3 Domains)? ──nein──→ Telegram "zu wenige Quellen"
+  [5] Artikel generieren (Claude, Wochenrückblick) → Antwort parsen
+       → Artikel valide? ──nein──→ Telegram "ungültig"
   [6] Dry-Run? ──ja──→ Dummy-CMS │ ──nein──→ CMS-Entwurf anlegen (PLATZHALTER)
   [7] Archiv-Eintrag anlegen (Data Table)
   [8] Telegram: Entwurf-Benachrichtigung (✅/❌ Inline-Buttons)
 
-blog-approval-handler.json
-  [9]  Telegram: Button-Klick (callback_query)
-       → Callback parsen → Button bestätigen → Freigabe?
-  [10a] approve → CMS PATCH status=published → Archiv published_at=now → Telegram "Veröffentlicht"
-  [10b] reject  → CMS DELETE → Archiv-Eintrag löschen → Telegram "Verworfen"
+blog-approval-handler.json  (AK Blog-Agent — Approval-Handler)
+  Telegram: Button-Klick (callback_query)
+   → Callback parsen → Button bestätigen → Freigabe?
+   ├ approve → CMS PATCH status=published → Archiv published_at=now → Telegram "Veröffentlicht"
+   └ reject  → CMS DELETE → Archiv-Eintrag löschen → Telegram "Verworfen"
 ```
 
 ---
