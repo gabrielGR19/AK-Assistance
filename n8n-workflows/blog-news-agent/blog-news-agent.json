@@ -112,7 +112,8 @@
         "returnAll": true,
         "orderBy": false
       },
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "alwaysOutputData": true
     },
     {
       "id": "dedup",
@@ -146,7 +147,7 @@
           },
           "conditions": [
             {
-              "id": "c-77543",
+              "id": "c-46085",
               "leftValue": "={{ $json.has_new_topic }}",
               "rightValue": "",
               "operator": {
@@ -225,7 +226,7 @@
           },
           "conditions": [
             {
-              "id": "c-46653",
+              "id": "c-31472",
               "leftValue": "={{ $json.enough_sources }}",
               "rightValue": "",
               "operator": {
@@ -313,7 +314,7 @@
           },
           "conditions": [
             {
-              "id": "c-81206",
+              "id": "c-49427",
               "leftValue": "={{ $json.article_valid }}",
               "rightValue": "",
               "operator": {
@@ -347,7 +348,7 @@
           },
           "conditions": [
             {
-              "id": "c-28168",
+              "id": "c-34110",
               "leftValue": "={{ $('Einstellungen').first().json.dry_run }}",
               "rightValue": "",
               "operator": {
