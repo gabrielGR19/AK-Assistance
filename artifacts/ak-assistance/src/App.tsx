@@ -77,19 +77,6 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
           borderLeft: `1px solid ${darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
         }}
       >
-        <div className="flex justify-end mb-10">
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
-            style={{ background: "var(--muted)", color: "var(--foreground)" }}
-            aria-label="Menü schließen"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-
         <motion.nav
           className="flex flex-col"
           variants={sidePanelContainer}
