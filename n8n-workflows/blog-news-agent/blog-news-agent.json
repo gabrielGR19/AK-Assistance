@@ -72,7 +72,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"query\": \"\\\"künstliche Intelligenz\\\" OR \\\"AI\\\" OR \\\"LLM\\\" news\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 10,\n  \"search_depth\": \"basic\"\n}",
+        "jsonBody": "{\n  \"query\": \"\\\"künstliche Intelligenz\\\" OR \\\"AI\\\" OR \\\"LLM\\\" news\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 15,\n  \"search_depth\": \"basic\"\n}",
         "options": {
           "timeout": 20000
         }
@@ -125,7 +125,7 @@
         380
       ],
       "parameters": {
-        "jsCode": "// Themen-Dedup: erstes Thema wählen, das noch nicht im Archiv steht.\n// Top-Ergebnisse der Themen-Recherche aus Tavily\nconst search = $('Themen-Recherche (Tavily)').first().json;\nconst results = Array.isArray(search.results) ? search.results : [];\n\n// Bereits behandelte Themen aus dem Archiv (Data Table)\nconst archiv = $('Archiv laden').all().map(i => i.json);\n\n// Normalisierung: Kleinschreibung, nur aussagekräftige Tokens\nconst tokenize = (s) => (s || '')\n  .toLowerCase()\n  .replace(/[^a-z0-9äöüß ]/gi, ' ')\n  .split(/\\s+/)\n  .filter(t => t.length > 3);\n\nconst stop = new Set(['oder','und','news','letzte','tage','eine','einen','einer','mit',\n  'für','von','das','der','die','dem','den','ein','ist','wird','neue','neuer','neues','beim','über']);\nconst keyset = (s) => new Set(tokenize(s).filter(t => !stop.has(t)));\n\n// Jaccard-Ähnlichkeit zweier Token-Mengen (0..1)\nconst jaccard = (a, b) => {\n  if (a.size === 0 || b.size === 0) return 0;\n  let inter = 0;\n  for (const t of a) if (b.has(t)) inter++;\n  return inter / (a.size + b.size - inter);\n};\n\n// Archiv-Themen als Token-Mengen (Titel + Keywords)\nconst archivKeys = archiv.map(row => keyset(`${row.title || ''} ${row.keywords || ''}`));\n\n// Erstes Ergebnis finden, das thematisch noch nicht behandelt wurde\nlet chosen = null;\nfor (const r of results) {\n  const k = keyset(r.title);\n  const istDuplikat = archivKeys.some(ak => jaccard(k, ak) >= 0.4);\n  if (!istDuplikat) { chosen = r; break; }\n}\n\n// Kein neues Thema gefunden -> Workflow meldet das und bricht sauber ab\nif (!chosen) {\n  return [{ json: { has_new_topic: false } }];\n}\n\nreturn [{ json: {\n  has_new_topic: true,\n  topic_title: chosen.title,\n  topic_url: chosen.url,\n  topic_query: chosen.title,\n  candidate_count: results.length\n}}];\n"
+        "jsCode": "// Themen-Dedup: erstes Thema wählen, das noch nicht im Archiv steht.\n// Top-Ergebnisse der Themen-Recherche aus Tavily\nconst search = $('Themen-Recherche (Tavily)').first().json;\nconst results = Array.isArray(search.results) ? search.results : [];\n\n// Bereits behandelte Themen aus dem Archiv (Data Table)\nconst archiv = $('Archiv laden').all().map(i => i.json);\n\n// Normalisierung: Kleinschreibung, nur aussagekräftige Tokens\nconst tokenize = (s) => (s || '')\n  .toLowerCase()\n  .replace(/[^a-z0-9äöüß ]/gi, ' ')\n  .split(/\\s+/)\n  .filter(t => t.length > 3);\n\nconst stop = new Set(['oder','und','news','letzte','tage','eine','einen','einer','mit',\n  'für','von','das','der','die','dem','den','ein','ist','wird','neue','neuer','neues','beim','über']);\nconst keyset = (s) => new Set(tokenize(s).filter(t => !stop.has(t)));\n\n// Jaccard-Ähnlichkeit zweier Token-Mengen (0..1)\nconst jaccard = (a, b) => {\n  if (a.size === 0 || b.size === 0) return 0;\n  let inter = 0;\n  for (const t of a) if (b.has(t)) inter++;\n  return inter / (a.size + b.size - inter);\n};\n\n// Archiv-Themen als Token-Mengen (Titel + Keywords)\nconst archivKeys = archiv.map(row => keyset(`${row.title || ''} ${row.keywords || ''}`));\n\n// Kandidaten = Ergebnisse, die thematisch noch nicht im Archiv stehen\nconst candidates = results.filter(r => {\n  const k = keyset(r.title);\n  return k.size > 0 && !archivKeys.some(ak => jaccard(k, ak) >= 0.4);\n});\n\n// Kein neues Thema gefunden -> Workflow meldet das und bricht sauber ab\nif (candidates.length === 0) {\n  return [{ json: { has_new_topic: false } }];\n}\n\n// Cross-Coverage: wie viele ANDERE Ergebnisse behandeln dasselbe Thema?\n// Mehr Überschneidung = Mainstream-Thema = mehr unabhängige Quellen erwartbar.\nconst scored = candidates.map(c => {\n  const ck = keyset(c.title);\n  let coverage = 0;\n  for (const r of results) {\n    if (r.url === c.url) continue;\n    if (jaccard(ck, keyset(r.title)) >= 0.2) coverage++;\n  }\n  return { r: c, coverage, score: c.score || 0 };\n});\n\n// Beste Wahl: meiste Überschneidung, dann höchster Tavily-Relevanz-Score\nscored.sort((a, b) => (b.coverage - a.coverage) || (b.score - a.score));\nconst chosen = scored[0].r;\n\n// Tiefen-Recherche breiter abfragen: wichtigste Titel-Stichwörter statt exaktem Titel\nconst titleTokens = [...keyset(chosen.title)];\nconst topic_query = titleTokens.slice(0, 6).join(' ') || chosen.title;\n\nreturn [{ json: {\n  has_new_topic: true,\n  topic_title: chosen.title,\n  topic_url: chosen.url,\n  topic_query,\n  coverage: scored[0].coverage,\n  candidate_count: candidates.length\n}}];\n"
       }
     },
     {
@@ -147,7 +147,7 @@
           },
           "conditions": [
             {
-              "id": "c-46085",
+              "id": "c-27026",
               "leftValue": "={{ $json.has_new_topic }}",
               "rightValue": "",
               "operator": {
@@ -178,7 +178,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ query: $json.topic_query, topic: 'news', days: 7, max_results: 8, search_depth: 'advanced', include_raw_content: true }) }}",
+        "jsonBody": "={{ JSON.stringify({ query: $json.topic_query, max_results: 12, search_depth: 'advanced', include_raw_content: true }) }}",
         "options": {
           "timeout": 30000
         }
@@ -226,7 +226,7 @@
           },
           "conditions": [
             {
-              "id": "c-31472",
+              "id": "c-23383",
               "leftValue": "={{ $json.enough_sources }}",
               "rightValue": "",
               "operator": {
@@ -314,7 +314,7 @@
           },
           "conditions": [
             {
-              "id": "c-49427",
+              "id": "c-89175",
               "leftValue": "={{ $json.article_valid }}",
               "rightValue": "",
               "operator": {
@@ -348,7 +348,7 @@
           },
           "conditions": [
             {
-              "id": "c-34110",
+              "id": "c-76737",
               "leftValue": "={{ $('Einstellungen').first().json.dry_run }}",
               "rightValue": "",
               "operator": {
