@@ -143,15 +143,26 @@ Subagenten werden auf ausdrückliche Aufforderung eingesetzt, um den Hauptagente
 ## Projektstruktur (Referenz)
 
 ```
-ak-assistance/
-├── CLAUDE.md               # Diese Datei
-├── .env                    # API-Keys (nicht ins Git!)
+AK-Assistance/
+├── .claude/                    # Claude Code System (Skills, Hooks, Agenten)
+├── .github/workflows/          # GitHub Actions (Auto-Review, @claude-Assistent)
+├── CLAUDE.md                   # Diese Datei
+├── .env                        # API-Keys (nicht ins Git!)
+├── .env.example                # Vorlage für Umgebungsvariablen
 ├── .gitignore
-├── agents/                 # KI-Agenten (Scraping, E-Mail, etc.)
-├── workflows/              # n8n-Workflow-Exporte
-├── scripts/                # Hilfsskripte
-├── data/                   # Temporäre Daten (nicht ins Git!)
-└── docs/                   # Dokumentation
+├── assets/                     # Logo, Medien
+├── phone-agents/               # Telefon-Agenten
+│   ├── demo/                   # Neutraler Demo-Agent (für Präsentationen)
+│   └── ak-assistance/          # Eigener interner Agent
+│       └── src/                # Backend-Code (Router, Webhooks, Services)
+├── client-templates/           # Vorlagen für Pilot-Kunden
+│   └── _basis/                 # Basis zum Kopieren & Nummern/Keys anpassen
+├── n8n-workflows/              # n8n Automatisierungen
+├── website/                    # Marketing-Website ak-assistance.de
+│   └── blog-agent/             # Vorbereitet für Blog-Schreib-Agent
+├── marketing/                  # Marketing-Automatisierung
+│   └── lead-generation/        # KI-gestützte Lead-Generierung (Apify, E-Mail)
+└── docs/                       # Technische Dokumentation
 ```
 
 ---
