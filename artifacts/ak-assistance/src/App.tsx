@@ -650,16 +650,19 @@ function DemoSection() {
 
         {status === "success" ? (
           <div
-            className="animate-in rounded-2xl p-10 flex flex-col items-center gap-5"
+            className="animate-in rounded-2xl p-10 flex flex-col items-center gap-4"
             style={{ background: "var(--card)", border: "1px solid var(--border)" }}
           >
-            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(232,98,42,0.12)" }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "rgba(232,98,42,0.12)" }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <p className="text-base font-semibold" style={{ color: "var(--foreground)" }}>
-              Vielen Dank! Sie erhalten die Demo in Kürze per E-Mail.
+            <p className="text-xl font-black tracking-tight" style={{ color: "var(--foreground)" }}>
+              Ihre Anfrage ist eingegangen!
+            </p>
+            <p className="text-base leading-relaxed max-w-xs" style={{ color: "var(--muted-foreground)" }}>
+              Vielen Dank — wir schicken Ihnen die Demo in Kürze per E-Mail zu. Schauen Sie auch in Ihren Spam-Ordner.
             </p>
           </div>
         ) : (
