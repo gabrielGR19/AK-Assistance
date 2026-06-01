@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
 
@@ -33,11 +33,20 @@ function useScrollAnimation() {
 }
 
 /* ── Side Panel ─────────────────────────────────────────── */
+const sidePanelContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055, delayChildren: 0.08 } },
+} as const;
+const sidePanelItem = {
+  hidden: { opacity: 0, x: 18 },
+  show: { opacity: 1, x: 0 },
+} as const;
+
 function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => void; darkMode: boolean }) {
   const links = [
     { label: "Das Problem", id: "problem" },
     { label: "Die Lösung", id: "loesung" },
-    { label: "Wie es funktioniert", id: "wie-es-funktioniert" },
+    { label: "Inbetriebnahme", id: "wie-es-funktioniert" },
     { label: "Kundenstimmen", id: "bewertungen" },
     { label: "Live Demo", id: "demo" },
     { label: "Pilot Programm", id: "pilot" },
@@ -68,33 +77,61 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
           borderLeft: `1px solid ${darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
         }}
       >
-        <div className="flex justify-end mb-12">
+        <div className="flex justify-end mb-10">
           <button
             onClick={onClose}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
             style={{ background: "var(--muted)", color: "var(--foreground)" }}
-            aria-label="Close menu"
+            aria-label="Menü schließen"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
-        <nav className="flex flex-col gap-2">
+
+        <motion.nav
+          className="flex flex-col"
+          variants={sidePanelContainer}
+          initial="hidden"
+          animate={open ? "show" : "hidden"}
+        >
           {links.map((l) => (
-            <button
+            <motion.button
               key={l.id}
+              variants={sidePanelItem}
               onClick={() => scrollTo(l.id)}
-              className="text-left text-xl font-semibold py-4 border-b transition-colors"
-              style={{ color: "var(--foreground)", borderColor: "var(--border)", background: "none", border: "none", borderBottom: `1px solid var(--border)`, cursor: "pointer", padding: "16px 0" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#e8622a")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground)")}
+              className="text-left text-xl font-semibold"
+              style={{
+                color: "var(--foreground)",
+                background: "none",
+                border: "none",
+                borderBottom: "1px solid var(--border)",
+                cursor: "pointer",
+                padding: "15px 0",
+                transition: "color 0.2s ease, padding-left 0.2s ease",
+              }}
+              onHoverStart={(e) => {
+                (e.target as HTMLElement).style.color = "#e8622a";
+                (e.target as HTMLElement).style.paddingLeft = "6px";
+              }}
+              onHoverEnd={(e) => {
+                (e.target as HTMLElement).style.color = "var(--foreground)";
+                (e.target as HTMLElement).style.paddingLeft = "0px";
+              }}
             >
               {l.label}
-            </button>
+            </motion.button>
           ))}
-        </nav>
-        <div className="mt-auto pt-8">
+        </motion.nav>
+
+        <motion.div
+          className="mt-auto pt-8"
+          variants={sidePanelItem}
+          initial="hidden"
+          animate={open ? "show" : "hidden"}
+          transition={{ delay: links.length * 0.055 + 0.1 }}
+        >
           <a
             href={BOOKING_URL}
             target="_blank"
@@ -104,7 +141,7 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
           >
             Termin buchen
           </a>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -114,11 +151,13 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
 function NavBar({
   darkMode,
   setDarkMode,
-  onMenuOpen,
+  menuOpen,
+  onMenuToggle,
 }: {
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
-  onMenuOpen: () => void;
+  menuOpen: boolean;
+  onMenuToggle: () => void;
 }) {
   const [scrolled, setScrolled] = useState(false);
 
@@ -192,14 +231,16 @@ function NavBar({
               </a>
 
               <button
-                onClick={onMenuOpen}
+                onClick={onMenuToggle}
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
                 style={{ background: "var(--muted)", color: "var(--foreground)" }}
-                aria-label="Open menu"
+                aria-label={menuOpen ? "Menü schließen" : "Menü öffnen"}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
+                <span className={`hamburger-icon ${menuOpen ? "open" : ""}`}>
+                  <span className="hbar top" />
+                  <span className="hbar mid" />
+                  <span className="hbar bot" />
+                </span>
               </button>
             </div>
           </div>
@@ -1439,7 +1480,7 @@ export default function App() {
   return (
     <>
       <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
-      <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
+      <NavBar darkMode={darkMode} setDarkMode={setDarkMode} menuOpen={menuOpen} onMenuToggle={() => setMenuOpen((v) => !v)} />
       <LandingHero darkMode={darkMode} />
       <HeroSection darkMode={darkMode} />
       <ProblemSection />
