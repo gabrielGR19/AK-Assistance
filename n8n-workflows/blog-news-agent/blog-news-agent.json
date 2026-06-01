@@ -36,7 +36,7 @@
             {
               "id": "s1",
               "name": "dry_run",
-              "value": false,
+              "value": true,
               "type": "boolean"
             },
             {
@@ -120,7 +120,7 @@
           },
           "conditions": [
             {
-              "id": "c-39618",
+              "id": "c-61522",
               "leftValue": "={{ $json.enough_sources }}",
               "rightValue": "",
               "operator": {
@@ -208,7 +208,7 @@
           },
           "conditions": [
             {
-              "id": "c-70810",
+              "id": "c-50291",
               "leftValue": "={{ $json.article_valid }}",
               "rightValue": "",
               "operator": {
@@ -242,7 +242,7 @@
           },
           "conditions": [
             {
-              "id": "c-68235",
+              "id": "c-67776",
               "leftValue": "={{ $('Einstellungen').first().json.dry_run }}",
               "rightValue": "",
               "operator": {
