@@ -621,11 +621,14 @@ function DemoSection() {
     if (!email.trim()) return;
     setStatus("sending");
     try {
-      const res = await fetch("/api/demo-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await fetch(
+        "https://n8n.ak-assistance.de/webhook/api/demo-request",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim() }),
+        }
+      );
       if (!res.ok) throw new Error();
       setStatus("success");
       setEmail("");
