@@ -1,5 +1,5 @@
 {
-  "name": "AK Blog-Agent — Wöchentlicher KI-News-Entwurf",
+  "name": "AK Blog-Agent — KI-Wochenrückblick",
   "nodes": [
     {
       "id": "schedule",
@@ -72,113 +72,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"query\": \"künstliche Intelligenz KI ChatGPT OpenAI\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 15,\n  \"search_depth\": \"basic\"\n}",
-        "options": {
-          "timeout": 20000
-        }
-      },
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "PLATZHALTER_TAVILY",
-          "name": "Tavily API"
-        }
-      },
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000
-    },
-    {
-      "id": "archive-load",
-      "name": "Archiv laden",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1.1,
-      "position": [
-        500,
-        380
-      ],
-      "parameters": {
-        "resource": "row",
-        "operation": "get",
-        "dataTableId": {
-          "__rl": true,
-          "mode": "name",
-          "value": "blog_archive"
-        },
-        "matchType": "anyCondition",
-        "filters": {
-          "conditions": []
-        },
-        "returnAll": true,
-        "orderBy": false
-      },
-      "onError": "continueErrorOutput",
-      "alwaysOutputData": true
-    },
-    {
-      "id": "dedup",
-      "name": "Themen-Dedup",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        720,
-        380
-      ],
-      "parameters": {
-        "jsCode": "// Themen-Dedup: erstes Thema wählen, das noch nicht im Archiv steht.\n// Top-Ergebnisse der Themen-Recherche aus Tavily\nconst search = $('Themen-Recherche (Tavily)').first().json;\nconst results = Array.isArray(search.results) ? search.results : [];\n\n// Bereits behandelte Themen aus dem Archiv (Data Table)\nconst archiv = $('Archiv laden').all().map(i => i.json);\n\n// Normalisierung: Kleinschreibung, nur aussagekräftige Tokens\nconst tokenize = (s) => (s || '')\n  .toLowerCase()\n  .replace(/[^a-z0-9äöüß ]/gi, ' ')\n  .split(/\\s+/)\n  .filter(t => t.length > 3);\n\nconst stop = new Set(['oder','und','news','letzte','tage','eine','einen','einer','mit',\n  'für','von','das','der','die','dem','den','ein','ist','wird','neue','neuer','neues','beim','über']);\nconst keyset = (s) => new Set(tokenize(s).filter(t => !stop.has(t)));\n\n// Jaccard-Ähnlichkeit zweier Token-Mengen (0..1)\nconst jaccard = (a, b) => {\n  if (a.size === 0 || b.size === 0) return 0;\n  let inter = 0;\n  for (const t of a) if (b.has(t)) inter++;\n  return inter / (a.size + b.size - inter);\n};\n\n// Archiv-Themen als Token-Mengen (Titel + Keywords)\nconst archivKeys = archiv.map(row => keyset(`${row.title || ''} ${row.keywords || ''}`));\n\n// Kandidaten = Ergebnisse, die thematisch noch nicht im Archiv stehen\nconst candidates = results.filter(r => {\n  const k = keyset(r.title);\n  return k.size > 0 && !archivKeys.some(ak => jaccard(k, ak) >= 0.4);\n});\n\n// Kein neues Thema gefunden -> Workflow meldet das und bricht sauber ab\nif (candidates.length === 0) {\n  return [{ json: { has_new_topic: false } }];\n}\n\n// Cross-Coverage: wie viele ANDERE Ergebnisse behandeln dasselbe Thema?\n// Mehr Überschneidung = Mainstream-Thema = mehr unabhängige Quellen erwartbar.\nconst scored = candidates.map(c => {\n  const ck = keyset(c.title);\n  let coverage = 0;\n  for (const r of results) {\n    if (r.url === c.url) continue;\n    if (jaccard(ck, keyset(r.title)) >= 0.2) coverage++;\n  }\n  return { r: c, coverage, score: c.score || 0 };\n});\n\n// Beste Wahl: meiste Überschneidung, dann höchster Tavily-Relevanz-Score\nscored.sort((a, b) => (b.coverage - a.coverage) || (b.score - a.score));\nconst chosen = scored[0].r;\n\n// Tiefen-Recherche breiter abfragen: wichtigste Titel-Stichwörter statt exaktem Titel\nconst titleTokens = [...keyset(chosen.title)];\nconst topic_query = titleTokens.slice(0, 6).join(' ') || chosen.title;\n\nreturn [{ json: {\n  has_new_topic: true,\n  topic_title: chosen.title,\n  topic_url: chosen.url,\n  topic_query,\n  coverage: scored[0].coverage,\n  candidate_count: candidates.length\n}}];\n"
-      }
-    },
-    {
-      "id": "if-new-topic",
-      "name": "Neues Thema gefunden?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        940,
-        380
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "c-5460",
-              "leftValue": "={{ $json.has_new_topic }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "deep-research",
-      "name": "Tiefen-Recherche (Tavily)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1160,
-        300
-      ],
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.tavily.com/search",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ query: $json.topic_query, max_results: 12, search_depth: 'advanced', include_raw_content: true }) }}",
+        "jsonBody": "{\n  \"query\": \"künstliche Intelligenz KI ChatGPT OpenAI\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 15,\n  \"search_depth\": \"advanced\"\n}",
         "options": {
           "timeout": 30000
         }
@@ -195,26 +89,26 @@
       "waitBetweenTries": 3000
     },
     {
-      "id": "check-sources",
-      "name": "Quellen prüfen (≥3 Domains)",
+      "id": "build",
+      "name": "Quellen aufbereiten",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1380,
-        300
+        500,
+        380
       ],
       "parameters": {
-        "jsCode": "// Quellen prüfen (min. 3 unabhängige Domains) + Claude-Prompt aufbauen.\n// Ergebnisse der Tiefen-Recherche\nconst deep = $('Tiefen-Recherche (Tavily)').first().json;\nconst results = Array.isArray(deep.results) ? deep.results : [];\nconst topic = $('Themen-Dedup').first().json.topic_title || 'KI-News der Woche';\n\n// Domain aus URL extrahieren\nconst domainOf = (url) => {\n  try { return new URL(url).hostname.replace(/^www\\./, ''); }\n  catch (e) { return ''; }\n};\n\n// Quellen aufbereiten, Duplikate je URL entfernen\nconst seen = new Set();\nconst sources = [];\nfor (const r of results) {\n  if (!r.url || seen.has(r.url)) continue;\n  seen.add(r.url);\n  const content = (r.raw_content || r.content || '').replace(/\\s+/g, ' ').trim().substring(0, 2000);\n  sources.push({\n    url: r.url,\n    title: r.title || '',\n    published_date: r.published_date || '',\n    domain: domainOf(r.url),\n    snippet: content\n  });\n}\n\n// Mindestens 3 verschiedene Domains erforderlich (Anti-Halluzination)\nconst domains = new Set(sources.map(s => s.domain).filter(Boolean));\nconst enough_sources = domains.size >= 3 && sources.length >= 3;\n\n// Exakter System-Prompt gemäß Vorgabe\nconst claude_system = \"Du bist Redakteur für den AK-Assistance-Blog. Zielgruppe: deutsche Handwerksbetriebe,\\ndie wissen wollen, was in der KI-Welt passiert und was es für sie bedeutet.\\n\\nStrikte Regeln:\\n- Verwende AUSSCHLIESSLICH die unten gelieferten Recherche-Quellen. Keine Information,\\n  die dort nicht steht, darf in den Artikel.\\n- Wenn die Quellen widersprüchlich oder unklar sind, benenne das im Artikel.\\n- Keine Zahlen, Zitate, Studien oder Personen erfinden.\\n- Schreibe auf Deutsch, sachlich, klar, ohne Marketing-Floskeln.\\n- Länge: 600–900 Wörter.\\n- Struktur: H1-Titel, kurze Einleitung (2–3 Sätze), 3–5 H2-Abschnitte, Fazit, Quellenliste.\\n- Quellenliste am Ende als nummerierte Liste: [Nr] Titel — Domain (Datum) — URL.\\n- Wenn weniger als 3 Quellen verwertbar sind, antworte ausschließlich mit:\\n  \\\"INSUFFICIENT_SOURCES\\\".\\n\\nGib das Ergebnis als JSON zurück:\\n{\\n  \\\"title\\\": \\\"...\\\",\\n  \\\"slug\\\": \\\"...\\\",\\n  \\\"meta_description\\\": \\\"... (max 155 Zeichen, SEO-tauglich)\\\",\\n  \\\"keywords\\\": [\\\"...\\\", \\\"...\\\"],\\n  \\\"body_markdown\\\": \\\"...\\\",\\n  \\\"sources_used\\\": [{\\\"url\\\": \\\"...\\\", \\\"title\\\": \\\"...\\\", \\\"date\\\": \\\"...\\\"}]\\n}\";\n\n// User-Message: Thema + komplette Recherche-Quellen (URL, Titel, Datum, Inhalt)\nconst quellenText = sources.map((s, i) =>\n  `[${i + 1}] ${s.title}\\nDomain: ${s.domain}\\nDatum: ${s.published_date || 'unbekannt'}\\nURL: ${s.url}\\nInhalt: ${s.snippet}`\n).join('\\n\\n');\n\nconst claude_user = `Thema des Artikels: ${topic}\\n\\n`\n  + `Recherche-Quellen (ausschließlich diese verwenden):\\n\\n${quellenText}`;\n\nreturn [{ json: {\n  enough_sources,\n  sources_count: sources.length,\n  domains_count: domains.size,\n  sources,\n  topic_title: topic,\n  claude_system,\n  claude_user\n}}];\n"
+        "jsCode": "// Quellen für den KI-Wochenrückblick aufbereiten (aus EINER breiten Suche).\nconst search = $('Themen-Recherche (Tavily)').first().json;\nlet results = Array.isArray(search.results) ? search.results : [];\n\n// Domain aus URL extrahieren\nconst domainOf = (url) => {\n  try { return new URL(url).hostname.replace(/^www\\./, ''); }\n  catch (e) { return ''; }\n};\n\n// Nach Tavily-Relevanz sortieren, je Domain nur die beste Meldung, max. 7 Quellen\nresults = results.slice().sort((a, b) => (b.score || 0) - (a.score || 0));\nconst seenDomains = new Set();\nconst sources = [];\nfor (const r of results) {\n  if (!r.url) continue;\n  const d = domainOf(r.url);\n  if (!d || seenDomains.has(d)) continue;\n  seenDomains.add(d);\n  const content = (r.content || r.raw_content || '')\n    .replace(/\\s+/g, ' ').trim().substring(0, 1500);\n  sources.push({\n    url: r.url,\n    title: r.title || '',\n    published_date: r.published_date || '',\n    domain: d,\n    snippet: content\n  });\n  if (sources.length >= 7) break;\n}\n\n// Mindestens 3 verschiedene Domains erforderlich (Anti-Halluzination)\nconst enough_sources = sources.length >= 3;\n\n// Exakter System-Prompt\nconst claude_system = \"Du bist Redakteur für den AK-Assistance-Blog. Zielgruppe: deutsche Handwerksbetriebe,\\ndie wissen wollen, was in der KI-Welt passiert und was es für sie bedeutet.\\n\\nDu erhältst eine Liste echter, aktueller Nachrichtenquellen zur KI-Welt. Erstelle daraus\\neinen redaktionellen Wochenrückblick.\\n\\nStrikte Regeln:\\n- Verwende AUSSCHLIESSLICH die unten gelieferten Quellen. Keine Information, die dort nicht\\n  steht, darf in den Artikel. Keine Zahlen, Zitate, Studien oder Personen erfinden.\\n- Wähle die 3–5 wichtigsten, für Handwerksbetriebe relevantesten Meldungen aus. Lass\\n  themenfremde oder belanglose Einträge weg.\\n- Ordne jede Meldung kurz ein: Was bedeutet das (falls relevant) für Handwerksbetriebe?\\n- Wenn eine Quelle unklar oder widersprüchlich ist, benenne das.\\n- Schreibe auf Deutsch, sachlich, klar, ohne Marketing-Floskeln.\\n- Länge: 600–900 Wörter.\\n- Struktur: H1-Titel, kurze Einleitung (2–3 Sätze), 3–5 H2-Abschnitte (je eine Meldung),\\n  Fazit, Quellenliste.\\n- Quellenliste am Ende als nummerierte Liste: [Nr] Titel — Domain (Datum) — URL.\\n- Verwende nur Quellen, die du auch wirklich im Text verarbeitet hast.\\n- Wenn weniger als 3 verwertbare Quellen vorhanden sind, antworte ausschließlich mit:\\n  \\\"INSUFFICIENT_SOURCES\\\".\\n\\nGib das Ergebnis als JSON zurück:\\n{\\n  \\\"title\\\": \\\"...\\\",\\n  \\\"slug\\\": \\\"...\\\",\\n  \\\"meta_description\\\": \\\"... (max 155 Zeichen, SEO-tauglich)\\\",\\n  \\\"keywords\\\": [\\\"...\\\", \\\"...\\\"],\\n  \\\"body_markdown\\\": \\\"...\\\",\\n  \\\"sources_used\\\": [{\\\"url\\\": \\\"...\\\", \\\"title\\\": \\\"...\\\", \\\"date\\\": \\\"...\\\"}]\\n}\";\n\n// User-Message: alle aufbereiteten Quellen (Titel, Domain, Datum, URL, Inhalt)\nconst quellenText = sources.map((s, i) =>\n  `[${i + 1}] ${s.title}\\nDomain: ${s.domain}\\nDatum: ${s.published_date || 'unbekannt'}\\nURL: ${s.url}\\nInhalt: ${s.snippet}`\n).join('\\n\\n');\n\nconst heute = $now.toFormat('dd.MM.yyyy');\nconst claude_user = `Erstelle einen KI-Wochenrückblick (Stand ${heute}) aus diesen Quellen:\\n\\n${quellenText}`;\n\nreturn [{ json: {\n  enough_sources,\n  sources_count: sources.length,\n  domains_count: seenDomains.size,\n  sources,\n  claude_system,\n  claude_user\n}}];\n"
       }
     },
     {
-      "id": "if-enough-sources",
-      "name": "Genug Quellen?",
+      "id": "if-enough",
+      "name": "Genug Quellen (≥3 Domains)?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1600,
-        300
+        720,
+        380
       ],
       "parameters": {
         "conditions": {
@@ -226,7 +120,7 @@
           },
           "conditions": [
             {
-              "id": "c-73249",
+              "id": "c-92646",
               "leftValue": "={{ $json.enough_sources }}",
               "rightValue": "",
               "operator": {
@@ -242,13 +136,13 @@
       }
     },
     {
-      "id": "claude-generate",
+      "id": "claude",
       "name": "Artikel generieren (Claude)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1820,
-        220
+        940,
+        300
       ],
       "parameters": {
         "method": "POST",
@@ -283,26 +177,26 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "parse-article",
+      "id": "parse",
       "name": "Claude-Antwort parsen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2040,
-        220
+        1160,
+        300
       ],
       "parameters": {
         "jsCode": "// Claude-Antwort parsen und auf Verwertbarkeit prüfen.\nconst resp = $input.first().json;\nconst text = (resp.content && resp.content[0] && resp.content[0].text) ? resp.content[0].text : '';\n\n// Anti-Halluzination: zu wenige Quellen -> klares Abbruchsignal\nif (text.trim().includes('INSUFFICIENT_SOURCES')) {\n  return [{ json: { article_valid: false, reason: 'INSUFFICIENT_SOURCES' } }];\n}\n\n// JSON aus der Antwort extrahieren (robust gegen umschließenden Text)\nlet parsed = null;\ntry {\n  parsed = JSON.parse(text.trim());\n} catch (e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  if (m) { try { parsed = JSON.parse(m[0]); } catch (e2) {} }\n}\n\n// Pflichtfelder müssen vorhanden sein, sonst gilt der Artikel als ungültig\nif (!parsed || !parsed.title || !parsed.body_markdown) {\n  return [{ json: { article_valid: false, reason: 'PARSE_ERROR' } }];\n}\n\n// Slug absichern (falls Claude keinen liefert)\nconst slug = parsed.slug || parsed.title.toLowerCase()\n  .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n\nreturn [{ json: {\n  article_valid: true,\n  title: parsed.title,\n  slug,\n  meta_description: parsed.meta_description || '',\n  keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],\n  body_markdown: parsed.body_markdown,\n  sources_used: Array.isArray(parsed.sources_used) ? parsed.sources_used : []\n}}];\n"
       }
     },
     {
-      "id": "if-article-valid",
+      "id": "if-valid",
       "name": "Artikel valide?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2260,
-        220
+        1380,
+        300
       ],
       "parameters": {
         "conditions": {
@@ -314,7 +208,7 @@
           },
           "conditions": [
             {
-              "id": "c-11049",
+              "id": "c-24922",
               "leftValue": "={{ $json.article_valid }}",
               "rightValue": "",
               "operator": {
@@ -335,8 +229,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2480,
-        220
+        1600,
+        300
       ],
       "parameters": {
         "conditions": {
@@ -348,7 +242,7 @@
           },
           "conditions": [
             {
-              "id": "c-68284",
+              "id": "c-79769",
               "leftValue": "={{ $('Einstellungen').first().json.dry_run }}",
               "rightValue": "",
               "operator": {
@@ -364,13 +258,13 @@
       }
     },
     {
-      "id": "set-dummy-cms",
+      "id": "set-dummy",
       "name": "Dummy-CMS-Antwort (Dry-Run)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2700,
-        120
+        1820,
+        200
       ],
       "parameters": {
         "assignments": {
@@ -398,8 +292,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2700,
-        320
+        1820,
+        400
       ],
       "parameters": {
         "method": "POST",
@@ -431,8 +325,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2920,
-        220
+        2040,
+        300
       ],
       "parameters": {
         "resource": "row",
@@ -466,8 +360,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3140,
-        220
+        2260,
+        300
       ],
       "parameters": {
         "resource": "message",
@@ -510,45 +404,19 @@
       }
     },
     {
-      "id": "tg-no-topic",
-      "name": "Telegram: Kein neues Thema",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1160,
-        520
-      ],
-      "parameters": {
-        "resource": "message",
-        "operation": "sendMessage",
-        "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
-        "text": "=ℹ️ *Blog-Agent:* Diese Woche wurde kein neues KI-Thema gefunden, das nicht bereits im Archiv steht. Es wurde kein Entwurf erstellt.",
-        "additionalFields": {
-          "parse_mode": "Markdown",
-          "appendAttribution": false
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
-        }
-      }
-    },
-    {
       "id": "tg-insufficient",
       "name": "Telegram: Zu wenige Quellen",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1820,
-        520
+        940,
+        540
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
-        "text": "=⚠️ *Blog-Agent abgebrochen:* Für das Thema \"{{ $('Themen-Dedup').first().json.topic_title }}\" wurden weniger als 3 unabhängige Quellen-Domains gefunden. Kein Artikel erstellt (Anti-Halluzination).",
+        "text": "=⚠️ *Blog-Agent abgebrochen:* Die KI-News-Suche lieferte weniger als 3 unabhängige Quellen-Domains. Kein Wochenrückblick erstellt (Anti-Halluzination).",
         "additionalFields": {
           "parse_mode": "Markdown",
           "appendAttribution": false
@@ -567,8 +435,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2480,
-        520
+        1380,
+        540
       ],
       "parameters": {
         "resource": "message",
@@ -593,8 +461,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        940,
-        700
+        280,
+        600
       ],
       "parameters": {
         "resource": "message",
@@ -615,7 +483,7 @@
     },
     {
       "id": "note-1",
-      "name": "Notiz Trigger",
+      "name": "Notiz 1",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -623,72 +491,56 @@
         120
       ],
       "parameters": {
-        "content": "## 1–2 · Trigger & Einstellungen\nLäuft jeden **Montag 08:00** (Europe/Berlin).\nIn **Einstellungen** den `dry_run`-Schalter umlegen, um ohne echten CMS-Call zu testen.",
-        "height": 200,
-        "width": 420,
+        "content": "## 1–2 · Trigger & Einstellungen\nJeden **Montag 08:00** (Europe/Berlin).\n`dry_run = true` im Node 'Einstellungen' = Test ohne CMS-Call.",
+        "height": 170,
+        "width": 400,
         "color": 4
       }
     },
     {
       "id": "note-2",
-      "name": "Notiz Recherche",
+      "name": "Notiz 2",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        480,
+        460,
         120
       ],
       "parameters": {
-        "content": "## 3–4 · Recherche & Dedup\nTavily liefert echte URLs+Snippets. **Themen-Dedup** vergleicht mit dem Archiv (Data Table `blog_archive`) und wählt das erste neue Thema.\n⚠️ Fallback \"tiefere Query, falls alle Top-10 belegt\" ist noch NICHT umgesetzt — siehe README.",
-        "height": 220,
+        "content": "## 3–4 · Recherche & Aufbereitung\nEINE breite Tavily-Suche (deutsche KI-News). Node 'Quellen aufbereiten' nimmt je Domain die beste Meldung (max. 7), so sind 3+ unabhängige Domains praktisch garantiert. Keine fragile zweite Recherche mehr.",
+        "height": 200,
         "width": 420,
         "color": 4
       }
     },
     {
       "id": "note-3",
-      "name": "Notiz Quellen",
+      "name": "Notiz 3",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1340,
-        60
+        920,
+        100
       ],
       "parameters": {
-        "content": "## 4–5 · Tiefen-Recherche & Quellen-Check\nMind. **3 verschiedene Domains** Pflicht, sonst Abbruch (Anti-Halluzination).",
-        "height": 160,
-        "width": 380,
-        "color": 4
-      }
-    },
-    {
-      "id": "note-4",
-      "name": "Notiz Claude",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        2020,
-        40
-      ],
-      "parameters": {
-        "content": "## 5–6 · Artikel & CMS\nClaude schreibt streng aus den Quellen. `INSUFFICIENT_SOURCES` → Abbruch.\n**CMS-Node ist PLATZHALTER** (`$env.CMS_API_URL`). Response muss `post_id` + `preview_url` liefern.",
-        "height": 200,
+        "content": "## 5–6 · Artikel & CMS\nClaude schreibt einen **Wochenrückblick** strikt aus den Quellen. `INSUFFICIENT_SOURCES` → Abbruch.\n**CMS-Node ist PLATZHALTER** (`$env.CMS_API_URL`).",
+        "height": 180,
         "width": 420,
         "color": 4
       }
     },
     {
-      "id": "note-5",
-      "name": "Notiz Telegram",
+      "id": "note-4",
+      "name": "Notiz 4",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3120,
-        60
+        2240,
+        120
       ],
       "parameters": {
-        "content": "## 7–8 · Archiv & Freigabe\nEintrag ins Archiv (status offen, `published_at` leer), dann Telegram mit **✅/❌-Buttons**. Die Buttons werden vom zweiten Workflow (`blog-approval-handler`) verarbeitet.",
-        "height": 180,
+        "content": "## 7–8 · Archiv & Freigabe\nEintrag ins Archiv (`published_at` leer), dann Telegram mit **✅/❌-Buttons**. Klick-Verarbeitung: Workflow `blog-approval-handler`.",
+        "height": 170,
         "width": 420,
         "color": 4
       }
@@ -721,7 +573,7 @@
       "main": [
         [
           {
-            "node": "Archiv laden",
+            "node": "Quellen aufbereiten",
             "type": "main",
             "index": 0
           }
@@ -735,83 +587,18 @@
         ]
       ]
     },
-    "Archiv laden": {
+    "Quellen aufbereiten": {
       "main": [
         [
           {
-            "node": "Themen-Dedup",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: Technischer Fehler",
+            "node": "Genug Quellen (≥3 Domains)?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Themen-Dedup": {
-      "main": [
-        [
-          {
-            "node": "Neues Thema gefunden?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Neues Thema gefunden?": {
-      "main": [
-        [
-          {
-            "node": "Tiefen-Recherche (Tavily)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: Kein neues Thema",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Tiefen-Recherche (Tavily)": {
-      "main": [
-        [
-          {
-            "node": "Quellen prüfen (≥3 Domains)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: Technischer Fehler",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Quellen prüfen (≥3 Domains)": {
-      "main": [
-        [
-          {
-            "node": "Genug Quellen?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Genug Quellen?": {
+    "Genug Quellen (≥3 Domains)?": {
       "main": [
         [
           {
@@ -948,7 +735,7 @@
     "timezone": "Europe/Berlin"
   },
   "meta": {
-    "templateId": "ak-blog-news-agent"
+    "templateId": "ak-blog-wochenrueckblick"
   },
   "tags": []
 }

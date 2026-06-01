@@ -79,7 +79,7 @@
           },
           "conditions": [
             {
-              "id": "c-6644",
+              "id": "c-79829",
               "leftValue": "={{ $('Callback parsen').first().json.action }}",
               "rightValue": "approve",
               "operator": {
@@ -265,7 +265,7 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
-        "text": "=❌ *Entwurf verworfen.* Das Thema ist wieder freigegeben und kann erneut vorgeschlagen werden (Post-ID {{ $('Callback parsen').first().json.post_id }}).",
+        "text": "=❌ *Entwurf verworfen.* Das Thema ist wieder freigegeben (Post-ID {{ $('Callback parsen').first().json.post_id }}).",
         "additionalFields": {
           "parse_mode": "Markdown",
           "appendAttribution": false
@@ -288,8 +288,8 @@
         120
       ],
       "parameters": {
-        "content": "## Approval-Handler (Nodes 9–10)\nLauscht dauerhaft auf **callback_query** der Inline-Buttons.\n`callback_data` wird an `:` gesplittet → Aktion + `post_id`.\n**Dieser Workflow muss aktiviert sein**, damit die Buttons funktionieren.",
-        "height": 200,
+        "content": "## Approval-Handler (Nodes 9–10)\nLauscht dauerhaft auf **callback_query** der Inline-Buttons.\n**Dieser Workflow muss aktiviert sein**, damit die Buttons funktionieren.",
+        "height": 180,
         "width": 440,
         "color": 4
       }
@@ -304,8 +304,8 @@
         120
       ],
       "parameters": {
-        "content": "## CMS-Aktionen (PLATZHALTER)\n**Approve:** PATCH status=published + `published_at` setzen.\n**Reject:** DELETE Entwurf + Archiv-Eintrag löschen (gibt Thema wieder frei).\nURL/Token über `$env.CMS_API_URL` / `$env.CMS_API_TOKEN`.",
-        "height": 180,
+        "content": "## CMS-Aktionen (PLATZHALTER)\n**Approve:** PATCH status=published + `published_at`.\n**Reject:** DELETE Entwurf + Archiv-Eintrag löschen.",
+        "height": 160,
         "width": 440,
         "color": 4
       }
