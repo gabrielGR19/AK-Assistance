@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
-import { RetellWebClient } from "retell-client-js-sdk";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
@@ -210,130 +209,7 @@ function NavBar({
   );
 }
 
-/* ── Retell shared context ───────────────────────────────── */
-const retellClient = new RetellWebClient();
-type CallState = "idle" | "loading" | "active" | "error";
-
-interface RetellCtx {
-  callState: CallState;
-  errorMsg: string;
-  startCall: () => Promise<void>;
-  endCall: () => void;
-}
-
-const RetellContext = createContext<RetellCtx | null>(null);
-
-function RetellProvider({ children }: { children: React.ReactNode }) {
-  const [callState, setCallState] = useState<CallState>("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-  const clientReady = useRef(false);
-
-  useEffect(() => {
-    if (clientReady.current) return;
-    clientReady.current = true;
-    retellClient.on("call_ended", () => setCallState("idle"));
-    retellClient.on("error", () => {
-      setCallState("error");
-      setErrorMsg("Verbindungsfehler – bitte erneut versuchen.");
-    });
-  }, []);
-
-  const startCall = useCallback(async () => {
-    setCallState("loading");
-    setErrorMsg("");
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      setCallState("error");
-      setErrorMsg("Mikrofonzugriff verweigert – bitte in den Browser-Einstellungen erlauben.");
-      return;
-    }
-    try {
-      const res = await fetch("/api/create-call", { method: "POST" });
-      const data = (await res.json()) as { access_token?: string; error?: string };
-      if (!res.ok || !data.access_token) throw new Error(data.error ?? "Kein Token");
-      await retellClient.startCall({ accessToken: data.access_token });
-      setCallState("active");
-    } catch (err) {
-      setCallState("error");
-      setErrorMsg(err instanceof Error ? err.message : "Verbindungsfehler – bitte erneut versuchen.");
-    }
-  }, []);
-
-  const endCall = useCallback(() => {
-    retellClient.stopCall();
-    setCallState("idle");
-  }, []);
-
-  return (
-    <RetellContext.Provider value={{ callState, errorMsg, startCall, endCall }}>
-      {children}
-    </RetellContext.Provider>
-  );
-}
-
-function useRetell() {
-  const ctx = useContext(RetellContext);
-  if (!ctx) throw new Error("useRetell must be used inside RetellProvider");
-  return ctx;
-}
-
-/* ── Shared soundwave visualiser ─────────────────────────── */
-function SoundwaveBars() {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4, height: 28 }}>
-      {[0, 0.15, 0.3, 0.45, 0.3, 0.15, 0].map((delay, i) => (
-        <div key={i} style={{ width: 3, borderRadius: 2, background: "#e8622a", animation: `soundwave 1.2s ease-in-out ${delay}s infinite` }} />
-      ))}
-    </div>
-  );
-}
-
 /* ── Landing Hero ───────────────────────────────────────── */
-function AudioDemo() {
-  const { callState, errorMsg, startCall, endCall } = useRetell();
-  const isActive = callState === "active";
-  const isLoading = callState === "loading";
-
-  const label = isLoading ? "Verbindung wird aufgebaut…" : isActive ? "Gespräch beenden" : "Demo anhören";
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-      <button
-        onClick={() => { if (callState === "loading") return; isActive ? endCall() : startCall(); }}
-        disabled={isLoading}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 12,
-          padding: "14px 28px", borderRadius: 100,
-          border: `2px solid ${isActive ? "#e8622a" : "var(--foreground)"}`,
-          background: isActive ? "#e8622a" : "transparent",
-          cursor: isLoading ? "not-allowed" : "pointer",
-          color: isActive ? "#ffffff" : "var(--foreground)",
-          fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-          fontSize: "0.95rem", fontWeight: 600, opacity: isLoading ? 0.7 : 1, transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => { if (!isLoading && !isActive) { e.currentTarget.style.background = "var(--foreground)"; e.currentTarget.style.color = "var(--background)"; } }}
-        onMouseLeave={(e) => { if (!isLoading && !isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--foreground)"; } }}
-      >
-        {isLoading ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          </svg>
-        ) : isActive ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-        )}
-        {label}
-      </button>
-      {isActive && <SoundwaveBars />}
-      {callState === "error" && (
-        <span style={{ fontSize: "0.75rem", color: "#e8622a", fontFamily: "'Segoe UI', sans-serif" }}>{errorMsg}</span>
-      )}
-    </div>
-  );
-}
-
 function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
   return (
     <section
@@ -386,15 +262,6 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
         >
           Der Assistent beantwortet Kundenanrufe, bucht Termine und entlastet Sie bei der Büroarbeit&nbsp;— automatisch, 24/7.
         </motion.p>
-
-        {/* Audio Demo */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <AudioDemo />
-        </motion.div>
 
         {/* Trust badges */}
         <motion.div
@@ -493,7 +360,6 @@ function HeroSection({ darkMode }: { darkMode: boolean }) {
           >
             Kostenloses Gespräch buchen
           </a>
-          <AudioDemo />
         </div>
       </motion.section>
     </>
@@ -746,78 +612,101 @@ function BewertungenSection() {
 }
 
 /* ── Demo ───────────────────────────────────────────────── */
-function DemoMicButton() {
-  const { callState, startCall, endCall } = useRetell();
-  const isActive = callState === "active";
-  const isLoading = callState === "loading";
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
-      {isActive ? (
-        <>
-          <div className="wave-ring" />
-          <div className="wave-ring" />
-          <div className="wave-ring" />
-        </>
-      ) : null}
-      <button
-        className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center btn-orange"
-        style={{ fontSize: 0, opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}
-        onClick={() => { if (isLoading) return; isActive ? endCall() : startCall(); }}
-        aria-label={isActive ? "Gespräch beenden" : "Demo starten"}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          </svg>
-        ) : isActive ? (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-        ) : (
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" />
-          </svg>
-        )}
-      </button>
-    </div>
-  );
-}
-
 function DemoSection() {
-  const { callState, errorMsg, startCall, endCall } = useRetell();
-  const isActive = callState === "active";
-  const isLoading = callState === "loading";
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/demo-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus("success");
+      setEmail("");
+    } catch {
+      setStatus("error");
+    }
+  }
+
   return (
     <section id="demo" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
-      <div className="max-w-3xl mx-auto text-center">
-        <span className="section-label animate-in">Live testen</span>
+      <div className="max-w-2xl mx-auto text-center">
+        <span className="section-label animate-in">Demo</span>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mt-3 mb-6 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
           Testen Sie unseren<br />KI-Assistenten
         </h2>
-        <p className="text-lg mb-12 max-w-xl mx-auto leading-relaxed animate-in delay-2" style={{ color: "var(--muted-foreground)" }}>
-          Sprechen Sie direkt mit unserem KI-Assistenten und testen Sie die Fähigkeiten
+        <p className="text-lg mb-10 max-w-lg mx-auto leading-relaxed animate-in delay-2" style={{ color: "var(--muted-foreground)" }}>
+          Geben Sie Ihre E-Mail-Adresse ein und wir schicken Ihnen die Demo direkt zu.
         </p>
 
-        <div className="animate-in delay-2 w-full max-w-md mx-auto rounded-2xl img-placeholder mb-12" style={{ height: "200px" }}>
-          <span>[ Bild: Demo Screenshot ]</span>
-        </div>
-
-        <div className="animate-in delay-3 flex flex-col items-center gap-6">
-          <DemoMicButton />
-          <button
-            className="inline-flex items-center justify-center px-10 py-4 rounded-full text-base btn-orange"
-            style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}
-            disabled={isLoading}
-            onClick={() => { if (isLoading) return; isActive ? endCall() : startCall(); }}
+        {status === "success" ? (
+          <div
+            className="animate-in rounded-2xl p-10 flex flex-col items-center gap-5"
+            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
           >
-            {isLoading ? "Verbindung wird aufgebaut…" : isActive ? "Gespräch beenden" : "Demo starten"}
-          </button>
-          {isActive && <SoundwaveBars />}
-          {callState === "error" && (
-            <span style={{ fontSize: "0.8rem", color: "#e8622a" }}>{errorMsg}</span>
-          )}
-        </div>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(232,98,42,0.12)" }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <p className="text-base font-semibold" style={{ color: "var(--foreground)" }}>
+              Vielen Dank! Sie erhalten die Demo in Kürze per E-Mail.
+            </p>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="animate-in delay-3"
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, maxWidth: 440, margin: "0 auto" }}
+          >
+            <input
+              type="email"
+              placeholder="Ihre E-Mail-Adresse"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: status === "error" ? "1px solid #e53e3e" : "1px solid var(--border)",
+                background: "var(--background)",
+                color: "var(--foreground)",
+                fontSize: "0.95rem",
+                outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={status === "sending"}
+              className="inline-flex items-center justify-center w-full btn-orange rounded-xl py-3.5 text-base font-semibold"
+              style={{ opacity: status === "sending" ? 0.7 : 1, cursor: status === "sending" ? "wait" : "pointer" }}
+            >
+              {status === "sending" ? "Wird gesendet…" : "Demo anfordern"}
+            </button>
+            {status === "error" && (
+              <p className="text-sm" style={{ color: "#e53e3e" }}>
+                Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.
+              </p>
+            )}
+          </form>
+        )}
+
+        {/*
+          N8N WORKFLOW PLATZHALTER — DEMO E-MAIL
+          Wenn jemand seine E-Mail eingibt:
+          1. POST /api/demo-request empfängt die E-Mail
+          2. n8n Workflow wird getriggert
+          3. n8n verschickt HTML-E-Mail mit Link zu:
+             https://ak-assistance-feedback.netlify.app
+          TODO: n8n Webhook URL hier eintragen wenn bereit
+        */}
       </div>
     </section>
   );
@@ -1093,19 +982,39 @@ function TeamSection() {
         </div>
 
         {/* Unsere Geschichte */}
-        {/* MOTIVATIONSSCHREIBEN PLATZHALTER */}
         <div
           className="animate-in delay-3 rounded-2xl p-8 mb-8"
           style={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-            borderLeft: "4px solid #0d2d3e",
+            borderLeft: "4px solid #e8622a",
           }}
         >
-          <h3 className="text-xl font-bold mb-4" style={{ color: "var(--foreground)" }}>Unsere Geschichte</h3>
-          <p className="leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
-            Hier folgt unser Motivationsschreiben — warum wir AK-Assistance gegründet haben, was uns antreibt und welche Vision wir gemeinsam verfolgen.
-          </p>
+          <h3 className="text-xl font-bold mb-5" style={{ color: "var(--foreground)" }}>Unsere Geschichte</h3>
+          <div className="text-sm leading-relaxed flex flex-col gap-4" style={{ color: "var(--muted-foreground)" }}>
+            <p>
+              AK-Assistance entstand aus einer persönlichen Erfahrung — und einer gemeinsamen Überzeugung.
+            </p>
+            <p>
+              Wir haben aus nächster Nähe erlebt, was es bedeutet, einen Betrieb zu führen. Moritz' Mutter leitet ein Unternehmen und ist jeden Tag eine außergewöhnliche Unternehmerin. Aber statt sich auf das zu konzentrieren, was sie wirklich kann, verliert sie täglich wertvolle Zeit an Telefonate, Terminkoordination und bürokratische Abläufe, die längst automatisiert sein könnten.
+            </p>
+            <p>Dieses Bild hat uns nicht losgelassen.</p>
+            <p>
+              Wir kennen uns seit Jahren — verbunden durch eine echte Freundschaft und eine gemeinsame Leidenschaft für das, was Künstliche Intelligenz heute schon möglich macht. Als wir anfingen, uns ernsthaft damit zu beschäftigen, war uns schnell klar: Die Technologie existiert bereits. Was fehlt, ist jemand der sie dorthin bringt, wo sie wirklich gebraucht wird.
+            </p>
+            <p>
+              Dienstleister aller Art sind das Rückgrat unserer Gesellschaft. Und trotzdem verbringen viele Unternehmer einen Großteil ihrer Zeit nicht mit dem, was sie großartig macht — sondern mit Aufgaben, die moderne Technologie heute längst übernehmen kann.
+            </p>
+            <p>
+              Wir verkaufen kein simples Produkt. Wir gehen gemeinsam mit unseren Kunden einen Weg — persönlich, verlässlich und auf Augenhöhe. Jeder Betrieb ist anders, jeder Inhaber hat andere Bedürfnisse. Das nehmen wir ernst.
+            </p>
+            <p>
+              Unsere Vision: In fünf Jahren haben wir Hunderten von Unternehmen in ganz Deutschland geholfen, effizienter zu arbeiten — damit sie sich wieder auf das konzentrieren können, was sie wirklich können.
+            </p>
+            <p className="pt-2 font-semibold" style={{ color: "var(--foreground)" }}>
+              Moritz Koch &amp; Gabriel Adam — Gründer, AK-Assistance
+            </p>
+          </div>
         </div>
 
         {/* Values */}
@@ -1139,19 +1048,21 @@ function TeamSection() {
 /* ── News ────────────────────────────────────────────────── */
 
 /*
- * HOW TO ADD A BLOG POST:
- * Add a new object to the BLOG_POSTS array like this:
- * {
- *   id: 1,
- *   date: "17. Mai 2026",
- *   category: "KI-Trends",
- *   title: "Ihr Artikel-Titel hier",
- *   excerpt: "Kurze Zusammenfassung des Artikels (2-3 Sätze).",
- *   readTime: "3 Min",
- *   imageUrl: "/imports/blog-image.jpg", // optional
- *   link: "https://ihr-artikel-link.de"  // optional
- * }
- */
+  N8N WORKFLOW PLATZHALTER — BLOG POSTS
+  n8n schickt wöchentlich neue Blogposts per POST an /api/blog
+  Format (wenn bekannt):
+  {
+    id: number,
+    date: string,
+    category: string,
+    title: string,
+    excerpt: string,
+    readTime: string,
+    imageUrl?: string,
+    link?: string
+  }
+  TODO: n8n Webhook hier anschließen wenn Format bekannt ist
+*/
 const BLOG_POSTS: {
   id: number;
   date: string;
@@ -1228,32 +1139,23 @@ function BlogCard({ post }: { post: (typeof BLOG_POSTS)[number] }) {
 }
 
 function NewsSection() {
-  const hasPosts = BLOG_POSTS.length > 0;
-  const [nlEmail, setNlEmail] = useState("");
-  const [nlStatus, setNlStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [apiPosts, setApiPosts] = useState<typeof BLOG_POSTS>([]);
 
-  async function handleNewsletter(e: React.FormEvent) {
-    e.preventDefault();
-    if (!nlEmail.trim()) return;
-    setNlStatus("sending");
-    try {
-      const res = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: nlEmail }),
-      });
-      if (!res.ok) throw new Error();
-      setNlStatus("success");
-      setNlEmail("");
-    } catch {
-      setNlStatus("error");
-    }
-  }
+  useEffect(() => {
+    fetch("/api/blog")
+      .then((r) => r.json())
+      .then((data: { posts?: typeof BLOG_POSTS }) => {
+        if (Array.isArray(data.posts)) setApiPosts(data.posts);
+      })
+      .catch(() => {/* silent — Fallback auf BLOG_POSTS */});
+  }, []);
+
+  const allPosts = [...apiPosts, ...BLOG_POSTS];
+  const hasPosts = allPosts.length > 0;
 
   return (
     <section id="news" className="py-20 px-4 sm:px-6" style={{ background: "var(--background)" }}>
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <div className="mb-12">
           <span
             className="inline-block text-xs font-semibold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
@@ -1270,16 +1172,14 @@ function NewsSection() {
         </div>
 
         {hasPosts ? (
-          /* Blog-Post Grid — wird befüllt sobald BLOG_POSTS Einträge enthält */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {BLOG_POSTS.map((post) => (
+            {allPosts.map((post) => (
               <BlogCard key={post.id} post={post} />
             ))}
           </div>
         ) : (
-          /* Platzhalter mit Newsletter-Anmeldung */
           <div
-            className="rounded-2xl flex flex-col items-center justify-center text-center py-14 px-8 gap-6"
+            className="rounded-2xl flex flex-col items-center justify-center text-center py-14 px-8 gap-5"
             style={{ border: "1.5px dashed var(--border)", background: "var(--muted)" }}
           >
             <div
@@ -1292,62 +1192,13 @@ function NewsSection() {
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-base mb-1" style={{ color: "var(--foreground)" }}>
+              <p className="font-semibold text-base mb-2" style={{ color: "var(--foreground)" }}>
                 Beiträge folgen in Kürze
               </p>
-              <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-                Wir informieren Sie, wenn neue Artikel erscheinen.
+              <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)", maxWidth: 440 }}>
+                Wir veröffentlichen regelmäßig neue Artikel rund um KI und Digitalisierung.
               </p>
             </div>
-
-            {nlStatus === "success" ? (
-              <div
-                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "rgba(232,98,42,0.1)", color: "#e8622a" }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                Vielen Dank! Wir melden uns.
-              </div>
-            ) : (
-              <form
-                onSubmit={handleNewsletter}
-                style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", width: "100%", maxWidth: 420 }}
-              >
-                <input
-                  type="email"
-                  placeholder="Ihre E-Mail-Adresse"
-                  value={nlEmail}
-                  onChange={(e) => setNlEmail(e.target.value)}
-                  required
-                  style={{
-                    flex: 1,
-                    minWidth: 200,
-                    padding: "10px 14px",
-                    borderRadius: 10,
-                    border: nlStatus === "error" ? "1px solid #e53e3e" : "1px solid var(--border)",
-                    background: "var(--background)",
-                    color: "var(--foreground)",
-                    fontSize: "0.93rem",
-                    outline: "none",
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={nlStatus === "sending"}
-                  className="inline-flex items-center justify-center btn-orange px-5 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ opacity: nlStatus === "sending" ? 0.7 : 1, cursor: nlStatus === "sending" ? "wait" : "pointer", whiteSpace: "nowrap" }}
-                >
-                  {nlStatus === "sending" ? "…" : "Benachrichtigen"}
-                </button>
-                {nlStatus === "error" && (
-                  <p className="w-full text-xs mt-1" style={{ color: "#e53e3e" }}>
-                    Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.
-                  </p>
-                )}
-              </form>
-            )}
           </div>
         )}
       </div>
@@ -1580,7 +1431,7 @@ export default function App() {
   useScrollAnimation();
 
   return (
-    <RetellProvider>
+    <>
       <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
       <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
       <LandingHero darkMode={darkMode} />
@@ -1630,6 +1481,6 @@ export default function App() {
       </div>
 
       <CookieBanner />
-    </RetellProvider>
+    </>
   );
 }
