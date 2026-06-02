@@ -94,45 +94,12 @@
       }
     },
     {
-      "id": "cms-publish",
-      "name": "CMS: Veröffentlichen (PATCH)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        780,
-        240
-      ],
-      "parameters": {
-        "method": "PATCH",
-        "url": "={{ $env.CMS_API_URL }}/posts/{{ $('Callback parsen').first().json.post_id }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.CMS_API_TOKEN }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ status: 'published' }) }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000
-    },
-    {
       "id": "archive-update",
       "name": "Archiv: published_at setzen",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1000,
+        780,
         240
       ],
       "parameters": {
@@ -172,16 +139,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1220,
+        1000,
         240
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
-        "text": "=✅ *Veröffentlicht.* Der Artikel ist jetzt online (Post-ID {{ $('Callback parsen').first().json.post_id }}).",
+        "text": "=✅ Freigegeben (Post-ID {{ $('Callback parsen').first().json.post_id }}).\nIm Archiv als veröffentlicht markiert. Du kannst die Artikel-Datei jetzt ins website-Repo laden — sobald die Seite angebunden ist, läuft das automatisch.",
         "additionalFields": {
-          "parse_mode": "Markdown",
           "appendAttribution": false
         }
       },
@@ -193,42 +159,12 @@
       }
     },
     {
-      "id": "cms-delete",
-      "name": "CMS: Entwurf löschen (DELETE)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        780,
-        480
-      ],
-      "parameters": {
-        "method": "DELETE",
-        "url": "={{ $env.CMS_API_URL }}/posts/{{ $('Callback parsen').first().json.post_id }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.CMS_API_TOKEN }}"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000
-    },
-    {
       "id": "archive-delete",
       "name": "Archiv: Eintrag löschen",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1000,
+        780,
         480
       ],
       "parameters": {
@@ -258,16 +194,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1220,
+        1000,
         480
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
-        "text": "=❌ *Entwurf verworfen.* Das Thema ist wieder freigegeben (Post-ID {{ $('Callback parsen').first().json.post_id }}).",
+        "text": "=❌ Verworfen (Post-ID {{ $('Callback parsen').first().json.post_id }}).\nDer Archiv-Eintrag wurde gelöscht.",
         "additionalFields": {
-          "parse_mode": "Markdown",
           "appendAttribution": false
         }
       },
@@ -304,7 +239,7 @@
         120
       ],
       "parameters": {
-        "content": "## CMS-Aktionen (PLATZHALTER)\n**Approve:** PATCH status=published + `published_at`.\n**Reject:** DELETE Entwurf + Archiv-Eintrag löschen.",
+        "content": "## Freigabe-Aktionen (MVP, kein CMS)\n**Freigeben:** Archiv `published_at` = jetzt + Telegram-Bestätigung.\n**Verwerfen:** Archiv-Eintrag löschen + Telegram-Bestätigung.\n\nArtikel-Veröffentlichung erfolgt manuell (Datei ins website-Repo). Echtes Auto-Publish via GitHub-API später nachrüstbar.",
         "height": 160,
         "width": 440,
         "color": 4
@@ -349,25 +284,14 @@
       "main": [
         [
           {
-            "node": "CMS: Veröffentlichen (PATCH)",
+            "node": "Archiv: published_at setzen",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "CMS: Entwurf löschen (DELETE)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "CMS: Veröffentlichen (PATCH)": {
-      "main": [
-        [
-          {
-            "node": "Archiv: published_at setzen",
+            "node": "Archiv: Eintrag löschen",
             "type": "main",
             "index": 0
           }
@@ -379,17 +303,6 @@
         [
           {
             "node": "Telegram: Veröffentlicht",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "CMS: Entwurf löschen (DELETE)": {
-      "main": [
-        [
-          {
-            "node": "Archiv: Eintrag löschen",
             "type": "main",
             "index": 0
           }
