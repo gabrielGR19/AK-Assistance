@@ -41,12 +41,19 @@ blog-news-agent.json  (AK Blog-Agent — KI-Wochenrückblick)
   [7] Archiv-Eintrag anlegen (Data Table)
   [8] Telegram: Entwurf-Benachrichtigung (✅/❌ Inline-Buttons)
 
-blog-approval-handler.json  (AK Blog-Agent — Approval-Handler)
+blog-approval-handler.json  (AK Blog-Agent — Approval-Handler)  [MVP: ohne CMS]
   Telegram: Button-Klick (callback_query)
    → Callback parsen → Button bestätigen → Freigabe?
-   ├ approve → CMS PATCH status=published → Archiv published_at=now → Telegram "Veröffentlicht"
-   └ reject  → CMS DELETE → Archiv-Eintrag löschen → Telegram "Verworfen"
+   ├ approve → Archiv published_at=now → Telegram "Freigegeben"
+   └ reject  → Archiv-Eintrag löschen   → Telegram "Verworfen"
 ```
+
+> **MVP-Veröffentlichung (bewusst halbautomatisch):** Die Website ist statisches HTML
+> (`website/*.html`, Auslieferung per `git pull` auf dem VPS) — es gibt **kein CMS** mit
+> PATCH/DELETE-API. Workflow 2 erledigt daher nur die **Archiv-Pflege** und bestätigt per Telegram.
+> Die eigentliche Veröffentlichung machst du manuell (Artikel ins `website/`-Repo committen).
+> Echtes Auto-Publish (HTML aus dem Artikel bauen + per GitHub-API committen) ist der nächste
+> Ausbauschritt. `dry_run` in Workflow 1 bleibt im MVP auf `true` (der CMS-Zweig dort ist ungenutzt).
 
 ---
 
