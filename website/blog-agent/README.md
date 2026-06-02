@@ -20,7 +20,7 @@ bis zur Telegram-Nachricht durch und **endet dann**. Der Button-Klick kommt spä
 | Datei | Workflow-Name in n8n | Inhalt | Aktiv? |
 |---|---|---|---|
 | `blog-news-agent.json` | **AK Blog-Agent — KI-Wochenrückblick** | Schedule → 1× Tavily-Suche → Quellen aufbereiten → Claude (Wochenrückblick) → CMS-Draft → Archiv → Telegram (Buttons) | nach Test aktivieren |
-| `blog-approval-handler.json` | **AK Blog-Agent — Approval-Handler (Telegram)** | Telegram-Trigger (callback_query) → Approve/Reject → CMS publish/delete + Archiv-Update | **muss dauerhaft aktiv sein** |
+| `blog-approval-handler.json` | **AK Blog-Agent — Approval-Handler (Telegram)** | Telegram-Trigger (callback_query) → Approve/Reject → Archiv-Update bzw. -Löschung + Telegram-Bestätigung | **muss dauerhaft aktiv sein** |
 
 > **Designprinzip (wichtig):** Statt EIN Thema auszuwählen und nachzurecherchieren (fragil — fand
 > oft keine 3 unabhängigen Quellen → Abbruch), erstellt der Workflow einen **Wochenrückblick** aus
