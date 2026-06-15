@@ -1,0 +1,165 @@
+Ich habe ein Node.js Projekt in Replit. Erstelle mir folgende drei Files exakt so:
+File 1: server.js
+javascriptconst express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+const RETELL_API_KEY = process.env.RETELL_API_KEY || 'key_1846b577cdc8b6944c253eedf546';
+const AGENT_ID = process.env.AGENT_ID || 'agent_309131545e0021c379f0307aba';
+
+app.post('/api/create-call', async (req, res) => {
+  try {
+    const response = await fetch('https://api.retellai.com/v2/create-web-call', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RETELL_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ agent_id: AGENT_ID })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Retell API Fehler:', error);
+      return res.status(response.status).json({ error: 'Retell API Fehler' });
+    }
+
+    const data = await response.json();
+    res.json({ access_token: data.access_token });
+
+  } catch (err) {
+    console.error('Server Fehler:', err);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server läuft auf Port ${PORT}`);
+});
+File 2: package.json
+json{
+  "name": "ak-assistance-demo",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
+File 3: public/index.html (Ordner "public" erstellen)
+html<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AK-Assistance – KI-Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@latest/dist/index.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080c10; --surface: #0f1419; --border: rgba(255,255,255,0.07);
+      --accent: #00e5c8; --accent-dim: rgba(0,229,200,0.12);
+      --accent-glow: rgba(0,229,200,0.3); --text: #e8edf2; --muted: #6b7a8d; --red: #ff4d6d;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,229,200,0.08) 0%, transparent 70%); pointer-events: none; }
+    .card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 56px 48px; max-width: 520px; width: calc(100% - 32px); text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
+    .card::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.6; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-dim); border: 1px solid rgba(0,229,200,0.2); color: var(--accent); font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 6px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    h1 { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; background: linear-gradient(135deg, #ffffff, rgba(255,255,255,0.7)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    h1 span { background: linear-gradient(135deg, var(--accent), #00b8d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 36px; }
+    .features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 40px; text-align: left; }
+    .feature { display: flex; align-items: center; gap: 12px; font-size: 14px; color: rgba(232,237,242,0.8); padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid var(--border); }
+    .feature-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--accent-dim); border: 1px solid rgba(0,229,200,0.15); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    #demoBtn { position: relative; width: 100%; padding: 18px 32px; border-radius: 14px; border: none; cursor: pointer; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #000; background: var(--accent); box-shadow: 0 0 30px var(--accent-glow); transition: all 0.25s ease; }
+    #demoBtn:hover { transform: translateY(-2px); box-shadow: 0 0 50px var(--accent-glow); }
+    #demoBtn.calling { background: var(--red); box-shadow: 0 0 30px rgba(255,77,109,0.4); animation: ringPulse 1.5s ease-in-out infinite; }
+    #demoBtn.loading { opacity: 0.7; cursor: not-allowed; pointer-events: none; }
+    @keyframes ringPulse { 0%, 100% { box-shadow: 0 0 30px rgba(255,77,109,0.4); } 50% { box-shadow: 0 0 60px rgba(255,77,109,0.7); } }
+    #status { margin-top: 16px; font-size: 13px; color: var(--muted); min-height: 20px; }
+    #status.active { color: var(--accent); }
+    #status.error { color: var(--red); }
+    #visualizer { display: none; justify-content: center; align-items: center; gap: 4px; height: 40px; margin-top: 20px; }
+    #visualizer.active { display: flex; }
+    .bar { width: 3px; border-radius: 2px; background: var(--accent); animation: soundwave 1.2s ease-in-out infinite; }
+    .bar:nth-child(1) { animation-delay: 0s; height: 8px; } .bar:nth-child(2) { animation-delay: 0.1s; height: 16px; } .bar:nth-child(3) { animation-delay: 0.2s; height: 24px; } .bar:nth-child(4) { animation-delay: 0.3s; height: 32px; } .bar:nth-child(5) { animation-delay: 0.4s; height: 24px; } .bar:nth-child(6) { animation-delay: 0.3s; height: 16px; } .bar:nth-child(7) { animation-delay: 0.2s; height: 8px; }
+    @keyframes soundwave { 0%, 100% { transform: scaleY(0.3); opacity: 0.4; } 50% { transform: scaleY(1); opacity: 1; } }
+    .footer-note { margin-top: 24px; font-size: 12px; color: var(--muted); opacity: 0.6; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="badge">Live Demo</div>
+  <h1>Sprich mit <span>Max</span></h1>
+  <p class="subtitle">Unser KI-Assistent beantwortet alle deine Fragen zu AK-Assistance – live, in Echtzeit, direkt im Browser.</p>
+  <div class="features">
+    <div class="feature"><div class="feature-icon">🤖</div>Was ist AK-Assistance und wie funktioniert KI-Telefonie?</div>
+    <div class="feature"><div class="feature-icon">🏗️</div>Wie sieht ein Projekt für deinen Betrieb aus?</div>
+    <div class="feature"><div class="feature-icon">📞</div>Kontaktdaten und nächste Schritte</div>
+  </div>
+  <button id="demoBtn" onclick="toggleCall()">🎙️ &nbsp; Demo starten</button>
+  <div id="visualizer">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+  <div id="status">Klick auf den Button und sprich direkt mit Max</div>
+  <p class="footer-note">Dies ist eine KI-Demo · Keine echte Telefonverbindung erforderlich</p>
+</div>
+<script>
+  const client = new RetellWebClient();
+  let isCallActive = false;
+  const btn = document.getElementById('demoBtn');
+  const status = document.getElementById('status');
+  const visualizer = document.getElementById('visualizer');
+
+  function setStatus(msg, type = '') { status.textContent = msg; status.className = type; }
+
+  async function toggleCall() { isCallActive ? endCall() : startCall(); }
+
+  async function startCall() {
+    btn.classList.add('loading');
+    setStatus('Verbindung wird aufgebaut…');
+    try {
+      const res = await fetch('/api/create-call', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || !data.access_token) throw new Error(data.error || 'Kein Token');
+      await client.startCall({ accessToken: data.access_token });
+      isCallActive = true;
+      btn.classList.remove('loading');
+      btn.classList.add('calling');
+      btn.textContent = '⏹ Gespräch beenden';
+      visualizer.classList.add('active');
+      setStatus('Verbunden – Max hört zu', 'active');
+    } catch (err) {
+      btn.classList.remove('loading');
+      setStatus('Fehler: ' + err.message, 'error');
+    }
+  }
+
+  function endCall() {
+    client.stopCall();
+    isCallActive = false;
+    btn.classList.remove('calling');
+    btn.innerHTML = '🎙️ &nbsp; Demo starten';
+    visualizer.classList.remove('active');
+    setStatus('Gespräch beendet – danke für deine Zeit!');
+  }
+
+  client.on('call_ended', () => { if (isCallActive) endCall(); });
+  client.on('error', (err) => { setStatus('Verbindungsfehler – bitte erneut versuchen', 'error'); endCall(); });
+</script>
+</body>
+</html>
+Führe danach npm install aus und starte mit node server.js

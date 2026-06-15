@@ -1,0 +1,61 @@
+Please make the following changes to the existing landing page:
+
+NAVIGATION:
+- Remove all center navigation links (Vorteile, Wie es funktioniert, FAQ, Kontakt)
+- Navigation should only have: Logo left | "Termin buchen" orange button + hamburger menu right
+- Make logo slightly larger: height="55"
+- Add hamburger menu (three horizontal lines) top right that slides out a side panel
+- Side panel has no title, only three options: FAQ | Pilot Programm | Kontakt
+- Each option scrolls to the correct section on the page
+- Side panel closes when clicking outside or on X button
+
+HERO SECTION - complete redesign:
+- White background
+- AK-Assistance logo centered and prominent at top
+- Below logo: placeholder text for later animation:
+  "[ HERO ANIMATION PLACEHOLDER ]"
+  "Ihr Problem: [ PLATZHALTER ]"
+  "Unsere Lösung: [ PLATZHALTER ]"
+- Keep "Kostenloses Gespräch buchen" orange button
+- Keep "Demo anhören" outline button
+- NO statistics, NO icons, NO emojis
+
+OVERALL DESIGN CHANGES:
+- Change entire page background to WHITE (#ffffff)
+- Only specific elements use dark petrol (#0d2d3e) and orange (#e8622a)
+- Headers, cards, buttons use petrol and orange as accents
+- Body text: dark gray (#1a1a1a)
+- Remove ALL emojis from entire page
+- Remove ALL branch-specific examples (no "Baustelle", no "Friseur", no "Reinigung") — keep everything general
+- Remove all info icons
+
+DARK/LIGHT MODE:
+- When switching to dark mode: entire page background becomes #0d2d3e, all text becomes white
+- When switching to light mode: entire page background becomes #ffffff, all text becomes dark
+- Must affect EVERY section consistently
+
+DEMO SECTION - new design:
+- Separate full section with headline: "Testen Sie unseren KI-Assistenten"
+- Large centered start button in orange: "Demo starten"
+- Subtext: "Sprechen Sie direkt mit unserem KI-Assistenten und testen Sie die Fähigkeiten"
+- Button click triggers Retell AI widget (placeholder code with comment):
+  <!-- RETELL AI DEMO AGENT - insert Retell AI agent ID here: -->
+  <!-- retellWebClient.startCall({ agentId: "YOUR_AGENT_ID_HERE" }) -->
+- Visual: microphone icon, subtle wave animation around button
+
+CHATBOT WIDGET:
+- Fixed position bottom right corner
+- Small circular orange button with chat/phone icon
+- On click: opens Retell AI widget
+- Placeholder comment: <!-- RETELL AI CHATBOT WIDGET - insert agent ID: YOUR_AGENT_ID_HERE -->
+
+IMAGE PLACEHOLDERS:
+- Add image placeholder in Hero section: gray box with text "[ Bild: Team / Produkt ]"
+- Add image placeholder in "Unser Team" section next to each team member
+- Add image placeholder in Demo section: "[ Bild: Demo Screenshot ]"
+- All placeholders styled as gray rounded rectangles with dashed border
+
+REMOVE FROM NAVIGATION BAR:
+- "Vorteile" link
+- "Wie es funktioniert" link
+- Any other navigation links except the buttons mentioned above
