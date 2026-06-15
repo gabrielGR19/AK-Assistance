@@ -1399,8 +1399,8 @@ function ImpressumSection() {
           Telefon: 0163 6905809 (Gabriel Adam)<br />
           Telefon: 0173 7983151 (Moritz Koch)<br />
           E-Mail:{" "}
-          <a href="mailto:gabrieladam@ak-assistance.de" style={{ color: "#e8622a", textDecoration: "underline" }}>
-            gabrieladam@ak-assistance.de
+          <a href="mailto:kontakt@ak-assistance.de" style={{ color: "#e8622a", textDecoration: "underline" }}>
+            kontakt@ak-assistance.de
           </a>
         </p>
 
