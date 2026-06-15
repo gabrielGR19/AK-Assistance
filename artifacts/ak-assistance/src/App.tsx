@@ -1380,18 +1380,38 @@ function CookieBanner() {
 
 /* ── Impressum ───────────────────────────────────────────── */
 function ImpressumSection() {
+  const h3: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#e8622a", marginBottom: 8, marginTop: 28 };
+  const p: React.CSSProperties = { color: "var(--muted-foreground)", lineHeight: 1.75, fontSize: "0.95rem" };
   return (
     <section id="impressum" style={{ background: "var(--background)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 16 }}>Impressum</h2>
-        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem" }}>
-          Das Impressum wird nach Anmeldung der GbR ergänzt.
+        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 24 }}>Impressum</h2>
+
+        <p style={h3}>Angaben gemäß § 5 DDG</p>
+        <p style={p}>
+          Gabriel Adam &amp; Moritz Koch<br />
+          Gervinusstraße 14<br />
+          90491 Nürnberg
         </p>
-        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem", marginTop: 12 }}>
-          Bei Fragen wenden Sie sich bitte an:{" "}
-          <a href="mailto:ak-assistance@protonmail.com" style={{ color: "#e8622a", textDecoration: "underline" }}>
-            ak-assistance@protonmail.com
+
+        <p style={h3}>Kontakt</p>
+        <p style={p}>
+          Telefon: 0163 6905809 (Gabriel Adam)<br />
+          Telefon: 0173 7983151 (Moritz Koch)<br />
+          E-Mail:{" "}
+          <a href="mailto:gabrieladam@ak-assistance.de" style={{ color: "#e8622a", textDecoration: "underline" }}>
+            gabrieladam@ak-assistance.de
           </a>
+        </p>
+
+        <p style={h3}>Inhaltlich Verantwortliche gemäß § 18 Abs. 2 MStV</p>
+        <p style={p}>
+          Gabriel Adam &amp; Moritz Koch, Gervinusstraße 14, 90491 Nürnberg
+        </p>
+
+        <p style={h3}>Hinweis zur Umsatzsteuer</p>
+        <p style={p}>
+          Die Umsatzsteuer-Identifikationsnummer wird nach Gewerbeanmeldung ergänzt.
         </p>
       </div>
     </section>
@@ -1400,19 +1420,78 @@ function ImpressumSection() {
 
 /* ── Datenschutz ─────────────────────────────────────────── */
 function DatenschutzSection() {
+  const h2s: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, color: "var(--foreground)", marginTop: 36, marginBottom: 8 };
+  const h3s: React.CSSProperties = { fontSize: "0.95rem", fontWeight: 700, color: "var(--foreground)", marginTop: 20, marginBottom: 6 };
+  const ps: React.CSSProperties = { color: "var(--muted-foreground)", lineHeight: 1.75, fontSize: "0.93rem", marginBottom: 10 };
+  const ul: React.CSSProperties = { color: "var(--muted-foreground)", lineHeight: 1.75, fontSize: "0.93rem", paddingLeft: 20, marginBottom: 10 };
   return (
     <section id="datenschutz" style={{ background: "var(--muted)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 16 }}>Datenschutzerklärung</h2>
-        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem" }}>
-          Die Datenschutzerklärung wird in Kürze ergänzt.
+        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 24 }}>Datenschutzerklärung</h2>
+
+        <h3 style={h2s}>1. Datenschutz auf einen Blick</h3>
+        <h4 style={h3s}>Allgemeine Hinweise</h4>
+        <p style={ps}>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können. Ausführliche Informationen zum Thema Datenschutz entnehmen Sie unserer unter diesem Text aufgeführten Datenschutzerklärung.</p>
+
+        <h4 style={h3s}>Datenerfassung auf dieser Website</h4>
+        <p style={ps}><strong>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</strong><br />Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Abschnitt „Hinweis zur verantwortlichen Stelle" in dieser Datenschutzerklärung entnehmen.</p>
+        <p style={ps}><strong>Wie erfassen wir Ihre Daten?</strong><br />Ihre Daten werden zum einen dadurch erhoben, dass Sie uns diese mitteilen. Hierbei kann es sich z. B. um Daten handeln, die Sie in ein Kontaktformular eingeben. Andere Daten werden automatisch oder nach Ihrer Einwilligung beim Besuch der Website durch unsere IT-Systeme erfasst. Das sind vor allem technische Daten (z. B. Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs).</p>
+        <p style={ps}><strong>Wofür nutzen wir Ihre Daten?</strong><br />Ein Teil der Daten wird erhoben, um eine fehlerfreie Bereitstellung der Website zu gewährleisten. Andere Daten können zur Analyse Ihres Nutzerverhaltens verwendet werden.</p>
+        <p style={ps}><strong>Welche Rechte haben Sie bezüglich Ihrer Daten?</strong><br />Sie haben jederzeit das Recht, unentgeltlich Auskunft über Herkunft, Empfänger und Zweck Ihrer gespeicherten personenbezogenen Daten zu erhalten. Sie haben außerdem ein Recht, die Berichtigung oder Löschung dieser Daten zu verlangen. Wenn Sie eine Einwilligung zur Datenverarbeitung erteilt haben, können Sie diese Einwilligung jederzeit für die Zukunft widerrufen. Außerdem haben Sie das Recht, unter bestimmten Umständen die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen. Des Weiteren steht Ihnen ein Beschwerderecht bei der zuständigen Aufsichtsbehörde zu.</p>
+
+        <h3 style={h2s}>2. Hosting</h3>
+        <h4 style={h3s}>Hetzner</h4>
+        <p style={ps}>Anbieter ist die Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen. Details entnehmen Sie der Datenschutzerklärung von Hetzner: <a href="https://www.hetzner.com/de/legal/privacy-policy/" target="_blank" rel="noopener noreferrer" style={{ color: "#e8622a" }}>https://www.hetzner.com/de/legal/privacy-policy/</a>.</p>
+        <p style={ps}>Die Verwendung von Hetzner erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO. Wir haben ein berechtigtes Interesse an einer möglichst zuverlässigen Darstellung unserer Website.</p>
+
+        <h3 style={h2s}>3. Allgemeine Hinweise und Pflichtinformationen</h3>
+        <h4 style={h3s}>Datenschutz</h4>
+        <p style={ps}>Die Betreiber dieser Seiten nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Wir behandeln Ihre personenbezogenen Daten vertraulich und entsprechend den gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.</p>
+
+        <h4 style={h3s}>Hinweis zur verantwortlichen Stelle</h4>
+        <p style={ps}>Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:<br /><br />
+          Gabriel Adam &amp; Moritz Koch<br />
+          Gervinusstraße 14, 90491 Nürnberg<br />
+          Telefon: 0163 6905809 / 0173 7983151<br />
+          E-Mail: <a href="mailto:gabrieladam@ak-assistance.de" style={{ color: "#e8622a" }}>gabrieladam@ak-assistance.de</a>
         </p>
-        <p style={{ color: "var(--muted-foreground)", lineHeight: 1.7, fontSize: "0.95rem", marginTop: 12 }}>
-          Bei datenschutzbezogenen Anfragen wenden Sie sich bitte an:{" "}
-          <a href="mailto:ak-assistance@protonmail.com" style={{ color: "#e8622a", textDecoration: "underline" }}>
-            ak-assistance@protonmail.com
-          </a>
-        </p>
+
+        <h4 style={h3s}>Speicherdauer</h4>
+        <p style={ps}>Soweit innerhalb dieser Datenschutzerklärung keine speziellere Speicherdauer genannt wurde, verbleiben Ihre personenbezogenen Daten bei uns, bis der Zweck für die Datenverarbeitung entfällt. Wenn Sie ein berechtigtes Löschersuchen geltend machen oder eine Einwilligung zur Datenverarbeitung widerrufen, werden Ihre Daten gelöscht, sofern wir keine anderen rechtlich zulässigen Gründe für die Speicherung Ihrer personenbezogenen Daten haben.</p>
+
+        <h4 style={h3s}>Widerruf Ihrer Einwilligung zur Datenverarbeitung</h4>
+        <p style={ps}>Viele Datenverarbeitungsvorgänge sind nur mit Ihrer ausdrücklichen Einwilligung möglich. Sie können eine bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit der bis zum Widerruf erfolgten Datenverarbeitung bleibt vom Widerruf unberührt.</p>
+
+        <h4 style={h3s}>Beschwerderecht bei der zuständigen Aufsichtsbehörde</h4>
+        <p style={ps}>Im Falle von Verstößen gegen die DSGVO steht den Betroffenen ein Beschwerderecht bei einer Aufsichtsbehörde, insbesondere in dem Mitgliedstaat ihres gewöhnlichen Aufenthalts, ihres Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes zu.</p>
+
+        <h4 style={h3s}>Recht auf Datenübertragbarkeit</h4>
+        <p style={ps}>Sie haben das Recht, Daten, die wir auf Grundlage Ihrer Einwilligung oder in Erfüllung eines Vertrags automatisiert verarbeiten, an sich oder an einen Dritten in einem gängigen, maschinenlesbaren Format aushändigen zu lassen.</p>
+
+        <h4 style={h3s}>Auskunft, Berichtigung und Löschung</h4>
+        <p style={ps}>Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft über Ihre gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten.</p>
+
+        <h4 style={h3s}>Recht auf Einschränkung der Verarbeitung</h4>
+        <p style={ps}>Sie haben das Recht, die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen. Das Recht besteht in folgenden Fällen:</p>
+        <ul style={ul}>
+          <li>Wenn Sie die Richtigkeit Ihrer bei uns gespeicherten Daten bestreiten.</li>
+          <li>Wenn die Verarbeitung Ihrer personenbezogenen Daten unrechtmäßig geschah/geschieht.</li>
+          <li>Wenn wir Ihre Daten nicht mehr benötigen, Sie sie jedoch zur Geltendmachung von Rechtsansprüchen benötigen.</li>
+          <li>Wenn Sie einen Widerspruch nach Art. 21 Abs. 1 DSGVO eingelegt haben.</li>
+        </ul>
+
+        <h3 style={h2s}>4. Datenerfassung auf dieser Website</h3>
+        <h4 style={h3s}>Cookies</h4>
+        <p style={ps}>Unsere Internetseiten verwenden so genannte „Cookies". Cookies sind kleine Datenpakete und richten auf Ihrem Endgerät keinen Schaden an. Sie werden entweder vorübergehend für die Dauer einer Sitzung (Session-Cookies) oder dauerhaft (permanente Cookies) auf Ihrem Endgerät gespeichert. Session-Cookies werden nach Ende Ihres Besuchs automatisch gelöscht.</p>
+        <p style={ps}>Notwendige Cookies werden auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO gespeichert. Der Websitebetreiber hat ein berechtigtes Interesse an der Speicherung von notwendigen Cookies zur technisch fehlerfreien und optimierten Bereitstellung seiner Dienste.</p>
+
+        <h4 style={h3s}>Kontaktformular</h4>
+        <p style={ps}>Wenn Sie uns per Kontaktformular Anfragen zukommen lassen, werden Ihre Angaben aus dem Anfrageformular inklusive der von Ihnen dort angegebenen Kontaktdaten zwecks Bearbeitung der Anfrage bei uns gespeichert. Diese Daten geben wir nicht ohne Ihre Einwilligung weiter. Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO.</p>
+
+        <h4 style={h3s}>Anfrage per E-Mail oder Telefon</h4>
+        <p style={ps}>Wenn Sie uns per E-Mail oder Telefon kontaktieren, wird Ihre Anfrage inklusive aller daraus hervorgehenden personenbezogenen Daten zum Zwecke der Bearbeitung Ihres Anliegens bei uns gespeichert und verarbeitet. Diese Daten geben wir nicht ohne Ihre Einwilligung weiter.</p>
+
+        <p style={{ ...ps, marginTop: 32, fontSize: "0.82rem" }}>Quelle: <a href="https://www.e-recht24.de" target="_blank" rel="noopener noreferrer" style={{ color: "#e8622a" }}>e-recht24.de</a></p>
       </div>
     </section>
   );
