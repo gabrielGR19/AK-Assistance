@@ -1081,22 +1081,6 @@ function TeamSection() {
 
 /* ── News ────────────────────────────────────────────────── */
 
-/*
-  N8N WORKFLOW PLATZHALTER — BLOG POSTS
-  n8n schickt wöchentlich neue Blogposts per POST an /api/blog
-  Format (wenn bekannt):
-  {
-    id: number,
-    date: string,
-    category: string,
-    title: string,
-    excerpt: string,
-    readTime: string,
-    imageUrl?: string,
-    link?: string
-  }
-  TODO: n8n Webhook hier anschließen wenn Format bekannt ist
-*/
 const BLOG_POSTS: {
   id: number;
   date: string;
@@ -1106,9 +1090,7 @@ const BLOG_POSTS: {
   readTime: string;
   imageUrl?: string;
   link?: string;
-}[] = [
-  // → Hier werden automatisch neue Blog-Posts eingefügt ←
-];
+}[] = [];
 
 function BlogCard({ post }: { post: (typeof BLOG_POSTS)[number] }) {
   return (
