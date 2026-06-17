@@ -1213,11 +1213,25 @@ function NewsSection() {
         </div>
 
         {hasPosts ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allPosts.map((post) => (
-              <BlogCard key={post.id} post={post} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {allPosts.slice(0, 3).map((post) => (
+                <BlogCard key={post.id} post={post} />
+              ))}
+            </div>
+            <div className="mt-10 flex justify-center">
+              <a
+                href="/blog.html"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all"
+                style={{ background: "var(--muted)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+              >
+                Alle Artikel anzeigen
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </>
         ) : (
           <div
             className="rounded-2xl flex flex-col items-center justify-center text-center py-14 px-8 gap-5"
