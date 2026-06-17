@@ -1154,19 +1154,44 @@ function BlogCard({ post }: { post: (typeof BLOG_POSTS)[number] }) {
   );
 }
 
+type BlogIndexEntry = {
+  path: string;
+  title: string;
+  meta_description: string;
+  published_at: string;
+  keywords?: string[];
+};
+
 function NewsSection() {
-  const [apiPosts, setApiPosts] = useState<typeof BLOG_POSTS>([]);
+  const [posts, setPosts] = useState<typeof BLOG_POSTS>([]);
 
   useEffect(() => {
-    fetch("/api/blog")
+    fetch("/blog/index.json")
       .then((r) => r.json())
-      .then((data: { posts?: typeof BLOG_POSTS }) => {
-        if (Array.isArray(data.posts)) setApiPosts(data.posts);
+      .then((data: BlogIndexEntry[]) => {
+        if (!Array.isArray(data)) return;
+        const mapped = data.map((entry, i) => {
+          const dateDE = new Date(entry.published_at).toLocaleDateString("de-DE", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          return {
+            id: i,
+            date: dateDE,
+            category: entry.keywords?.[0] ?? "KI-News",
+            title: entry.title,
+            excerpt: entry.meta_description,
+            readTime: "ca. 5 Min.",
+            link: "/" + entry.path,
+          };
+        });
+        setPosts(mapped);
       })
       .catch(() => {/* silent — Fallback auf BLOG_POSTS */});
   }, []);
 
-  const allPosts = [...apiPosts, ...BLOG_POSTS];
+  const allPosts = [...posts, ...BLOG_POSTS];
   const hasPosts = allPosts.length > 0;
 
   return (
