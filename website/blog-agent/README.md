@@ -89,21 +89,10 @@ Alle Keys werden **als n8n-Credential** hinterlegt — niemals im Workflow-JSON.
 > nutzt `Anthropic API`; alle Telegram-Nodes nutzen `Telegram account`.
 > Der `anthropic-version`-Header (`2023-06-01`) ist bereits im Node gesetzt.
 
-### Umgebungsvariablen (für den CMS-Platzhalter)
+### GitHub-Repository
 
-Der CMS-Teil ist bewusst generisch (Hosting steht noch nicht final fest). Setze in der
-n8n-Umgebung (z. B. Docker-`environment` oder `.env` der n8n-Instanz):
-
-```
-CMS_API_URL=https://PLATZHALTER-CMS-DOMAIN.de/api
-CMS_API_TOKEN=dein_cms_token
-```
-
-Aufgerufen werden `{{ $env.CMS_API_URL }}/posts` (POST/PATCH/DELETE) mit
-`Authorization: Bearer {{ $env.CMS_API_TOKEN }}`.
-
-> Hinweis: n8n muss `$env`-Zugriff erlauben (Standard an; nicht durch
-> `N8N_BLOCK_ENV_ACCESS_IN_NODE=true` blockiert).
+Die GitHub API URLs sind im Approval-Handler fest auf `gabrielGR19/AK-Assistance` konfiguriert.
+Falls das Repository umzieht, müssen die URLs in den HTTP-Request-Nodes angepasst werden.
 
 ---
 
