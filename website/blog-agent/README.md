@@ -119,10 +119,12 @@ sofort gefunden.
 |---|---|---|
 | `topic_slug` | String | URL-Slug des Themas |
 | `title` | String | Artikeltitel |
-| `url_cms` | String | Vorschau-/CMS-URL (= `preview_url`) |
-| `keywords` | String | Komma-getrennte Keywords (für Dedup-Vergleich) |
+| `meta_description` | String | Meta-Description für SEO |
+| `keywords` | String | Komma-getrennte Keywords |
+| `body_markdown` | String | Vollständiger Artikel-Body in Markdown |
+| `article_filename` | String | HTML-Dateiname (z.B. `2026-06-23-slug.html`) |
 | `published_at` | String | leer bis Freigabe, dann ISO-Datum |
-| `post_id` | String | CMS-Post-ID — **Match-Schlüssel** für Approve/Reject |
+| `post_id` | String | Eindeutige ID — **Match-Schlüssel** für Approve/Reject |
 
 > `id`, `createdAt`, `updatedAt` legt n8n automatisch als System-Spalten an.
 > **`post_id`** ist eine Ergänzung zum Plan-Schema: ohne sie könnten Approve/Reject den
