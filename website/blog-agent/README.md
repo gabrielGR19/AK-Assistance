@@ -164,9 +164,9 @@ der Archiv-Teil funktioniert). Nach abgeschlossenem Test `dry_run` wieder auf `f
 - **Kein Cross-Wochen-Themen-Dedup:** Da jede Woche frische News (letzte 7 Tage) verarbeitet
   werden, ist Wiederholung gering. Das Archiv dient v.a. der Freigabe-/Publish-Verwaltung.
   Bei Bedarf nachrüstbar (Quell-URLs im Archiv speichern und in „Quellen aufbereiten" abgleichen).
-- **CMS ist Platzhalter:** Sobald das CMS feststeht (WordPress/Headless auf Hetzner/IONOS), die
-  Nodes „CMS-Entwurf anlegen", „CMS: Veröffentlichen", „CMS: Entwurf löschen" durch den nativen
-  Node oder angepasste HTTP-Calls ersetzen. Erwartete Draft-Response: `{ "post_id", "preview_url" }`.
+- **Auto-Publish via GitHub API:** Der Approval-Handler committed Artikel direkt per GitHub
+  Contents API ins Repository. Das erzeugt 2 Commits (Artikel + index.json), die jeweils den
+  Deploy-Workflow triggern. Der zweite Deploy überschreibt den ersten — funktional korrekt.
 - **Telegram Parse-Mode `Markdown`:** Enthält ein Artikeltitel ausnahmsweise `*` oder `_`, kann
   Telegram die Nachricht ablehnen. Bei Bedarf auf `HTML` umstellen oder Sonderzeichen escapen.
 - **Modell:** `claude-sonnet-4-6` (im Node „Einstellungen" zentral änderbar).
