@@ -175,7 +175,8 @@
         return;
       }
       const cards = articles.map(a => {
-        const date = new Date(a.published_at).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
+        const d = new Date(a.published_at);
+        const date = new Intl.DateTimeFormat('de-DE', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Berlin' }).format(d);
         const tags = (a.keywords || []).slice(0, 3).map(k => `<span class="card-tag">${escHtml(k)}</span>`).join('');
         const safePath = /^[a-zA-Z0-9/_.\-äöüÄÖÜß]+$/.test(a.path || '') ? a.path : '#';
         return `<a href="${safePath}" class="article-card">
