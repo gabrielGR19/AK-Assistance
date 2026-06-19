@@ -41,19 +41,19 @@ blog-news-agent.json  (AK Blog-Agent — KI-Wochenrückblick)
   [7] Archiv-Eintrag anlegen (Data Table)
   [8] Telegram: Entwurf-Benachrichtigung (✅/❌ Inline-Buttons)
 
-blog-approval-handler.json  (AK Blog-Agent — Approval-Handler)  [MVP: ohne CMS]
+blog-approval-handler.json  (AK Blog-Agent — Approval-Handler mit Auto-Publish)
   Telegram: Button-Klick (callback_query)
    → Callback parsen → Button bestätigen → Freigabe?
-   ├ approve → Archiv published_at=now → Telegram "Freigegeben"
-   └ reject  → Archiv-Eintrag löschen   → Telegram "Verworfen"
+   ├ approve → Archiv laden → HTML generieren → GitHub: Artikel committen
+   │          → index.json updaten → Archiv published_at=now → Telegram mit Link
+   └ reject  → Archiv-Eintrag löschen → Telegram "Verworfen"
 ```
 
-> **MVP-Veröffentlichung (bewusst halbautomatisch):** Die Website ist statisches HTML
-> (`website/*.html`, Auslieferung per `git pull` auf dem VPS) — es gibt **kein CMS** mit
-> PATCH/DELETE-API. Workflow 2 erledigt daher nur die **Archiv-Pflege** und bestätigt per Telegram.
-> Die eigentliche Veröffentlichung machst du manuell (Artikel ins `website/`-Repo committen).
-> Echtes Auto-Publish (HTML aus dem Artikel bauen + per GitHub-API committen) ist der nächste
-> Ausbauschritt. `dry_run` in Workflow 1 bleibt im MVP auf `true` (der CMS-Zweig dort ist ungenutzt).
+> **Auto-Publish via GitHub:** Bei Freigabe per Telegram-Button generiert der Approval-Handler
+> die vollständige HTML-Artikelseite aus dem gespeicherten Markdown, committed sie per GitHub API
+> ins Repository (`website/blog/`), aktualisiert `blog/index.json` und löst damit automatisch
+> das Deployment via GitHub Actions (`deploy.yml` → rsync auf den Hetzner VPS) aus.
+> Kein manuelles Eingreifen mehr nötig nach dem Telegram-Knopfdruck.
 
 ---
 
