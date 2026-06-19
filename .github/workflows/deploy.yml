@@ -29,6 +29,6 @@ jobs:
             --exclude='node_modules/' \
             --exclude='dist/' \
             --exclude='.DS_Store' \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            -e "ssh -i ~/.ssh/deploy_key" \
             website/ \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
