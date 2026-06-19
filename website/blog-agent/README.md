@@ -146,7 +146,7 @@ der Archiv-Teil funktioniert). Nach abgeschlossenem Test `dry_run` wieder auf `f
 |---|---|---|
 | `Tavily API` Key | n8n-Credential (Header Auth) | offen |
 | `Anthropic API` Key | n8n-Credential (Header Auth) | offen |
-| `CMS_API_URL`, `CMS_API_TOKEN` | n8n-Umgebungsvariablen | offen |
+| `GitHub Token` PAT | n8n-Credential (Header Auth) | offen |
 | `blog_archive` Data Table | n8n Data Tables | anlegen (Abschnitt 4) |
 | `Telegram account` | n8n-Credential | **erledigt** |
 | Telegram-Chat-ID `8740574505` | Node „Einstellungen" | **erledigt** |
