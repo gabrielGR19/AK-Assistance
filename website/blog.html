@@ -58,13 +58,19 @@
     .page-hero h1 { font-size: clamp(40px, 6vw, 72px); line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 24px; }
     .page-hero .lead { font-size: clamp(18px, 1.4vw, 21px); color: var(--ink-soft); max-width: 52ch; line-height: 1.55; }
 
-    /* Coming soon */
-    .coming-soon { padding: 112px 0; text-align: center; }
-    .cs-icon { width: 72px; height: 72px; border-radius: 20px; background: var(--bg-soft); border: 1px solid var(--line); display: grid; place-items: center; margin: 0 auto 32px; color: var(--ink-mute); }
-    .coming-soon h2 { font-size: 32px; margin-bottom: 16px; letter-spacing: -0.025em; }
-    .coming-soon p { font-size: 17px; color: var(--ink-soft); max-width: 44ch; margin: 0 auto 40px; line-height: 1.6; }
-    .btn-notify { display: inline-flex; align-items: center; gap: 10px; background: var(--ink); color: #fff; border: 0; border-radius: 999px; padding: 16px 24px; font-size: 15px; font-weight: 600; text-decoration: none; transition: background .15s; }
-    .btn-notify:hover { background: #000; }
+    /* Artikel-Liste */
+    .blog-list { padding: 72px 0 96px; }
+    .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 28px; margin-top: 0; }
+    .article-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; background: var(--bg); text-decoration: none; color: var(--ink); transition: border-color .15s, box-shadow .15s; display: flex; flex-direction: column; gap: 16px; }
+    .article-card:hover { border-color: var(--line-strong); box-shadow: 0 4px 24px rgba(11,18,32,.07); }
+    .card-date { font-size: 13px; color: var(--ink-mute); font-weight: 500; }
+    .card-title { font-family: 'Inter Tight', 'Inter', sans-serif; font-weight: 700; font-size: 20px; line-height: 1.2; letter-spacing: -0.02em; }
+    .card-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; flex: 1; }
+    .card-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .card-tag { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); background: var(--bg-soft); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+    .card-arrow { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); margin-top: auto; }
+    .empty-state { padding: 96px 0; text-align: center; }
+    .empty-state p { font-size: 17px; color: var(--ink-mute); }
 
     /* Footer */
     footer { border-top: 1px solid var(--line); padding: 28px 0; }
