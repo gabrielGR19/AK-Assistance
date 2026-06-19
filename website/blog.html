@@ -159,6 +159,40 @@
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') document.body.classList.remove('nav-open');
   });
+
+  function escHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loadArticles() {
+    const container = document.getElementById('articles-container');
+    try {
+      const res = await fetch('blog/index.json');
+      if (!res.ok) throw new Error('Nicht gefunden');
+      const articles = await res.json();
+      if (!Array.isArray(articles) || articles.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Noch keine Artikel veröffentlicht.</p></div>';
+        return;
+      }
+      const cards = articles.map(a => {
+        const date = new Date(a.published_at).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
+        const tags = (a.keywords || []).slice(0, 3).map(k => `<span class="card-tag">${escHtml(k)}</span>`).join('');
+        const safePath = /^[a-zA-Z0-9/_.-]+$/.test(a.path || '') ? a.path : '#';
+        return `<a href="${safePath}" class="article-card">
+          <div class="card-date">${date}</div>
+          <div class="card-title">${escHtml(a.title)}</div>
+          <div class="card-desc">${escHtml(a.meta_description)}</div>
+          ${tags ? `<div class="card-tags">${tags}</div>` : ''}
+          <div class="card-arrow">Artikel lesen <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </a>`;
+      }).join('');
+      container.innerHTML = `<div class="articles-grid">${cards}</div>`;
+    } catch (e) {
+      container.innerHTML = '<div class="empty-state"><p>Noch keine Artikel veröffentlicht.</p></div>';
+    }
+  }
+
+  loadArticles();
 </script>
 </body>
 </html>
