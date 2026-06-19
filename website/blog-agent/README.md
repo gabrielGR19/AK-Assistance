@@ -79,7 +79,11 @@ Alle Keys werden **als n8n-Credential** hinterlegt — niemals im Workflow-JSON.
 |---|---|---|
 | `Tavily API` | **Header Auth** | Name: `Authorization` · Value: `Bearer DEIN_TAVILY_KEY` |
 | `Anthropic API` | **Header Auth** | Name: `x-api-key` · Value: `DEIN_ANTHROPIC_KEY` |
+| `GitHub Token` | **Header Auth** | Name: `Authorization` · Value: `token DEIN_GITHUB_PAT` |
 | `Telegram account` | **Telegram API** | Bot-Token (bereits vorhanden) |
+
+> **GitHub PAT:** Das Token braucht `repo`-Scope (Contents: read+write). Erstellen unter
+> https://github.com/settings/tokens → „Generate new token (classic)" → Scope `repo` auswählen.
 
 > Die Nodes „Themen-Recherche", „Tiefen-Recherche" nutzen `Tavily API`; „Artikel generieren"
 > nutzt `Anthropic API`; alle Telegram-Nodes nutzen `Telegram account`.
