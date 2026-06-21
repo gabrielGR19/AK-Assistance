@@ -29,10 +29,7 @@ jobs:
       - name: Website auf Server übertragen
         run: |
           rsync -avz --delete \
-            --exclude='blog-agent/' \
-            --exclude='node_modules/' \
-            --exclude='dist/' \
             --exclude='.DS_Store' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            website/ \
+            website/dist/ \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
