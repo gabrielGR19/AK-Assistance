@@ -9,6 +9,10 @@ on:
       - "!website/node_modules/**"
   workflow_dispatch:
 
+concurrency:
+  group: deploy-website
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
