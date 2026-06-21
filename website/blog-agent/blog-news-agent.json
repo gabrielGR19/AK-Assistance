@@ -34,12 +34,6 @@
         "assignments": {
           "assignments": [
             {
-              "id": "s1",
-              "name": "dry_run",
-              "value": true,
-              "type": "boolean"
-            },
-            {
               "id": "s2",
               "name": "telegram_chat_id",
               "value": "8740574505",
@@ -195,7 +189,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1380,
+        1600,
         300
       ],
       "parameters": {
@@ -224,108 +218,12 @@
       }
     },
     {
-      "id": "if-dryrun",
-      "name": "Dry-Run aktiv?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1600,
-        300
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "c-45000",
-              "leftValue": "={{ $('Einstellungen').first().json.dry_run }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "set-dummy",
-      "name": "Dummy-CMS-Antwort (Dry-Run)",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1820,
-        200
-      ],
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "d1",
-              "name": "post_id",
-              "value": "=dry-run-{{ $now.toUnixInteger() }}",
-              "type": "string"
-            },
-            {
-              "id": "d2",
-              "name": "preview_url",
-              "value": "https://PLATZHALTER-CMS-DOMAIN.de/preview/dry-run",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "cms-create",
-      "name": "CMS-Entwurf anlegen",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1820,
-        400
-      ],
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $env.CMS_API_URL }}/posts",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.CMS_API_TOKEN }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ title: $('Claude-Antwort parsen').first().json.title, slug: $('Claude-Antwort parsen').first().json.slug, content_markdown: $('Claude-Antwort parsen').first().json.body_markdown, meta_description: $('Claude-Antwort parsen').first().json.meta_description, status: 'draft', keywords: $('Claude-Antwort parsen').first().json.keywords }) }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000
-    },
-    {
       "id": "archive-insert",
       "name": "Archiv-Eintrag anlegen",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2040,
+        1820,
         300
       ],
       "parameters": {
@@ -341,8 +239,10 @@
           "value": {
             "topic_slug": "={{ $('Claude-Antwort parsen').first().json.slug }}",
             "title": "={{ $('Claude-Antwort parsen').first().json.title }}",
-            "url_cms": "={{ $json.preview_url }}",
+            "meta_description": "={{ $('Claude-Antwort parsen').first().json.meta_description }}",
             "keywords": "={{ ($('Claude-Antwort parsen').first().json.keywords || []).join(', ') }}",
+            "body_markdown": "={{ $('Claude-Antwort parsen').first().json.body_markdown }}",
+            "article_filename": "={{ $json.article_filename }}",
             "published_at": "",
             "post_id": "={{ $json.post_id }}"
           },
@@ -360,14 +260,14 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2260,
+        2040,
         300
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
-        "text": "=*Neuer Blog-Entwurf bereit*\n\n*Titel:* {{ $('Claude-Antwort parsen').first().json.title }}\n*Keywords:* {{ ($('Claude-Antwort parsen').first().json.keywords || []).join(', ') }}\n*Quellen verwendet:* {{ ($('Claude-Antwort parsen').first().json.sources_used || []).length }}\n\nVorschau: {{ $json.url_cms }}",
+        "text": "=*Neuer Blog-Entwurf bereit*\n\n*Titel:* {{ $('Claude-Antwort parsen').first().json.title }}\n*Keywords:* {{ ($('Claude-Antwort parsen').first().json.keywords || []).join(', ') }}\n*Quellen verwendet:* {{ ($('Claude-Antwort parsen').first().json.sources_used || []).length }}\n\nVorschau: {{ $json.preview_url }}",
         "replyMarkup": "inlineKeyboard",
         "inlineKeyboard": {
           "rows": [
@@ -520,7 +420,7 @@
         100
       ],
       "parameters": {
-        "content": "## 5–6 · Artikel & CMS\nClaude schreibt einen **Wochenrückblick** strikt aus den Quellen. `INSUFFICIENT_SOURCES` → Abbruch.\n**CMS-Node ist PLATZHALTER** (`$env.CMS_API_URL`).",
+        "content": "## 5–7 · Artikel, Vorbereitung & Archiv\nClaude schreibt einen **Wochenrückblick** strikt aus den Quellen. `INSUFFICIENT_SOURCES` → Abbruch.\nNode \"Veröffentlichung vorbereiten\" erzeugt Post-ID und Dateiname.\nArchiv speichert Markdown + Metadaten für Auto-Publish.",
         "height": 180,
         "width": 420,
         "color": 4
@@ -536,10 +436,23 @@
         120
       ],
       "parameters": {
-        "content": "## 7–8 · Archiv & Freigabe\nEintrag ins Archiv (`published_at` leer), dann Telegram mit **✅/❌-Buttons**. Klick-Verarbeitung: Workflow `blog-approval-handler`.",
+        "content": "## 8 · Telegram-Freigabe\nEintrag ins Archiv (inkl. Markdown-Body), dann Telegram mit **✅/❌-Buttons**.\nKlick-Verarbeitung + Auto-Publish auf GitHub: Workflow `blog-approval-handler`.",
         "height": 170,
         "width": 420,
         "color": 4
+      }
+    },
+    {
+      "id": "prepare",
+      "name": "Veröffentlichung vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Post-ID und Dateiname generieren.\nconst parsed = $input.first().json;\nif (!parsed.article_valid) {\n  return [{ json: parsed }];\n}\nconst now = new Date();\nconst dp = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');\nconst fn = dp + '-' + parsed.slug + '.html';\nreturn [{ json: {\n  ...parsed,\n  post_id: dp + '-' + parsed.slug,\n  article_filename: fn,\n  preview_url: 'https://ak-assistance.de/blog/' + fn\n}}];"
       }
     }
   ],
@@ -635,6 +548,17 @@
       "main": [
         [
           {
+            "node": "Veröffentlichung vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Veröffentlichung vorbereiten": {
+      "main": [
+        [
+          {
             "node": "Artikel valide?",
             "type": "main",
             "index": 0
@@ -646,7 +570,7 @@
       "main": [
         [
           {
-            "node": "Dry-Run aktiv?",
+            "node": "Archiv-Eintrag anlegen",
             "type": "main",
             "index": 0
           }
@@ -654,53 +578,6 @@
         [
           {
             "node": "Telegram: Artikel ungültig",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Dry-Run aktiv?": {
-      "main": [
-        [
-          {
-            "node": "Dummy-CMS-Antwort (Dry-Run)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "CMS-Entwurf anlegen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Dummy-CMS-Antwort (Dry-Run)": {
-      "main": [
-        [
-          {
-            "node": "Archiv-Eintrag anlegen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "CMS-Entwurf anlegen": {
-      "main": [
-        [
-          {
-            "node": "Archiv-Eintrag anlegen",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: Technischer Fehler",
             "type": "main",
             "index": 0
           }

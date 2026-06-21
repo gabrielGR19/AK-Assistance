@@ -99,7 +99,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        780,
+        2320,
         240
       ],
       "parameters": {
@@ -139,14 +139,14 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1000,
+        2540,
         240
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
-        "text": "=✅ Freigegeben (Post-ID {{ $('Callback parsen').first().json.post_id }}).\nIm Archiv als veröffentlicht markiert. Du kannst die Artikel-Datei jetzt ins website-Repo laden — sobald die Seite angebunden ist, läuft das automatisch.",
+        "text": "=✅ Veröffentlicht: *{{ $('HTML generieren').first().json.title }}*\n\n🔗 https://ak-assistance.de/blog/{{ $('HTML generieren').first().json.article_filename }}\n\nArtikel + index.json wurden auf GitHub committed. Deploy läuft automatisch.",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -223,9 +223,9 @@
         120
       ],
       "parameters": {
-        "content": "## Approval-Handler (Nodes 9–10)\nLauscht dauerhaft auf **callback_query** der Inline-Buttons.\n**Dieser Workflow muss aktiviert sein**, damit die Buttons funktionieren.",
+        "content": "## Approval-Handler mit Auto-Publish\nLauscht auf **callback_query** der Inline-Buttons.\n**Dieser Workflow muss aktiviert sein**, damit die Buttons funktionieren.\n\nBei Freigabe: Artikel-HTML generieren → GitHub committen → index.json updaten → Auto-Deploy.",
         "height": 180,
-        "width": 440,
+        "width": 500,
         "color": 4
       }
     },
@@ -235,14 +235,217 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        760,
-        120
+        1200,
+        100
       ],
       "parameters": {
-        "content": "## Freigabe-Aktionen (MVP, kein CMS)\n**Freigeben:** Archiv `published_at` = jetzt + Telegram-Bestätigung.\n**Verwerfen:** Archiv-Eintrag löschen + Telegram-Bestätigung.\n\nArtikel-Veröffentlichung erfolgt manuell (Datei ins website-Repo). Echtes Auto-Publish via GitHub-API später nachrüstbar.",
+        "content": "## Freigabe-Aktionen (Auto-Publish via GitHub)\n**Freigeben:** Archiv laden → HTML generieren → Artikel auf GitHub → index.json updaten → Archiv `published_at` = jetzt → Telegram mit Link.\n**Verwerfen:** Archiv-Eintrag löschen + Telegram-Bestätigung.\n\nDeploy läuft automatisch via GitHub Actions (deploy.yml).",
         "height": 160,
-        "width": 440,
+        "width": 520,
         "color": 4
+      }
+    },
+    {
+      "id": "load-archive",
+      "name": "Archiv-Daten laden",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        240
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "getAll",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "blog_archive"
+        },
+        "returnAll": false,
+        "limit": 100
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "find-entry",
+      "name": "Eintrag finden",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        240
+      ],
+      "parameters": {
+        "jsCode": "// Den richtigen Archiv-Eintrag per post_id finden.\nconst postId = $('Callback parsen').first().json.post_id;\nconst items = $input.all();\nfor (const item of items) {\n  if (item.json.post_id === postId) {\n    return [{ json: item.json }];\n  }\n}\nthrow new Error('Archiv-Eintrag mit post_id ' + postId + ' nicht gefunden');\n"
+      }
+    },
+    {
+      "id": "build-html",
+      "name": "HTML generieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        240
+      ],
+      "parameters": {
+        "jsCode": "// Markdown zu HTML konvertieren und Artikelseite generieren.\nconst data = $input.first().json;\nfunction esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');}\nfunction mdToHtml(md){\n  var h='',lines=md.split('\\n'),inUl=false,inOl=false,para=[];\n  function fmt(t){return t.replace(/\\*\\*(.*?)\\*\\*/g,'<strong>$1</strong>').replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+)\\)/g,'<a href=\"$2\">$1</a>');}\n  function flush(){if(para.length){h+='<p>'+fmt(para.join(' ').trim())+'</p>\\n';para=[];}}\n  function close(){if(inUl){h+='</ul>\\n';inUl=false;}if(inOl){h+='</ol>\\n';inOl=false;}}\n  for(var i=0;i<lines.length;i++){\n    var t=lines[i].trim();\n    if(!t){close();flush();continue;}\n    if(t.startsWith('# ')){close();flush();continue;}\n    if(t.startsWith('## ')){close();flush();h+='<h2>'+fmt(t.slice(3))+'</h2>\\n';continue;}\n    if(t.startsWith('### ')){close();flush();h+='<h3>'+fmt(t.slice(4))+'</h3>\\n';continue;}\n    if(t==='---'){close();flush();continue;}\n    if(t.startsWith('- ')){flush();if(!inUl){close();h+='<ul>\\n';inUl=true;}h+='<li>'+fmt(t.slice(2))+'</li>\\n';continue;}\n    if(/^\\d+\\.\\s/.test(t)){flush();if(!inOl){close();h+='<ol>\\n';inOl=true;}h+='<li>'+fmt(t.replace(/^\\d+\\.\\s/,''))+'</li>\\n';continue;}\n    close();para.push(t);\n  }\n  close();flush();return h;\n}\nvar bodyHtml=mdToHtml(data.body_markdown||'');\nvar kw=(data.keywords||'').split(', ').filter(Boolean);\nvar kwTags=kw.map(function(k){return '<span class=\"article-tag\">'+esc(k)+'</span>';}).join('');\nvar months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];\nvar now=new Date();\nvar dateStr=now.getDate()+'. '+months[now.getMonth()]+' '+now.getFullYear();\nvar css=\":root{--bg:#fff;--bg-soft:#F6F7F9;--ink:#0B1220;--ink-soft:#455066;--ink-mute:#8892A6;--line:#E6E9EE;--radius:16px;--maxw:1180px;}*{box-sizing:border-box;}html,body{margin:0;padding:0;}body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased;}h1,h2,h3{font-family:'Inter Tight','Inter',sans-serif;font-weight:700;letter-spacing:-0.025em;margin:0 0 16px;}p{margin:0 0 20px;}a{color:var(--ink);}button{font-family:inherit;cursor:pointer;}.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}.topbar{padding:28px 0 0;position:relative;z-index:200;}.topbar-inner{display:flex;align-items:center;justify-content:space-between;}.logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);}.logo-mark{width:32px;height:32px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;}.hamburger{background:none;border:none;padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer;z-index:301;}.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s;}body.nav-open .hamburger span:nth-child(1){transform:translateY(7px) rotate(45deg);}body.nav-open .hamburger span:nth-child(2){opacity:0;}body.nav-open .hamburger span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}.nav-overlay{position:fixed;inset:0;background:rgba(11,18,32,.5);z-index:299;opacity:0;pointer-events:none;transition:opacity .3s;}body.nav-open .nav-overlay{opacity:1;pointer-events:all;}.nav-drawer{position:fixed;top:0;right:0;width:min(320px,85vw);height:100vh;background:#fff;z-index:300;transform:translateX(100%);transition:transform .35s cubic-bezier(.25,.46,.45,.94);display:flex;flex-direction:column;padding:28px 32px 40px;box-shadow:-4px 0 32px rgba(11,18,32,.12);}body.nav-open .nav-drawer{transform:translateX(0);}.nav-drawer-logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:17px;text-decoration:none;color:var(--ink);margin-bottom:40px;}.nav-drawer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;flex:1;}.nav-drawer ul li a{display:block;padding:12px 0;font-size:17px;font-weight:500;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:color .15s;}.nav-drawer ul li:last-child a{border-bottom:none;}.nav-drawer-contact{margin-top:32px;font-size:14px;color:var(--ink-mute);}.nav-drawer-contact a{color:var(--ink-soft);text-decoration:none;display:inline-flex;align-items:center;gap:7px;margin-top:6px;}.article-hero{padding:80px 0 56px;border-bottom:1px solid var(--line);}.back-link{display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft);text-decoration:none;font-size:15px;margin-bottom:40px;transition:color .15s;}.back-link:hover{color:var(--ink);}.article-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}.article-date{font-size:14px;color:var(--ink-mute);font-weight:500;}.article-tag{font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:4px 12px;}.article-hero h1{font-size:clamp(32px,5vw,60px);line-height:1.05;letter-spacing:-0.03em;max-width:22ch;}.article-content{padding:64px 0 80px;}.article-content .prose{max-width:72ch;}.prose h2{font-size:clamp(22px,2.2vw,28px);margin-top:48px;margin-bottom:16px;}.prose h3{font-size:20px;margin-top:32px;margin-bottom:12px;}.prose p{color:var(--ink-soft);}.prose ul,.prose ol{color:var(--ink-soft);padding-left:24px;margin:0 0 20px;}.prose li{margin-bottom:8px;}.prose a{color:var(--ink);text-underline-offset:3px;}.prose strong{color:var(--ink);}footer{border-top:1px solid var(--line);padding:28px 0;}.footer-simple{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--ink-mute);font-size:14px;}.footer-links{display:flex;gap:24px;flex-wrap:wrap;}.footer-links a{color:var(--ink-mute);text-decoration:none;transition:color .15s;}.footer-links a:hover{color:var(--ink);}\";\nvar page='<!DOCTYPE html>\\n<html lang=\"de\">\\n<head>\\n<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\\n<title>'+esc(data.title)+' — AK-Assistance Blog</title>\\n<meta name=\"description\" content=\"'+esc(data.meta_description)+'\">\\n<link rel=\"stylesheet\" href=\"../shared.css\">\\n<style>\\n'+css+'\\n</style>\\n</head>\\n<body>\\n<div class=\"topbar\"><div class=\"wrap topbar-inner\">\\n<a href=\"../index.html\" class=\"logo\"><span class=\"logo-mark\">AK</span><span>AK-Assistance</span></a>\\n<button class=\"hamburger\" aria-label=\"Menü\" onclick=\"document.body.classList.toggle(\\'nav-open\\')\"><span></span><span></span><span></span></button>\\n</div></div>\\n<div class=\"nav-overlay\" onclick=\"document.body.classList.remove(\\'nav-open\\')\"></div>\\n<nav class=\"nav-drawer\">\\n<a href=\"../index.html\" class=\"nav-drawer-logo\"><span class=\"logo-mark\">AK</span><span>AK-Assistance</span></a>\\n<ul>\\n<li><a href=\"../leistungen.html\">Leistungen</a></li>\\n<li><a href=\"../testen.html\">Live testen</a></li>\\n<li><a href=\"../blog.html\">Blog</a></li>\\n<li><a href=\"../kontakt.html\">Kontakt</a></li>\\n<li><a href=\"../impressum.html\">Impressum</a></li>\\n</ul>\\n<div class=\"nav-drawer-contact\"><div>Direkt schreiben:</div>\\n<a href=\"mailto:AK-Assistance@protonmail.com\">AK-Assistance@protonmail.com</a></div>\\n</nav>\\n<div class=\"article-hero\"><div class=\"wrap\">\\n<a href=\"../blog.html\" class=\"back-link\">\\n<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"/><polyline points=\"12 19 5 12 12 5\"/></svg>\\nAlle Artikel</a>\\n<div class=\"article-meta\"><span class=\"article-date\">'+dateStr+'</span>'+kwTags+'</div>\\n<h1>'+esc(data.title)+'</h1>\\n</div></div>\\n<section class=\"article-content\"><div class=\"wrap\"><div class=\"prose\">\\n'+bodyHtml+'\\n</div></div></section>\\n<footer><div class=\"wrap footer-simple\">\\n<div>© '+now.getFullYear()+' AK-Assistance</div>\\n<div class=\"footer-links\">\\n<a href=\"mailto:AK-Assistance@protonmail.com\">E-Mail</a>\\n<a href=\"../impressum.html\">Impressum</a>\\n<a href=\"../agb.html\">AGB</a>\\n<a href=\"../datenschutz.html\">Datenschutz</a>\\n</div></div></footer>\\n<script>document.addEventListener(\\'keydown\\', function(e){if(e.key===\\'Escape\\')document.body.classList.remove(\\'nav-open\\');});</script>\\n</body></html>';\nreturn [{json:{\n  body_html: page,\n  article_filename: data.article_filename,\n  title: data.title,\n  meta_description: data.meta_description,\n  keywords: data.keywords,\n  post_id: data.post_id\n}}];"
+      }
+    },
+    {
+      "id": "gh-article",
+      "name": "GitHub: Artikel committen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        240
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/gabrielGR19/AK-Assistance/contents/website/blog/{{ $json.article_filename }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: 'Blog: ' + $json.title, content: Buffer.from($json.body_html, 'utf-8').toString('base64') }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLATZHALTER_GITHUB",
+          "name": "GitHub Token"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "gh-index-read",
+      "name": "GitHub: index.json laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1660,
+        240
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/gabrielGR19/AK-Assistance/contents/website/blog/index.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLATZHALTER_GITHUB",
+          "name": "GitHub Token"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "gh-index-update",
+      "name": "index.json aktualisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        240
+      ],
+      "parameters": {
+        "jsCode": "// Neuen Artikel in index.json einfügen.\nvar ghResp = $input.first().json;\nvar content = Buffer.from(ghResp.content || '', 'base64').toString('utf-8');\nvar articles = [];\ntry { articles = JSON.parse(content); } catch(e) { articles = []; }\nif (!Array.isArray(articles)) articles = [];\nvar data = $('HTML generieren').first().json;\nvar kw = (data.keywords || '').split(', ').filter(Boolean);\narticles.unshift({\n  path: 'blog/' + data.article_filename,\n  title: data.title,\n  meta_description: data.meta_description,\n  published_at: new Date().toISOString(),\n  keywords: kw\n});\nvar updated = JSON.stringify(articles, null, 2);\nreturn [{ json: {\n  sha: ghResp.sha,\n  content_b64: Buffer.from(updated, 'utf-8').toString('base64'),\n  message: 'Blog: ' + data.title + ' zur Artikelliste hinzugefügt'\n}}];"
+      }
+    },
+    {
+      "id": "gh-index-commit",
+      "name": "GitHub: index.json committen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2100,
+        240
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "https://api.github.com/repos/gabrielGR19/AK-Assistance/contents/website/blog/index.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: $json.message, content: $json.content_b64, sha: $json.sha }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLATZHALTER_GITHUB",
+          "name": "GitHub Token"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "tg-gh-error",
+      "name": "Telegram: GitHub-Fehler",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1660,
+        440
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
+        "text": "=❌ GitHub-Fehler beim Veröffentlichen.\nArtikel konnte nicht committed werden. Bitte manuell prüfen.\n\nFehler: {{ $json.error || $json.message || 'unbekannt' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLATZHALTER_TELEGRAM",
+          "name": "Telegram account"
+        }
       }
     }
   ],
@@ -284,7 +487,7 @@
       "main": [
         [
           {
-            "node": "Archiv: published_at setzen",
+            "node": "Archiv-Daten laden",
             "type": "main",
             "index": 0
           }
@@ -292,6 +495,111 @@
         [
           {
             "node": "Archiv: Eintrag löschen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archiv-Daten laden": {
+      "main": [
+        [
+          {
+            "node": "Eintrag finden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eintrag finden": {
+      "main": [
+        [
+          {
+            "node": "HTML generieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML generieren": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Artikel committen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Artikel committen": {
+      "main": [
+        [
+          {
+            "node": "GitHub: index.json laden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: index.json laden": {
+      "main": [
+        [
+          {
+            "node": "index.json aktualisieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "index.json aktualisieren": {
+      "main": [
+        [
+          {
+            "node": "GitHub: index.json committen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: index.json committen": {
+      "main": [
+        [
+          {
+            "node": "Archiv: published_at setzen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
             "type": "main",
             "index": 0
           }

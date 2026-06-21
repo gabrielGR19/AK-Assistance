@@ -41,19 +41,19 @@ blog-news-agent.json  (AK Blog-Agent — KI-Wochenrückblick)
   [7] Archiv-Eintrag anlegen (Data Table)
   [8] Telegram: Entwurf-Benachrichtigung (✅/❌ Inline-Buttons)
 
-blog-approval-handler.json  (AK Blog-Agent — Approval-Handler)  [MVP: ohne CMS]
+blog-approval-handler.json  (AK Blog-Agent — Approval-Handler mit Auto-Publish)
   Telegram: Button-Klick (callback_query)
    → Callback parsen → Button bestätigen → Freigabe?
-   ├ approve → Archiv published_at=now → Telegram "Freigegeben"
-   └ reject  → Archiv-Eintrag löschen   → Telegram "Verworfen"
+   ├ approve → Archiv laden → HTML generieren → GitHub: Artikel committen
+   │          → index.json updaten → Archiv published_at=now → Telegram mit Link
+   └ reject  → Archiv-Eintrag löschen → Telegram "Verworfen"
 ```
 
-> **MVP-Veröffentlichung (bewusst halbautomatisch):** Die Website ist statisches HTML
-> (`website/*.html`, Auslieferung per `git pull` auf dem VPS) — es gibt **kein CMS** mit
-> PATCH/DELETE-API. Workflow 2 erledigt daher nur die **Archiv-Pflege** und bestätigt per Telegram.
-> Die eigentliche Veröffentlichung machst du manuell (Artikel ins `website/`-Repo committen).
-> Echtes Auto-Publish (HTML aus dem Artikel bauen + per GitHub-API committen) ist der nächste
-> Ausbauschritt. `dry_run` in Workflow 1 bleibt im MVP auf `true` (der CMS-Zweig dort ist ungenutzt).
+> **Auto-Publish via GitHub:** Bei Freigabe per Telegram-Button generiert der Approval-Handler
+> die vollständige HTML-Artikelseite aus dem gespeicherten Markdown, committed sie per GitHub API
+> ins Repository (`website/blog/`), aktualisiert `blog/index.json` und löst damit automatisch
+> das Deployment via GitHub Actions (`deploy.yml` → rsync auf den Hetzner VPS) aus.
+> Kein manuelles Eingreifen mehr nötig nach dem Telegram-Knopfdruck.
 
 ---
 
@@ -79,27 +79,20 @@ Alle Keys werden **als n8n-Credential** hinterlegt — niemals im Workflow-JSON.
 |---|---|---|
 | `Tavily API` | **Header Auth** | Name: `Authorization` · Value: `Bearer DEIN_TAVILY_KEY` |
 | `Anthropic API` | **Header Auth** | Name: `x-api-key` · Value: `DEIN_ANTHROPIC_KEY` |
+| `GitHub Token` | **Header Auth** | Name: `Authorization` · Value: `token DEIN_GITHUB_PAT` |
 | `Telegram account` | **Telegram API** | Bot-Token (bereits vorhanden) |
+
+> **GitHub PAT:** Das Token braucht `repo`-Scope (Contents: read+write). Erstellen unter
+> https://github.com/settings/tokens → „Generate new token (classic)" → Scope `repo` auswählen.
 
 > Die Nodes „Themen-Recherche", „Tiefen-Recherche" nutzen `Tavily API`; „Artikel generieren"
 > nutzt `Anthropic API`; alle Telegram-Nodes nutzen `Telegram account`.
 > Der `anthropic-version`-Header (`2023-06-01`) ist bereits im Node gesetzt.
 
-### Umgebungsvariablen (für den CMS-Platzhalter)
+### GitHub-Repository
 
-Der CMS-Teil ist bewusst generisch (Hosting steht noch nicht final fest). Setze in der
-n8n-Umgebung (z. B. Docker-`environment` oder `.env` der n8n-Instanz):
-
-```
-CMS_API_URL=https://PLATZHALTER-CMS-DOMAIN.de/api
-CMS_API_TOKEN=dein_cms_token
-```
-
-Aufgerufen werden `{{ $env.CMS_API_URL }}/posts` (POST/PATCH/DELETE) mit
-`Authorization: Bearer {{ $env.CMS_API_TOKEN }}`.
-
-> Hinweis: n8n muss `$env`-Zugriff erlauben (Standard an; nicht durch
-> `N8N_BLOCK_ENV_ACCESS_IN_NODE=true` blockiert).
+Die GitHub API URLs sind im Approval-Handler fest auf `gabrielGR19/AK-Assistance` konfiguriert.
+Falls das Repository umzieht, müssen die URLs in den HTTP-Request-Nodes angepasst werden.
 
 ---
 
@@ -115,10 +108,12 @@ sofort gefunden.
 |---|---|---|
 | `topic_slug` | String | URL-Slug des Themas |
 | `title` | String | Artikeltitel |
-| `url_cms` | String | Vorschau-/CMS-URL (= `preview_url`) |
-| `keywords` | String | Komma-getrennte Keywords (für Dedup-Vergleich) |
+| `meta_description` | String | Meta-Description für SEO |
+| `keywords` | String | Komma-getrennte Keywords |
+| `body_markdown` | String | Vollständiger Artikel-Body in Markdown |
+| `article_filename` | String | HTML-Dateiname (z.B. `2026-06-23-slug.html`) |
 | `published_at` | String | leer bis Freigabe, dann ISO-Datum |
-| `post_id` | String | CMS-Post-ID — **Match-Schlüssel** für Approve/Reject |
+| `post_id` | String | Eindeutige ID — **Match-Schlüssel** für Approve/Reject |
 
 > `id`, `createdAt`, `updatedAt` legt n8n automatisch als System-Spalten an.
 > **`post_id`** ist eine Ergänzung zum Plan-Schema: ohne sie könnten Approve/Reject den
@@ -151,7 +146,7 @@ der Archiv-Teil funktioniert). Nach abgeschlossenem Test `dry_run` wieder auf `f
 |---|---|---|
 | `Tavily API` Key | n8n-Credential (Header Auth) | offen |
 | `Anthropic API` Key | n8n-Credential (Header Auth) | offen |
-| `CMS_API_URL`, `CMS_API_TOKEN` | n8n-Umgebungsvariablen | offen |
+| `GitHub Token` PAT | n8n-Credential (Header Auth) | offen |
 | `blog_archive` Data Table | n8n Data Tables | anlegen (Abschnitt 4) |
 | `Telegram account` | n8n-Credential | **erledigt** |
 | Telegram-Chat-ID `8740574505` | Node „Einstellungen" | **erledigt** |
@@ -169,9 +164,9 @@ der Archiv-Teil funktioniert). Nach abgeschlossenem Test `dry_run` wieder auf `f
 - **Kein Cross-Wochen-Themen-Dedup:** Da jede Woche frische News (letzte 7 Tage) verarbeitet
   werden, ist Wiederholung gering. Das Archiv dient v.a. der Freigabe-/Publish-Verwaltung.
   Bei Bedarf nachrüstbar (Quell-URLs im Archiv speichern und in „Quellen aufbereiten" abgleichen).
-- **CMS ist Platzhalter:** Sobald das CMS feststeht (WordPress/Headless auf Hetzner/IONOS), die
-  Nodes „CMS-Entwurf anlegen", „CMS: Veröffentlichen", „CMS: Entwurf löschen" durch den nativen
-  Node oder angepasste HTTP-Calls ersetzen. Erwartete Draft-Response: `{ "post_id", "preview_url" }`.
+- **Auto-Publish via GitHub API:** Der Approval-Handler committed Artikel direkt per GitHub
+  Contents API ins Repository. Das erzeugt 2 Commits (Artikel + index.json), die jeweils den
+  Deploy-Workflow triggern. Der zweite Deploy überschreibt den ersten — funktional korrekt.
 - **Telegram Parse-Mode `Markdown`:** Enthält ein Artikeltitel ausnahmsweise `*` oder `_`, kann
   Telegram die Nachricht ablehnen. Bei Bedarf auf `HTML` umstellen oder Sonderzeichen escapen.
 - **Modell:** `claude-sonnet-4-6` (im Node „Einstellungen" zentral änderbar).
