@@ -1,38 +1,42 @@
 {
+  "updatedAt": "2026-06-19T16:28:35.013Z",
+  "createdAt": "2026-06-02T21:54:38.470Z",
+  "id": "ZBjJfxJ9Ulqm57wU",
   "name": "AK Blog-Agent — KI-Wochenrückblick",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
-      "id": "schedule",
-      "name": "Wöchentlicher Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -160,
-        380
-      ],
       "parameters": {
         "rule": {
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 8 * * 1"
+              "expression": "0 1 * * 1"
             }
           ]
         }
-      }
+      },
+      "id": "14110c19-19d9-43d3-8993-bb2f2a8a1e77",
+      "name": "Wöchentlicher Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        288
+      ]
     },
     {
-      "id": "config",
-      "name": "Einstellungen",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        60,
-        380
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
+            {
+              "id": "s1",
+              "name": "dry_run",
+              "value": false,
+              "type": "boolean"
+            },
             {
               "id": "s2",
               "name": "telegram_chat_id",
@@ -48,17 +52,17 @@
           ]
         },
         "options": {}
-      }
+      },
+      "id": "60636c84-7586-4115-9bee-f51384faab13",
+      "name": "Einstellungen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        288
+      ]
     },
     {
-      "id": "tavily-search",
-      "name": "Themen-Recherche (Tavily)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        280,
-        380
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://api.tavily.com/search",
@@ -71,39 +75,39 @@
           "timeout": 30000
         }
       },
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "PLATZHALTER_TAVILY",
-          "name": "Tavily API"
-        }
-      },
-      "onError": "continueErrorOutput",
+      "id": "dc4cbc9d-e3df-4209-ba31-a9a9768c177f",
+      "name": "Themen-Recherche (Tavily)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -640,
+        288
+      ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Tavily API",
+          "id": "o65pLxEbRnNMXUpQ"
+        }
+      },
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "build",
+      "parameters": {
+        "jsCode": "// Quellen für den KI-Wochenrückblick aufbereiten (aus EINER breiten Suche).\n// Tavily-Ergebnisse ROBUST einlesen - egal wie n8n die HTTP-Antwort strukturiert.\nfunction fromObj(o) {\n  if (!o || typeof o !== 'object') return null;\n  if (Array.isArray(o.results)) return o.results;\n  if (o.body && Array.isArray(o.body.results)) return o.body.results;\n  if (o.data && Array.isArray(o.data.results)) return o.data.results;\n  return null;\n}\nfunction scan(items) {\n  if (!Array.isArray(items)) return null;\n  // a) ein Item enthält die results-Liste (Standardfall)\n  for (const it of items) {\n    const j = (it && it.json) ? it.json : it;\n    const r = fromObj(j);\n    if (r && r.length) return r;\n  }\n  // b) Items SIND die Ergebnisse (gesplittet -> jedes hat url)\n  const hits = items.map(it => (it && it.json) ? it.json : it).filter(x => x && x.url);\n  if (hits.length) return hits;\n  return null;\n}\n// Bewusst nur .all() (manche n8n-Versionen liefern .first() unerwartet).\nlet results = [];\ntry { results = scan($input.all()) || results; } catch (e) {}\nif (!results.length) { try { results = scan($('Themen-Recherche (Tavily)').all()) || results; } catch (e) {} }\nif (!results.length) { try { if (Array.isArray($json.results)) results = $json.results; } catch (e) {} }\n\n// Eingebaute Diagnose (zeigt im Output, was wirklich am Eingang lag)\nlet _debug = null;\ntry {\n  const a = $input.all();\n  const j0 = (a[0] && a[0].json) ? a[0].json : null;\n  _debug = {\n    input_items: a.length,\n    first_keys: j0 ? Object.keys(j0) : [],\n    results_is_array: !!(j0 && Array.isArray(j0.results)),\n    results_len: (j0 && Array.isArray(j0.results)) ? j0.results.length : -1\n  };\n} catch (e) { _debug = { err: String(e) }; }\n\n// Domain aus URL extrahieren - OHNE new URL() (in mancher n8n-Sandbox blockiert)\nconst domainOf = (url) => {\n  const m = String(url || '').match(/^https?:\\/\\/([^\\/?#]+)/i);\n  return m ? m[1].replace(/^www\\./i, '') : '';\n};\n\n// Nach Tavily-Relevanz sortieren, je Domain nur die beste Meldung, max. 7 Quellen\nresults = results.slice().sort((a, b) => (b.score || 0) - (a.score || 0));\nconst seenDomains = new Set();\nconst sources = [];\nfor (const r of results) {\n  if (!r.url) continue;\n  const d = domainOf(r.url);\n  if (!d || seenDomains.has(d)) continue;\n  seenDomains.add(d);\n  const content = (r.content || r.raw_content || '')\n    .replace(/\\s+/g, ' ').trim().substring(0, 1500);\n  sources.push({\n    url: r.url,\n    title: r.title || '',\n    published_date: r.published_date || '',\n    domain: d,\n    snippet: content\n  });\n  if (sources.length >= 7) break;\n}\n\n// Mindestens 3 verschiedene Domains erforderlich (Anti-Halluzination)\nconst enough_sources = sources.length >= 3;\n\n// Exakter System-Prompt\nconst claude_system = \"Du bist Redakteur für den AK-Assistance-Blog. Zielgruppe: deutsche Handwerksbetriebe,\\ndie wissen wollen, was in der KI-Welt passiert und was es für sie bedeutet.\\n\\nDu erhältst eine Liste echter, aktueller Nachrichtenquellen zur KI-Welt. Erstelle daraus\\neinen redaktionellen Wochenrückblick.\\n\\nStrikte Regeln:\\n- Verwende AUSSCHLIESSLICH die unten gelieferten Quellen. Keine Information, die dort nicht\\n  steht, darf in den Artikel. Keine Zahlen, Zitate, Studien oder Personen erfinden.\\n- Wähle die 3–5 wichtigsten, für Handwerksbetriebe relevantesten Meldungen aus. Lass\\n  themenfremde oder belanglose Einträge weg.\\n- Ordne jede Meldung kurz ein: Was bedeutet das (falls relevant) für Handwerksbetriebe?\\n- Wenn eine Quelle unklar oder widersprüchlich ist, benenne das.\\n- Schreibe auf Deutsch, sachlich, klar, ohne Marketing-Floskeln.\\n- Länge: 600–900 Wörter.\\n- Struktur: H1-Titel, kurze Einleitung (2–3 Sätze), 3–5 H2-Abschnitte (je eine Meldung),\\n  Fazit, Quellenliste.\\n- Quellenliste am Ende als nummerierte Liste: [Nr] Titel — Domain (Datum) — URL.\\n- Verwende nur Quellen, die du auch wirklich im Text verarbeitet hast.\\n- Wenn weniger als 3 verwertbare Quellen vorhanden sind, antworte ausschließlich mit:\\n  \\\"INSUFFICIENT_SOURCES\\\".\\n\\nGib das Ergebnis GENAU in diesem Format zurück. Keine Code-Bloecke, kein JSON, nichts vor oder nach den Markern:\\n\\n###TITLE###\\n<Titel>\\n###SLUG###\\n<slug, nur Kleinbuchstaben und Bindestriche>\\n###META###\\n<Meta-Description, max 155 Zeichen>\\n###KEYWORDS###\\n<keyword1, keyword2, keyword3>\\n###BODY###\\n<vollstaendiger Artikel in Markdown, 600-900 Woerter, mit H1/H2 und Quellenliste am Ende>\\n###SOURCES###\\n<je verarbeitete Quelle eine Zeile im Format: URL | Titel | Datum>\\n###END###\";\n\n// User-Message: alle aufbereiteten Quellen (Titel, Domain, Datum, URL, Inhalt)\nconst quellenText = sources.map((s, i) =>\n  `[${i + 1}] ${s.title}\\nDomain: ${s.domain}\\nDatum: ${s.published_date || 'unbekannt'}\\nURL: ${s.url}\\nInhalt: ${s.snippet}`\n).join('\\n\\n');\n\nlet heute = '';\ntry { heute = $now.toFormat('dd.MM.yyyy'); } catch (e) { heute = new Date().toLocaleDateString('de-DE'); }\nconst claude_user = `Erstelle einen KI-Wochenrückblick (Stand ${heute}) aus diesen Quellen:\\n\\n${quellenText}`;\n\nreturn [{ json: {\n  enough_sources,\n  sources_count: sources.length,\n  domains_count: seenDomains.size,\n  _debug,\n  sources,\n  claude_system,\n  claude_user\n}}];\n"
+      },
+      "id": "9b90e14c-1531-40b1-a090-f8e0272c74b8",
       "name": "Quellen aufbereiten",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        500,
-        380
-      ],
-      "parameters": {
-        "jsCode": "// Quellen für den KI-Wochenrückblick aufbereiten (aus EINER breiten Suche).\n// Tavily-Ergebnisse ROBUST einlesen - egal wie n8n die HTTP-Antwort strukturiert.\nfunction fromObj(o) {\n  if (!o || typeof o !== 'object') return null;\n  if (Array.isArray(o.results)) return o.results;\n  if (o.body && Array.isArray(o.body.results)) return o.body.results;\n  if (o.data && Array.isArray(o.data.results)) return o.data.results;\n  return null;\n}\nfunction scan(items) {\n  if (!Array.isArray(items)) return null;\n  // a) ein Item enthält die results-Liste (Standardfall)\n  for (const it of items) {\n    const j = (it && it.json) ? it.json : it;\n    const r = fromObj(j);\n    if (r && r.length) return r;\n  }\n  // b) Items SIND die Ergebnisse (gesplittet -> jedes hat url)\n  const hits = items.map(it => (it && it.json) ? it.json : it).filter(x => x && x.url);\n  if (hits.length) return hits;\n  return null;\n}\n// Bewusst nur .all() (manche n8n-Versionen liefern .first() unerwartet).\nlet results = [];\ntry { results = scan($input.all()) || results; } catch (e) {}\nif (!results.length) { try { results = scan($('Themen-Recherche (Tavily)').all()) || results; } catch (e) {} }\nif (!results.length) { try { if (Array.isArray($json.results)) results = $json.results; } catch (e) {} }\n\n// Eingebaute Diagnose (zeigt im Output, was wirklich am Eingang lag)\nlet _debug = null;\ntry {\n  const a = $input.all();\n  const j0 = (a[0] && a[0].json) ? a[0].json : null;\n  _debug = {\n    input_items: a.length,\n    first_keys: j0 ? Object.keys(j0) : [],\n    results_is_array: !!(j0 && Array.isArray(j0.results)),\n    results_len: (j0 && Array.isArray(j0.results)) ? j0.results.length : -1\n  };\n} catch (e) { _debug = { err: String(e) }; }\n\n// Domain aus URL extrahieren - OHNE new URL() (in mancher n8n-Sandbox blockiert)\nconst domainOf = (url) => {\n  const m = String(url || '').match(/^https?:\\/\\/([^\\/?#]+)/i);\n  return m ? m[1].replace(/^www\\./i, '') : '';\n};\n\n// Nach Tavily-Relevanz sortieren, je Domain nur die beste Meldung, max. 7 Quellen\nresults = results.slice().sort((a, b) => (b.score || 0) - (a.score || 0));\nconst seenDomains = new Set();\nconst sources = [];\nfor (const r of results) {\n  if (!r.url) continue;\n  const d = domainOf(r.url);\n  if (!d || seenDomains.has(d)) continue;\n  seenDomains.add(d);\n  const content = (r.content || r.raw_content || '')\n    .replace(/\\s+/g, ' ').trim().substring(0, 1500);\n  sources.push({\n    url: r.url,\n    title: r.title || '',\n    published_date: r.published_date || '',\n    domain: d,\n    snippet: content\n  });\n  if (sources.length >= 7) break;\n}\n\n// Mindestens 3 verschiedene Domains erforderlich (Anti-Halluzination)\nconst enough_sources = sources.length >= 3;\n\n// Exakter System-Prompt\nconst claude_system = \"Du bist Redakteur für den AK-Assistance-Blog. Zielgruppe: deutsche Handwerksbetriebe,\\ndie wissen wollen, was in der KI-Welt passiert und was es für sie bedeutet.\\n\\nDu erhältst eine Liste echter, aktueller Nachrichtenquellen zur KI-Welt. Erstelle daraus\\neinen redaktionellen Wochenrückblick.\\n\\nStrikte Regeln:\\n- Verwende AUSSCHLIESSLICH die unten gelieferten Quellen. Keine Information, die dort nicht\\n  steht, darf in den Artikel. Keine Zahlen, Zitate, Studien oder Personen erfinden.\\n- Wähle die 3–5 wichtigsten, für Handwerksbetriebe relevantesten Meldungen aus. Lass\\n  themenfremde oder belanglose Einträge weg.\\n- Ordne jede Meldung kurz ein: Was bedeutet das (falls relevant) für Handwerksbetriebe?\\n- Wenn eine Quelle unklar oder widersprüchlich ist, benenne das.\\n- Schreibe auf Deutsch, sachlich, klar, ohne Marketing-Floskeln.\\n- Länge: 600–900 Wörter.\\n- Struktur: H1-Titel, kurze Einleitung (2–3 Sätze), 3–5 H2-Abschnitte (je eine Meldung),\\n  Fazit, Quellenliste.\\n- Quellenliste am Ende als nummerierte Liste: [Nr] Titel — Domain (Datum) — URL.\\n- Verwende nur Quellen, die du auch wirklich im Text verarbeitet hast.\\n- Wenn weniger als 3 verwertbare Quellen vorhanden sind, antworte ausschließlich mit:\\n  \\\"INSUFFICIENT_SOURCES\\\".\\n\\nGib das Ergebnis GENAU in diesem Format zurück. Keine Code-Bloecke, kein JSON, nichts vor oder nach den Markern:\\n\\n###TITLE###\\n<Titel>\\n###SLUG###\\n<slug, nur Kleinbuchstaben und Bindestriche>\\n###META###\\n<Meta-Description, max 155 Zeichen>\\n###KEYWORDS###\\n<keyword1, keyword2, keyword3>\\n###BODY###\\n<vollstaendiger Artikel in Markdown, 600-900 Woerter, mit H1/H2 und Quellenliste am Ende>\\n###SOURCES###\\n<je verarbeitete Quelle eine Zeile im Format: URL | Titel | Datum>\\n###END###\";\n\n// User-Message: alle aufbereiteten Quellen (Titel, Domain, Datum, URL, Inhalt)\nconst quellenText = sources.map((s, i) =>\n  `[${i + 1}] ${s.title}\\nDomain: ${s.domain}\\nDatum: ${s.published_date || 'unbekannt'}\\nURL: ${s.url}\\nInhalt: ${s.snippet}`\n).join('\\n\\n');\n\nlet heute = '';\ntry { heute = $now.toFormat('dd.MM.yyyy'); } catch (e) { heute = new Date().toLocaleDateString('de-DE'); }\nconst claude_user = `Erstelle einen KI-Wochenrückblick (Stand ${heute}) aus diesen Quellen:\\n\\n${quellenText}`;\n\nreturn [{ json: {\n  enough_sources,\n  sources_count: sources.length,\n  domains_count: seenDomains.size,\n  _debug,\n  sources,\n  claude_system,\n  claude_user\n}}];\n"
-      }
+        -416,
+        288
+      ]
     },
     {
-      "id": "if-enough",
-      "name": "Genug Quellen (≥3 Domains)?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        720,
-        380
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -127,17 +131,17 @@
           "combinator": "and"
         },
         "options": {}
-      }
+      },
+      "id": "508ca751-ac6f-4d1a-891d-ec4d2f2414c7",
+      "name": "Genug Quellen (≥3 Domains)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        288
+      ]
     },
     {
-      "id": "claude",
-      "name": "Artikel generieren (Claude)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        940,
-        300
-      ],
       "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
@@ -159,39 +163,39 @@
           "timeout": 120000
         }
       },
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "PLATZHALTER_ANTHROPIC",
-          "name": "Anthropic API"
-        }
-      },
-      "onError": "continueErrorOutput",
+      "id": "ac5ed4e2-79da-4edc-98f3-2b6f72959f79",
+      "name": "Artikel generieren (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        32,
+        208
+      ],
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Anthropic API",
+          "id": "1sqhvuprxy5szWxz"
+        }
+      },
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "parse",
+      "parameters": {
+        "jsCode": "// Claude-Antwort parsen (Trennzeichen-Format, robust gegen Sonderzeichen im Text).\nconst resp = $input.first().json;\nconst text = (resp.content && resp.content[0] && resp.content[0].text) ? resp.content[0].text : '';\n\n// Anti-Halluzination: Claude signalisiert zu wenige Quellen\nif (text.trim().includes('INSUFFICIENT_SOURCES')) {\n  return [{ json: { article_valid: false, reason: 'INSUFFICIENT_SOURCES' } }];\n}\n\n// Abschnitt zwischen zwei Markern herausschneiden (ohne RegExp -> sandbox-sicher)\nfunction between(start, end) {\n  const i = text.indexOf(start);\n  if (i < 0) return '';\n  const from = i + start.length;\n  const j = end ? text.indexOf(end, from) : -1;\n  return (j < 0 ? text.slice(from) : text.slice(from, j)).trim();\n}\n\nconst title  = between('###TITLE###', '###SLUG###');\nlet   slug   = between('###SLUG###', '###META###');\nconst meta   = between('###META###', '###KEYWORDS###');\nconst kwRaw  = between('###KEYWORDS###', '###BODY###');\nconst body   = between('###BODY###', '###SOURCES###');\nconst srcRaw = between('###SOURCES###', '###END###');\n\n// Pflichtfelder: ohne Titel oder Body ist der Artikel nicht verwertbar\nif (!title || !body) {\n  return [{ json: {\n    article_valid: false,\n    reason: 'PARSE_ERROR',\n    _raw_head: text.slice(0, 300)   // Diagnose: zeigt, was Claude wirklich geliefert hat\n  } }];\n}\n\n// Slug absichern, falls Claude keinen sauberen liefert\nif (!slug) {\n  slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n}\n\n// Keywords: kommagetrennt -> Array\nconst keywords = kwRaw.split(',').map(k => k.trim()).filter(Boolean);\n\n// Quellen: je Zeile \"URL | Titel | Datum\" -> Objektliste\nconst sources_used = srcRaw.split('\\n').map(line => {\n  const p = line.split('|').map(s => s.trim());\n  if (!p[0]) return null;\n  return { url: p[0] || '', title: p[1] || '', date: p[2] || '' };\n}).filter(Boolean);\n\nreturn [{ json: {\n  article_valid: true,\n  title,\n  slug,\n  meta_description: meta,\n  keywords,\n  body_markdown: body,\n  sources_used\n} }];\n"
+      },
+      "id": "04201757-7996-4c41-966c-fdc579d18b91",
       "name": "Claude-Antwort parsen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1160,
-        300
-      ],
-      "parameters": {
-        "jsCode": "// Claude-Antwort parsen (Trennzeichen-Format, robust gegen Sonderzeichen im Text).\nconst resp = $input.first().json;\nconst text = (resp.content && resp.content[0] && resp.content[0].text) ? resp.content[0].text : '';\n\n// Anti-Halluzination: Claude signalisiert zu wenige Quellen\nif (text.trim().includes('INSUFFICIENT_SOURCES')) {\n  return [{ json: { article_valid: false, reason: 'INSUFFICIENT_SOURCES' } }];\n}\n\n// Abschnitt zwischen zwei Markern herausschneiden (ohne RegExp -> sandbox-sicher)\nfunction between(start, end) {\n  const i = text.indexOf(start);\n  if (i < 0) return '';\n  const from = i + start.length;\n  const j = end ? text.indexOf(end, from) : -1;\n  return (j < 0 ? text.slice(from) : text.slice(from, j)).trim();\n}\n\nconst title  = between('###TITLE###', '###SLUG###');\nlet   slug   = between('###SLUG###', '###META###');\nconst meta   = between('###META###', '###KEYWORDS###');\nconst kwRaw  = between('###KEYWORDS###', '###BODY###');\nconst body   = between('###BODY###', '###SOURCES###');\nconst srcRaw = between('###SOURCES###', '###END###');\n\n// Pflichtfelder: ohne Titel oder Body ist der Artikel nicht verwertbar\nif (!title || !body) {\n  return [{ json: {\n    article_valid: false,\n    reason: 'PARSE_ERROR',\n    _raw_head: text.slice(0, 300)   // Diagnose: zeigt, was Claude wirklich geliefert hat\n  } }];\n}\n\n// Slug absichern, falls Claude keinen sauberen liefert\nif (!slug) {\n  slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n}\n\n// Keywords: kommagetrennt -> Array\nconst keywords = kwRaw.split(',').map(k => k.trim()).filter(Boolean);\n\n// Quellen: je Zeile \"URL | Titel | Datum\" -> Objektliste\nconst sources_used = srcRaw.split('\\n').map(line => {\n  const p = line.split('|').map(s => s.trim());\n  if (!p[0]) return null;\n  return { url: p[0] || '', title: p[1] || '', date: p[2] || '' };\n}).filter(Boolean);\n\nreturn [{ json: {\n  article_valid: true,\n  title,\n  slug,\n  meta_description: meta,\n  keywords,\n  body_markdown: body,\n  sources_used\n} }];\n"
-      }
+        240,
+        208
+      ]
     },
     {
-      "id": "if-valid",
-      "name": "Artikel valide?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1600,
-        300
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -215,245 +219,195 @@
           "combinator": "and"
         },
         "options": {}
-      }
-    },
-    {
-      "id": "archive-insert",
-      "name": "Archiv-Eintrag anlegen",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1.1,
-      "position": [
-        1820,
-        300
-      ],
-      "parameters": {
-        "resource": "row",
-        "operation": "insert",
-        "dataTableId": {
-          "__rl": true,
-          "mode": "name",
-          "value": "blog_archive"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "topic_slug": "={{ $('Claude-Antwort parsen').first().json.slug }}",
-            "title": "={{ $('Claude-Antwort parsen').first().json.title }}",
-            "meta_description": "={{ $('Claude-Antwort parsen').first().json.meta_description }}",
-            "keywords": "={{ ($('Claude-Antwort parsen').first().json.keywords || []).join(', ') }}",
-            "body_markdown": "={{ $('Claude-Antwort parsen').first().json.body_markdown }}",
-            "article_filename": "={{ $json.article_filename }}",
-            "published_at": "",
-            "post_id": "={{ $json.post_id }}"
-          },
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        }
       },
-      "onError": "continueErrorOutput"
+      "id": "f0f22a78-0c92-494f-8d93-e9c086737b40",
+      "name": "Artikel valide?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        208
+      ]
     },
     {
-      "id": "telegram-notify",
-      "name": "Telegram: Entwurf-Benachrichtigung",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        2040,
-        300
-      ],
       "parameters": {
-        "resource": "message",
-        "operation": "sendMessage",
-        "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
-        "text": "=*Neuer Blog-Entwurf bereit*\n\n*Titel:* {{ $('Claude-Antwort parsen').first().json.title }}\n*Keywords:* {{ ($('Claude-Antwort parsen').first().json.keywords || []).join(', ') }}\n*Quellen verwendet:* {{ ($('Claude-Antwort parsen').first().json.sources_used || []).length }}\n\nVorschau: {{ $json.preview_url }}",
-        "replyMarkup": "inlineKeyboard",
-        "inlineKeyboard": {
-          "rows": [
-            {
-              "row": {
-                "buttons": [
-                  {
-                    "text": "✅ Veröffentlichen",
-                    "additionalFields": {
-                      "callback_data": "=approve:{{ $json.post_id }}"
-                    }
-                  },
-                  {
-                    "text": "❌ Verwerfen",
-                    "additionalFields": {
-                      "callback_data": "=reject:{{ $json.post_id }}"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "additionalFields": {
-          "parse_mode": "Markdown",
-          "appendAttribution": false
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
-        }
-      }
-    },
-    {
-      "id": "tg-insufficient",
-      "name": "Telegram: Zu wenige Quellen",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        940,
-        540
-      ],
-      "parameters": {
-        "resource": "message",
-        "operation": "sendMessage",
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
         "text": "=⚠️ Blog-Agent abgebrochen: Die KI-News-Suche lieferte weniger als 3 unabhängige Quellen-Domains. Kein Wochenrückblick erstellt (Anti-Halluzination).",
         "additionalFields": {
           "appendAttribution": false
         }
       },
+      "id": "2fd7b789-b96a-4583-a927-faaa6aa945ed",
+      "name": "Telegram: Zu wenige Quellen",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        448
+      ],
+      "webhookId": "e2121660-f12e-48c1-be77-fa11ff789c0a",
       "credentials": {
         "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
         }
       }
     },
     {
-      "id": "tg-no-article",
-      "name": "Telegram: Artikel ungültig",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1380,
-        540
-      ],
       "parameters": {
-        "resource": "message",
-        "operation": "sendMessage",
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
         "text": "=⚠️ Blog-Agent abgebrochen: Claude konnte aus den Quellen keinen verwertbaren Artikel erstellen (Grund: {{ $json.reason }}). Kein Entwurf angelegt.",
         "additionalFields": {
           "appendAttribution": false
         }
       },
+      "id": "e49f0a62-e6b8-421a-8133-df7a146fd3d3",
+      "name": "Telegram: Artikel ungültig",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        448
+      ],
+      "webhookId": "4d84dbb3-8829-4f62-a382-de8d2ce162a1",
       "credentials": {
         "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
         }
       }
     },
     {
-      "id": "tg-error",
-      "name": "Telegram: Technischer Fehler",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        280,
-        600
-      ],
       "parameters": {
-        "resource": "message",
-        "operation": "sendMessage",
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
         "text": "=❌ Blog-Agent — technischer Fehler: Ein API-Aufruf ist fehlgeschlagen.\nNode: {{ $json.error?.node?.name || 'unbekannt' }}\nMeldung: {{ $json.error?.message || $json.error || 'siehe n8n-Execution-Log' }}",
         "additionalFields": {
           "appendAttribution": false
         }
       },
+      "id": "431bac67-5165-4d69-9fa3-d1a7e429aaa2",
+      "name": "Telegram: Technischer Fehler",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        512
+      ],
+      "webhookId": "1f943ea3-19ce-4c3a-82ab-89419eb31668",
       "credentials": {
         "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
         }
       }
     },
     {
-      "id": "note-1",
-      "name": "Notiz 1",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -180,
-        120
-      ],
       "parameters": {
         "content": "## 1–2 · Trigger & Einstellungen\nJeden **Montag 08:00** (Europe/Berlin).\n`dry_run = true` im Node 'Einstellungen' = Test ohne CMS-Call.",
         "height": 170,
         "width": 400,
         "color": 4
-      }
-    },
-    {
-      "id": "note-2",
-      "name": "Notiz 2",
+      },
+      "id": "3cbbd84b-927a-4a8a-8a65-92b9f77d8015",
+      "name": "Notiz 1",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        460,
-        120
-      ],
+        -1104,
+        32
+      ]
+    },
+    {
       "parameters": {
         "content": "## 3–4 · Recherche & Aufbereitung\nEINE breite Tavily-Suche (deutsche KI-News). Node 'Quellen aufbereiten' nimmt je Domain die beste Meldung (max. 7), so sind 3+ unabhängige Domains praktisch garantiert. Keine fragile zweite Recherche mehr.",
         "height": 200,
         "width": 420,
         "color": 4
-      }
+      },
+      "id": "4ad88f30-80ec-4c90-a9f8-c887d3ba9f06",
+      "name": "Notiz 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        32
+      ]
     },
     {
-      "id": "note-3",
+      "parameters": {
+        "content": "## 5–6 · Artikel & CMS\nClaude schreibt einen **Wochenrückblick** strikt aus den Quellen. `INSUFFICIENT_SOURCES` → Abbruch.\n**CMS-Node ist PLATZHALTER** (`$env.CMS_API_URL`).",
+        "height": 180,
+        "width": 420,
+        "color": 4
+      },
+      "id": "886d3176-9cda-4a75-9d43-bf63103cb5d2",
       "name": "Notiz 3",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        920,
-        100
-      ],
-      "parameters": {
-        "content": "## 5–7 · Artikel, Vorbereitung & Archiv\nClaude schreibt einen **Wochenrückblick** strikt aus den Quellen. `INSUFFICIENT_SOURCES` → Abbruch.\nNode \"Veröffentlichung vorbereiten\" erzeugt Post-ID und Dateiname.\nArchiv speichert Markdown + Metadaten für Auto-Publish.",
-        "height": 180,
-        "width": 420,
-        "color": 4
-      }
+        0,
+        0
+      ]
     },
     {
-      "id": "note-4",
+      "parameters": {
+        "content": "## 7–8 · Archiv & Freigabe\nEintrag ins Archiv (`published_at` leer), dann Telegram mit **✅/❌-Buttons**. Klick-Verarbeitung: Workflow `blog-approval-handler`.",
+        "height": 170,
+        "width": 420,
+        "color": 4
+      },
+      "id": "89e68fc9-84c1-4644-8dee-a5f4037eb0f3",
       "name": "Notiz 4",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2240,
-        120
-      ],
-      "parameters": {
-        "content": "## 8 · Telegram-Freigabe\nEintrag ins Archiv (inkl. Markdown-Body), dann Telegram mit **✅/❌-Buttons**.\nKlick-Verarbeitung + Auto-Publish auf GitHub: Workflow `blog-approval-handler`.",
-        "height": 170,
-        "width": 420,
-        "color": 4
-      }
+        1328,
+        32
+      ]
     },
     {
-      "id": "prepare",
-      "name": "Veröffentlichung vorbereiten",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1380,
-        300
-      ],
       "parameters": {
-        "jsCode": "// Post-ID und Dateiname generieren.\nconst parsed = $input.first().json;\nif (!parsed.article_valid) {\n  return [{ json: parsed }];\n}\nconst now = new Date();\nconst dp = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');\nconst fn = dp + '-' + parsed.slug + '.html';\nreturn [{ json: {\n  ...parsed,\n  post_id: dp + '-' + parsed.slug,\n  article_filename: fn,\n  preview_url: 'https://ak-assistance.de/blog/' + fn\n}}];"
-      }
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pid-1",
+              "name": "post_id",
+              "value": "=post-{{ $now.toMillis() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gen-post-id",
+      "name": "Post-ID generieren",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1824,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.ak-assistance.de/webhook/blog-artikel-eingang",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post_id: $json.post_id, title: $('Claude-Antwort parsen').first().json.title, slug: $('Claude-Antwort parsen').first().json.slug, meta_description: $('Claude-Antwort parsen').first().json.meta_description, keywords: ($('Claude-Antwort parsen').first().json.keywords || []).join(', '), body_markdown: $('Claude-Antwort parsen').first().json.body_markdown, dry_run: String($('Einstellungen').first().json.dry_run) }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "artikel-weiterleiten",
+      "name": "An Workflow 2 senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2048,
+        304
+      ],
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -548,17 +502,6 @@
       "main": [
         [
           {
-            "node": "Veröffentlichung vorbereiten",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Veröffentlichung vorbereiten": {
-      "main": [
-        [
-          {
             "node": "Artikel valide?",
             "type": "main",
             "index": 0
@@ -570,7 +513,7 @@
       "main": [
         [
           {
-            "node": "Archiv-Eintrag anlegen",
+            "node": "Post-ID generieren",
             "type": "main",
             "index": 0
           }
@@ -584,15 +527,20 @@
         ]
       ]
     },
-    "Archiv-Eintrag anlegen": {
+    "Post-ID generieren": {
       "main": [
         [
           {
-            "node": "Telegram: Entwurf-Benachrichtigung",
+            "node": "An Workflow 2 senden",
             "type": "main",
             "index": 0
           }
-        ],
+        ]
+      ]
+    },
+    "An Workflow 2 senden": {
+      "main": [
+        [],
         [
           {
             "node": "Telegram: Technischer Fehler",
@@ -603,13 +551,45 @@
       ]
     }
   },
-  "active": false,
   "settings": {
     "executionOrder": "v1",
-    "timezone": "Europe/Berlin"
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Wöchentlicher Trigger": {
+      "recurrenceRules": []
+    }
   },
   "meta": {
-    "templateId": "ak-blog-wochenrueckblick"
+    "templateCredsSetupCompleted": true
   },
-  "tags": []
+  "pinData": {},
+  "versionId": "d4970733-1869-481d-9586-a006d37ef955",
+  "activeVersionId": "d4970733-1869-481d-9586-a006d37ef955",
+  "versionCounter": 10,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-06-02T21:54:38.474Z",
+      "createdAt": "2026-06-02T21:54:38.474Z",
+      "role": "workflow:owner",
+      "workflowId": "ZBjJfxJ9Ulqm57wU",
+      "projectId": "a9T2t83fThlISn9u",
+      "project": {
+        "updatedAt": "2026-04-21T20:47:05.365Z",
+        "createdAt": "2026-04-21T20:34:33.830Z",
+        "id": "a9T2t83fThlISn9u",
+        "name": "Moritz Koch <koch_moritz12@gmx.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "156eef8d-1ffc-4930-8ec3-98ca7ae9c972"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version d4970733",
+    "description": ""
+  }
 }

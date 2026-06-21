@@ -1,74 +1,73 @@
 {
+  "updatedAt": "2026-06-03T11:51:19.107Z",
+  "createdAt": "2026-06-02T21:46:41.891Z",
+  "id": "ispDA5uyFhkkZT37",
   "name": "AK Blog-Agent — Approval-Handler (Telegram)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
-      "id": "tg-trigger",
-      "name": "Telegram: Button-Klick",
-      "type": "n8n-nodes-base.telegramTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -100,
-        360
-      ],
       "parameters": {
         "updates": [
           "callback_query"
         ],
         "additionalFields": {}
       },
+      "id": "47f74dc6-f512-4687-8c7e-fa5d07f71c80",
+      "name": "Telegram: Button-Klick",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        240
+      ],
+      "webhookId": "d82cf077-29f8-4c3c-9f0e-e02fc24869be",
       "credentials": {
         "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
         }
       }
     },
     {
-      "id": "parse-callback",
+      "parameters": {
+        "jsCode": "// Telegram-Callback (Button-Klick) auswerten.\nconst cq = $json.callback_query || {};\nconst raw = cq.data || '';\nconst parts = raw.split(':');\nreturn [{ json: {\n  action: parts[0] || '',\n  post_id: parts[1] || '',\n  query_id: cq.id || '',\n  chat_id: (cq.message && cq.message.chat) ? cq.message.chat.id : '',\n  message_id: cq.message ? cq.message.message_id : '',\n  raw\n}}];\n"
+      },
+      "id": "244ad905-a0f9-4b36-a76b-57201514dc8a",
       "name": "Callback parsen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        120,
-        360
-      ],
-      "parameters": {
-        "jsCode": "// Telegram-Callback (Button-Klick) auswerten.\nconst cq = $json.callback_query || {};\nconst raw = cq.data || '';\nconst parts = raw.split(':');\nreturn [{ json: {\n  action: parts[0] || '',\n  post_id: parts[1] || '',\n  query_id: cq.id || '',\n  chat_id: (cq.message && cq.message.chat) ? cq.message.chat.id : '',\n  message_id: cq.message ? cq.message.message_id : '',\n  raw\n}}];\n"
-      }
+        240,
+        240
+      ]
     },
     {
-      "id": "answer-callback",
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Callback parsen').first().json.query_id }}",
+        "additionalFields": {
+          "text": "=Wird verarbeitet … (Post-ID: {{ $('Callback parsen').first().json.post_id || 'LEER' }})"
+        }
+      },
+      "id": "05b02ae7-90d7-46f8-bd50-61c2e9ecb17f",
       "name": "Button bestätigen",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        340,
-        360
+        464,
+        240
       ],
-      "parameters": {
-        "resource": "callback",
-        "operation": "answerQuery",
-        "queryId": "={{ $('Callback parsen').first().json.query_id }}",
-        "additionalFields": {
-          "text": "Wird verarbeitet …"
-        }
-      },
+      "webhookId": "0e51249f-2be6-49d7-9d8f-9477ab3275aa",
       "credentials": {
         "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
         }
       }
     },
     {
-      "id": "switch-action",
-      "name": "Freigabe?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        560,
-        360
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -91,24 +90,23 @@
           "combinator": "and"
         },
         "options": {}
-      }
+      },
+      "id": "d4763663-e826-4c0f-b4f8-8bfc2a392d4a",
+      "name": "Freigabe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        240
+      ]
     },
     {
-      "id": "archive-update",
-      "name": "Archiv: published_at setzen",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1.1,
-      "position": [
-        2320,
-        240
-      ],
       "parameters": {
-        "resource": "row",
         "operation": "update",
         "dataTableId": {
           "__rl": true,
           "mode": "name",
-          "value": "blog_archive"
+          "value": "blog_archive_v2"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -120,6 +118,7 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
+        "options": {},
         "matchType": "allConditions",
         "filters": {
           "conditions": [
@@ -131,127 +130,238 @@
           ]
         }
       },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "id": "tg-confirm-publish",
-      "name": "Telegram: Veröffentlicht",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        2540,
-        240
-      ],
-      "parameters": {
-        "resource": "message",
-        "operation": "sendMessage",
-        "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
-        "text": "=✅ Veröffentlicht: *{{ $('HTML generieren').first().json.title }}*\n\n🔗 https://ak-assistance.de/blog/{{ $('HTML generieren').first().json.article_filename }}\n\nArtikel + index.json wurden auf GitHub committed. Deploy läuft automatisch.",
-        "additionalFields": {
-          "appendAttribution": false
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
-        }
-      }
-    },
-    {
-      "id": "archive-delete",
-      "name": "Archiv: Eintrag löschen",
+      "id": "5d9ff233-be99-47af-8bdd-856b87e74aa9",
+      "name": "Archiv: published_at setzen",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        780,
-        480
+        912,
+        128
       ],
+      "onError": "continueErrorOutput"
+    },
+    {
       "parameters": {
-        "resource": "row",
         "operation": "deleteRows",
         "dataTableId": {
           "__rl": true,
           "mode": "name",
-          "value": "blog_archive"
+          "value": "blog_archive_v2"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
               "keyName": "post_id",
-              "condition": "eq",
               "keyValue": "={{ $('Callback parsen').first().json.post_id }}"
             }
           ]
-        }
+        },
+        "options": {}
       },
+      "id": "8aff191f-57b8-4654-9c57-657dff509b24",
+      "name": "Archiv: Eintrag löschen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        368
+      ],
       "onError": "continueErrorOutput"
     },
     {
-      "id": "tg-confirm-reject",
-      "name": "Telegram: Verworfen",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1000,
-        480
-      ],
       "parameters": {
-        "resource": "message",
-        "operation": "sendMessage",
         "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
         "text": "=❌ Verworfen (Post-ID {{ $('Callback parsen').first().json.post_id }}).\nDer Archiv-Eintrag wurde gelöscht.",
         "additionalFields": {
           "appendAttribution": false
         }
       },
+      "id": "0a6410b2-e6a1-4e08-af6a-d42d4db61ccc",
+      "name": "Telegram: Verworfen",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        368
+      ],
+      "webhookId": "aff21a97-e990-4994-9b27-d35a2870f94d",
       "credentials": {
         "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
         }
       }
     },
     {
-      "id": "note2-1",
+      "parameters": {
+        "content": "## Approval-Handler\nLauscht dauerhaft auf **callback_query** der Inline-Buttons.\n**Dieser Workflow muss aktiviert/published sein**, damit die Buttons funktionieren.",
+        "height": 180,
+        "width": 440,
+        "color": 4
+      },
+      "id": "a5b6f4c3-e464-4670-9c9b-c129e42cb853",
       "name": "Notiz Handler",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -120,
-        120
-      ],
-      "parameters": {
-        "content": "## Approval-Handler mit Auto-Publish\nLauscht auf **callback_query** der Inline-Buttons.\n**Dieser Workflow muss aktiviert sein**, damit die Buttons funktionieren.\n\nBei Freigabe: Artikel-HTML generieren → GitHub committen → index.json updaten → Auto-Deploy.",
-        "height": 180,
-        "width": 500,
-        "color": 4
-      }
+        0,
+        0
+      ]
     },
     {
-      "id": "note2-2",
-      "name": "Notiz CMS",
+      "parameters": {
+        "content": "## Auto-Publish via GitHub API\n**Freigeben:** published_at setzen → HTML bauen → GitHub committen (Artikel + Index).\n**Dry-Run:** Wenn dry_run=true im Archiv, wird nur bestätigt — kein GitHub-Commit.\n**Duplikat-Schutz:** Wenn Datei bereits auf GitHub existiert, wird gewarnt und nichts überschrieben.\n\nCredential: **GitHub API** (HTTP Header Auth) mit `Authorization: Bearer ghp_...`",
+        "height": 200,
+        "width": 540,
+        "color": 4
+      },
+      "id": "8f6e2f2d-6275-4324-8649-2dfb15c54a06",
+      "name": "Notiz Publish",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1200,
-        100
+        1328,
+        0
+      ]
+    },
+    {
+      "id": "webhook-eingang",
+      "name": "Webhook: Artikel-Eingang",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        -100
       ],
+      "webhookId": "blog-artikel-eingang",
       "parameters": {
-        "content": "## Freigabe-Aktionen (Auto-Publish via GitHub)\n**Freigeben:** Archiv laden → HTML generieren → Artikel auf GitHub → index.json updaten → Archiv `published_at` = jetzt → Telegram mit Link.\n**Verwerfen:** Archiv-Eintrag löschen + Telegram-Bestätigung.\n\nDeploy läuft automatisch via GitHub Actions (deploy.yml).",
-        "height": 160,
-        "width": 520,
-        "color": 4
+        "httpMethod": "POST",
+        "path": "blog-artikel-eingang",
+        "responseMode": "onReceived",
+        "options": {}
       }
     },
     {
-      "id": "load-archive",
-      "name": "Archiv-Daten laden",
+      "id": "archiv-insert",
+      "name": "Archiv-Eintrag anlegen",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        780,
+        140,
+        -100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "blog_archive_v2"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_id": "={{ $json.post_id }}",
+            "topic_slug": "={{ $json.topic_slug }}",
+            "title": "={{ $json.title }}",
+            "keywords": "={{ $json.keywords }}",
+            "published_at": "",
+            "body_markdown": "={{ $json.body_markdown }}",
+            "meta_description": "={{ $json.meta_description }}",
+            "dry_run": "={{ $json.dry_run }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "tg-notify",
+      "name": "Telegram: Entwurf-Benachrichtigung",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        -100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "8740574505",
+        "text": "=*Neuer Blog-Entwurf bereit*\n\n*Titel:* {{ $('Daten aufbereiten').first().json.title }}\n*Keywords:* {{ $('Daten aufbereiten').first().json.keywords }}\n\n📖 Artikel folgt — lesen und dann entscheiden:",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Veröffentlichen",
+                    "additionalFields": {
+                      "callback_data": "=approve:{{ $('Daten aufbereiten').first().json.post_id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Verwerfen",
+                    "additionalFields": {
+                      "callback_data": "=reject:{{ $('Daten aufbereiten').first().json.post_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
+        }
+      },
+      "webhookId": "a047f8f5-70cd-4e04-ab24-75b55372fccc"
+    },
+    {
+      "id": "tg-body",
+      "name": "Telegram: Artikel-Volltext",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        580,
+        -100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "8740574505",
+        "text": "={{ (() => { const body = $('Daten aufbereiten').first().json.body_markdown || ''; return body.length > 3800 ? body.slice(0, 3800) + '\\n\\n_(Artikel gekürzt)_' : body; })() }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
+        }
+      },
+      "webhookId": "a5e40aac-172c-41b3-a300-3859320814da"
+    },
+    {
+      "id": "archiv-read",
+      "name": "Archiv: Artikel-Daten lesen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1000,
         240
       ],
       "parameters": {
@@ -260,51 +370,165 @@
         "dataTableId": {
           "__rl": true,
           "mode": "name",
-          "value": "blog_archive"
+          "value": "blog_archive_v2"
         },
-        "returnAll": false,
-        "limit": 100
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "post_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Callback parsen').first().json.post_id }}"
+            }
+          ]
+        }
       },
       "onError": "continueErrorOutput"
     },
     {
-      "id": "find-entry",
-      "name": "Eintrag finden",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "check-empty",
+      "name": "Archiv-Eintrag vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
-        1000,
+        1200,
         240
       ],
       "parameters": {
-        "jsCode": "// Den richtigen Archiv-Eintrag per post_id finden.\nconst postId = $('Callback parsen').first().json.post_id;\nconst items = $input.all();\nfor (const item of items) {\n  if (item.json.post_id === postId) {\n    return [{ json: item.json }];\n  }\n}\nthrow new Error('Archiv-Eintrag mit post_id ' + postId + ' nicht gefunden');\n"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "emp-1",
+              "leftValue": "={{ $json.post_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       }
+    },
+    {
+      "id": "tg-not-found",
+      "name": "Telegram: Artikel nicht gefunden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        360
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
+        "text": "=⚠️ Kein Archiv-Eintrag für Post-ID {{ $('Callback parsen').first().json.post_id }}.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
+        }
+      },
+      "webhookId": "1e534b91-16f8-4d5e-9abb-cabb7366df7c"
     },
     {
       "id": "build-html",
-      "name": "HTML generieren",
+      "name": "HTML und Pfad berechnen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1220,
+        1400,
         240
       ],
       "parameters": {
-        "jsCode": "// Markdown zu HTML konvertieren und Artikelseite generieren.\nconst data = $input.first().json;\nfunction esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');}\nfunction mdToHtml(md){\n  var h='',lines=md.split('\\n'),inUl=false,inOl=false,para=[];\n  function fmt(t){return t.replace(/\\*\\*(.*?)\\*\\*/g,'<strong>$1</strong>').replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+)\\)/g,'<a href=\"$2\">$1</a>');}\n  function flush(){if(para.length){h+='<p>'+fmt(para.join(' ').trim())+'</p>\\n';para=[];}}\n  function close(){if(inUl){h+='</ul>\\n';inUl=false;}if(inOl){h+='</ol>\\n';inOl=false;}}\n  for(var i=0;i<lines.length;i++){\n    var t=lines[i].trim();\n    if(!t){close();flush();continue;}\n    if(t.startsWith('# ')){close();flush();continue;}\n    if(t.startsWith('## ')){close();flush();h+='<h2>'+fmt(t.slice(3))+'</h2>\\n';continue;}\n    if(t.startsWith('### ')){close();flush();h+='<h3>'+fmt(t.slice(4))+'</h3>\\n';continue;}\n    if(t==='---'){close();flush();continue;}\n    if(t.startsWith('- ')){flush();if(!inUl){close();h+='<ul>\\n';inUl=true;}h+='<li>'+fmt(t.slice(2))+'</li>\\n';continue;}\n    if(/^\\d+\\.\\s/.test(t)){flush();if(!inOl){close();h+='<ol>\\n';inOl=true;}h+='<li>'+fmt(t.replace(/^\\d+\\.\\s/,''))+'</li>\\n';continue;}\n    close();para.push(t);\n  }\n  close();flush();return h;\n}\nvar bodyHtml=mdToHtml(data.body_markdown||'');\nvar kw=(data.keywords||'').split(', ').filter(Boolean);\nvar kwTags=kw.map(function(k){return '<span class=\"article-tag\">'+esc(k)+'</span>';}).join('');\nvar months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];\nvar now=new Date();\nvar dateStr=now.getDate()+'. '+months[now.getMonth()]+' '+now.getFullYear();\nvar css=\":root{--bg:#fff;--bg-soft:#F6F7F9;--ink:#0B1220;--ink-soft:#455066;--ink-mute:#8892A6;--line:#E6E9EE;--radius:16px;--maxw:1180px;}*{box-sizing:border-box;}html,body{margin:0;padding:0;}body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased;}h1,h2,h3{font-family:'Inter Tight','Inter',sans-serif;font-weight:700;letter-spacing:-0.025em;margin:0 0 16px;}p{margin:0 0 20px;}a{color:var(--ink);}button{font-family:inherit;cursor:pointer;}.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}.topbar{padding:28px 0 0;position:relative;z-index:200;}.topbar-inner{display:flex;align-items:center;justify-content:space-between;}.logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);}.logo-mark{width:32px;height:32px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;}.hamburger{background:none;border:none;padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer;z-index:301;}.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s;}body.nav-open .hamburger span:nth-child(1){transform:translateY(7px) rotate(45deg);}body.nav-open .hamburger span:nth-child(2){opacity:0;}body.nav-open .hamburger span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}.nav-overlay{position:fixed;inset:0;background:rgba(11,18,32,.5);z-index:299;opacity:0;pointer-events:none;transition:opacity .3s;}body.nav-open .nav-overlay{opacity:1;pointer-events:all;}.nav-drawer{position:fixed;top:0;right:0;width:min(320px,85vw);height:100vh;background:#fff;z-index:300;transform:translateX(100%);transition:transform .35s cubic-bezier(.25,.46,.45,.94);display:flex;flex-direction:column;padding:28px 32px 40px;box-shadow:-4px 0 32px rgba(11,18,32,.12);}body.nav-open .nav-drawer{transform:translateX(0);}.nav-drawer-logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:17px;text-decoration:none;color:var(--ink);margin-bottom:40px;}.nav-drawer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;flex:1;}.nav-drawer ul li a{display:block;padding:12px 0;font-size:17px;font-weight:500;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:color .15s;}.nav-drawer ul li:last-child a{border-bottom:none;}.nav-drawer-contact{margin-top:32px;font-size:14px;color:var(--ink-mute);}.nav-drawer-contact a{color:var(--ink-soft);text-decoration:none;display:inline-flex;align-items:center;gap:7px;margin-top:6px;}.article-hero{padding:80px 0 56px;border-bottom:1px solid var(--line);}.back-link{display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft);text-decoration:none;font-size:15px;margin-bottom:40px;transition:color .15s;}.back-link:hover{color:var(--ink);}.article-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}.article-date{font-size:14px;color:var(--ink-mute);font-weight:500;}.article-tag{font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:4px 12px;}.article-hero h1{font-size:clamp(32px,5vw,60px);line-height:1.05;letter-spacing:-0.03em;max-width:22ch;}.article-content{padding:64px 0 80px;}.article-content .prose{max-width:72ch;}.prose h2{font-size:clamp(22px,2.2vw,28px);margin-top:48px;margin-bottom:16px;}.prose h3{font-size:20px;margin-top:32px;margin-bottom:12px;}.prose p{color:var(--ink-soft);}.prose ul,.prose ol{color:var(--ink-soft);padding-left:24px;margin:0 0 20px;}.prose li{margin-bottom:8px;}.prose a{color:var(--ink);text-underline-offset:3px;}.prose strong{color:var(--ink);}footer{border-top:1px solid var(--line);padding:28px 0;}.footer-simple{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--ink-mute);font-size:14px;}.footer-links{display:flex;gap:24px;flex-wrap:wrap;}.footer-links a{color:var(--ink-mute);text-decoration:none;transition:color .15s;}.footer-links a:hover{color:var(--ink);}\";\nvar page='<!DOCTYPE html>\\n<html lang=\"de\">\\n<head>\\n<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\\n<title>'+esc(data.title)+' — AK-Assistance Blog</title>\\n<meta name=\"description\" content=\"'+esc(data.meta_description)+'\">\\n<link rel=\"stylesheet\" href=\"../shared.css\">\\n<style>\\n'+css+'\\n</style>\\n</head>\\n<body>\\n<div class=\"topbar\"><div class=\"wrap topbar-inner\">\\n<a href=\"../index.html\" class=\"logo\"><span class=\"logo-mark\">AK</span><span>AK-Assistance</span></a>\\n<button class=\"hamburger\" aria-label=\"Menü\" onclick=\"document.body.classList.toggle(\\'nav-open\\')\"><span></span><span></span><span></span></button>\\n</div></div>\\n<div class=\"nav-overlay\" onclick=\"document.body.classList.remove(\\'nav-open\\')\"></div>\\n<nav class=\"nav-drawer\">\\n<a href=\"../index.html\" class=\"nav-drawer-logo\"><span class=\"logo-mark\">AK</span><span>AK-Assistance</span></a>\\n<ul>\\n<li><a href=\"../leistungen.html\">Leistungen</a></li>\\n<li><a href=\"../testen.html\">Live testen</a></li>\\n<li><a href=\"../blog.html\">Blog</a></li>\\n<li><a href=\"../kontakt.html\">Kontakt</a></li>\\n<li><a href=\"../impressum.html\">Impressum</a></li>\\n</ul>\\n<div class=\"nav-drawer-contact\"><div>Direkt schreiben:</div>\\n<a href=\"mailto:AK-Assistance@protonmail.com\">AK-Assistance@protonmail.com</a></div>\\n</nav>\\n<div class=\"article-hero\"><div class=\"wrap\">\\n<a href=\"../blog.html\" class=\"back-link\">\\n<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"/><polyline points=\"12 19 5 12 12 5\"/></svg>\\nAlle Artikel</a>\\n<div class=\"article-meta\"><span class=\"article-date\">'+dateStr+'</span>'+kwTags+'</div>\\n<h1>'+esc(data.title)+'</h1>\\n</div></div>\\n<section class=\"article-content\"><div class=\"wrap\"><div class=\"prose\">\\n'+bodyHtml+'\\n</div></div></section>\\n<footer><div class=\"wrap footer-simple\">\\n<div>© '+now.getFullYear()+' AK-Assistance</div>\\n<div class=\"footer-links\">\\n<a href=\"mailto:AK-Assistance@protonmail.com\">E-Mail</a>\\n<a href=\"../impressum.html\">Impressum</a>\\n<a href=\"../agb.html\">AGB</a>\\n<a href=\"../datenschutz.html\">Datenschutz</a>\\n</div></div></footer>\\n<script>document.addEventListener(\\'keydown\\', function(e){if(e.key===\\'Escape\\')document.body.classList.remove(\\'nav-open\\');});</script>\\n</body></html>';\nreturn [{json:{\n  body_html: page,\n  article_filename: data.article_filename,\n  title: data.title,\n  meta_description: data.meta_description,\n  keywords: data.keywords,\n  post_id: data.post_id\n}}];"
+        "jsCode": "\nconst row = $input.first().json;\nconst title = row.title || 'Kein Titel';\nconst slug = row.topic_slug || (row.post_id || 'artikel').toLowerCase().replace(/[^a-z0-9]+/g, '-');\nconst body = row.body_markdown || '';\nconst meta = row.meta_description || title;\nconst keywords = row.keywords || '';\nconst pubAt = row.published_at || new Date().toISOString();\nconst isDryRun = row.dry_run === 'true' || row.dry_run === true;\nconst dateISO = pubAt.slice(0, 10);\nconst dateObj = new Date(pubAt);\nconst dateDE = dateObj.toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });\nconst filename = `website/blog/${dateISO}-${slug}.html`;\nconst articlePath = `blog/${dateISO}-${slug}.html`;\nconst articleUrl = `https://ak-assistance.de/blog/${dateISO}-${slug}.html`;\n\nfunction esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;'); }\nfunction inline(s) {\n  return esc(s)\n    .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')\n    .replace(/\\*(.+?)\\*/g, '<em>$1</em>')\n    .replace(/\\[(.+?)\\]\\((.+?)\\)/g, (_, t, u) => {\n      const safe = /^https?:\\/\\//i.test(u) ? u : '#';\n      return '<a href=\"' + safe + '\" target=\"_blank\" rel=\"noopener noreferrer\">' + t + '</a>';\n    });\n}\nfunction mdToHtml(md) {\n  const lines = (md || '').split('\\n');\n  let html = '', inOl = false, inUl = false;\n  for (const line of lines) {\n    if (line.startsWith('# ')) { if(inOl){html+='</ol>\\n';inOl=false;} if(inUl){html+='</ul>\\n';inUl=false;} html += '<h1>' + esc(line.slice(2).trim()) + '</h1>\\n'; }\n    else if (line.startsWith('## ')) { if(inOl){html+='</ol>\\n';inOl=false;} if(inUl){html+='</ul>\\n';inUl=false;} html += '<h2>' + esc(line.slice(3).trim()) + '</h2>\\n'; }\n    else if (line.startsWith('### ')) { if(inOl){html+='</ol>\\n';inOl=false;} if(inUl){html+='</ul>\\n';inUl=false;} html += '<h3>' + esc(line.slice(4).trim()) + '</h3>\\n'; }\n    else if (/^\\d+\\.\\s/.test(line)) { if(inUl){html+='</ul>\\n';inUl=false;} if(!inOl){html+='<ol>\\n';inOl=true;} html += '<li>' + inline(line.replace(/^\\d+\\.\\s/, '')) + '</li>\\n'; }\n    else if (/^[-*]\\s/.test(line)) { if(inOl){html+='</ol>\\n';inOl=false;} if(!inUl){html+='<ul>\\n';inUl=true;} html += '<li>' + inline(line.replace(/^[-*]\\s/, '')) + '</li>\\n'; }\n    else if (line.trim() === '') { if(inOl){html+='</ol>\\n';inOl=false;} if(inUl){html+='</ul>\\n';inUl=false;} }\n    else { if(inOl){html+='</ol>\\n';inOl=false;} if(inUl){html+='</ul>\\n';inUl=false;} html += '<p>' + inline(line) + '</p>\\n'; }\n  }\n  if(inOl) html+='</ol>\\n'; if(inUl) html+='</ul>\\n';\n  return html;\n}\nconst bodyHtml = mdToHtml(body);\nconst tags = (keywords||'').split(',').map(k=>k.trim()).filter(Boolean).map(k=>`<span class=\"article-tag\">${esc(k)}</span>`).join('');\nconst html = `<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>${esc(title)} — AK-Assistance Blog</title>\n<meta name=\"description\" content=\"${meta.replace(/\"/g,'&quot;')}\">\n<link rel=\"stylesheet\" href=\"../shared.css\">\n<style>\n:root{--bg:#fff;--bg-soft:#F6F7F9;--ink:#0B1220;--ink-soft:#455066;--ink-mute:#8892A6;--line:#E6E9EE;--radius:16px;--maxw:1180px;}\n*{box-sizing:border-box;}html,body{margin:0;padding:0;}\nbody{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased;}\nh1,h2,h3{font-family:'Inter Tight','Inter',sans-serif;font-weight:700;letter-spacing:-0.025em;margin:0 0 16px;}\np{margin:0 0 20px;}a{color:var(--ink);}button{font-family:inherit;cursor:pointer;}\n.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}\n.topbar{padding:28px 0 0;position:relative;z-index:200;}\n.topbar-inner{display:flex;align-items:center;justify-content:space-between;}\n.logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);}\n.logo-mark{width:32px;height:32px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;}\n.hamburger{background:none;border:none;padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer;z-index:301;}\n.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s;}\nbody.nav-open .hamburger span:nth-child(1){transform:translateY(7px) rotate(45deg);}\nbody.nav-open .hamburger span:nth-child(2){opacity:0;}\nbody.nav-open .hamburger span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}\n.nav-overlay{position:fixed;inset:0;background:rgba(11,18,32,.5);z-index:299;opacity:0;pointer-events:none;transition:opacity .3s;}\nbody.nav-open .nav-overlay{opacity:1;pointer-events:all;}\n.nav-drawer{position:fixed;top:0;right:0;width:min(320px,85vw);height:100vh;background:#fff;z-index:300;transform:translateX(100%);transition:transform .35s cubic-bezier(.25,.46,.45,.94);display:flex;flex-direction:column;padding:28px 32px 40px;box-shadow:-4px 0 32px rgba(11,18,32,.12);}\nbody.nav-open .nav-drawer{transform:translateX(0);}\n.nav-drawer-logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:17px;text-decoration:none;color:var(--ink);margin-bottom:40px;}\n.nav-drawer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;flex:1;}\n.nav-drawer ul li a{display:block;padding:12px 0;font-size:17px;font-weight:500;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:color .15s;}\n.nav-drawer ul li:last-child a{border-bottom:none;}\n.nav-drawer-contact{margin-top:32px;font-size:14px;color:var(--ink-mute);}\n.nav-drawer-contact a{color:var(--ink-soft);text-decoration:none;display:inline-flex;align-items:center;gap:7px;margin-top:6px;}\n.article-hero{padding:80px 0 56px;border-bottom:1px solid var(--line);}\n.back-link{display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft);text-decoration:none;font-size:15px;margin-bottom:40px;transition:color .15s;}\n.back-link:hover{color:var(--ink);}\n.article-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}\n.article-date{font-size:14px;color:var(--ink-mute);font-weight:500;}\n.article-tag{font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:4px 12px;}\n.article-hero h1{font-size:clamp(32px,5vw,60px);line-height:1.05;letter-spacing:-0.03em;max-width:22ch;}\n.article-content{padding:64px 0 80px;}\n.article-content .prose{max-width:72ch;}\n.prose h2{font-size:clamp(22px,2.2vw,28px);margin-top:48px;margin-bottom:16px;}\n.prose h3{font-size:20px;margin-top:32px;margin-bottom:12px;}\n.prose p{color:var(--ink-soft);}\n.prose ul,.prose ol{color:var(--ink-soft);padding-left:24px;margin:0 0 20px;}\n.prose li{margin-bottom:8px;}\n.prose a{color:var(--ink);text-underline-offset:3px;}\n.prose strong{color:var(--ink);}\nfooter{border-top:1px solid var(--line);padding:28px 0;}\n.footer-simple{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--ink-mute);font-size:14px;}\n.footer-links{display:flex;gap:24px;flex-wrap:wrap;}\n.footer-links a{color:var(--ink-mute);text-decoration:none;transition:color .15s;}\n.footer-links a:hover{color:var(--ink);}\n</style>\n</head>\n<body>\n<div class=\"topbar\"><div class=\"wrap topbar-inner\">\n<a href=\"../index.html\" class=\"logo\"><span class=\"logo-mark\">AK</span><span>AK-Assistance</span></a>\n<button class=\"hamburger\" aria-label=\"Menü\" onclick=\"document.body.classList.toggle('nav-open')\"><span></span><span></span><span></span></button>\n</div></div>\n<div class=\"nav-overlay\" onclick=\"document.body.classList.remove('nav-open')\"></div>\n<nav class=\"nav-drawer\">\n<a href=\"../index.html\" class=\"nav-drawer-logo\"><span class=\"logo-mark\">AK</span><span>AK-Assistance</span></a>\n<ul>\n<li><a href=\"../leistungen.html\">Leistungen</a></li>\n<li><a href=\"../testen.html\">Live testen</a></li>\n<li><a href=\"../blog.html\">Blog</a></li>\n<li><a href=\"../kontakt.html\">Kontakt</a></li>\n<li><a href=\"../impressum.html\">Impressum</a></li>\n</ul>\n<div class=\"nav-drawer-contact\"><div>Direkt schreiben:</div>\n<a href=\"mailto:AK-Assistance@protonmail.com\">AK-Assistance@protonmail.com</a></div>\n</nav>\n<div class=\"article-hero\"><div class=\"wrap\">\n<a href=\"../blog.html\" class=\"back-link\">\n<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"/><polyline points=\"12 19 5 12 12 5\"/></svg>\nAlle Artikel</a>\n<div class=\"article-meta\"><span class=\"article-date\">${dateDE}</span>${tags}</div>\n<h1>${esc(title)}</h1>\n</div></div>\n<section class=\"article-content\"><div class=\"wrap\"><div class=\"prose\">\n${bodyHtml}\n</div></div></section>\n<footer><div class=\"wrap footer-simple\">\n<div>© 2026 AK-Assistance</div>\n<div class=\"footer-links\">\n<a href=\"mailto:AK-Assistance@protonmail.com\">E-Mail</a>\n<a href=\"../impressum.html\">Impressum</a>\n<a href=\"../agb.html\">AGB</a>\n<a href=\"../datenschutz.html\">Datenschutz</a>\n</div></div></footer>\n<script>document.addEventListener('keydown', e => { if(e.key==='Escape') document.body.classList.remove('nav-open'); });</script>\n</body></html>`;\n\nconst contentBase64 = Buffer.from(html).toString('base64');\nconst indexEntry = {\n  path: articlePath, title, meta_description: meta, published_at: pubAt,\n  keywords: (keywords||'').split(',').map(k=>k.trim()).filter(Boolean)\n};\nreturn [{ json: { filename, articleUrl, articlePath, slug, dateISO, title, contentBase64, indexEntry, dry_run: isDryRun } }];\n"
       }
     },
     {
-      "id": "gh-article",
-      "name": "GitHub: Artikel committen",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "id": "check-dryrun",
+      "name": "Dry-Run aktiv?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
-        1440,
+        1620,
         240
       ],
       "parameters": {
-        "method": "PUT",
-        "url": "=https://api.github.com/repos/gabrielGR19/AK-Assistance/contents/website/blog/{{ $json.article_filename }}",
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dr-1",
+              "leftValue": "={{ $json.dry_run }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "tg-dryrun",
+      "name": "Telegram: Dry-Run bestätigt",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        160
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
+        "text": "=✅ Freigegeben (Dry-Run) — Post-ID: {{ $('Callback parsen').first().json.post_id }}\ndry_run=true im Archiv → kein GitHub-Commit.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
+        }
+      },
+      "webhookId": "ef6825f6-53b6-4336-a62f-106be6aeca2b"
+    },
+    {
+      "id": "github-check",
+      "name": "GitHub: Artikel-Datei prüfen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        340
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.github.com/repos/gabrielGR19/AK-Assistance/contents/{{ $json.filename }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -313,35 +537,134 @@
             {
               "name": "Accept",
               "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "GitHub API",
+          "id": "CJf1IoksyuWPDgO9"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "check-dup",
+      "name": "Artikel bereits vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2060,
+        340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dup-1",
+              "leftValue": "={{ $json.sha }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "tg-already",
+      "name": "Telegram: Bereits hochgeladen",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2280,
+        240
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
+        "text": "=⚠️ Artikel bereits hochgeladen (Post-ID: {{ $('Callback parsen').first().json.post_id }}).\nDuplikat-Schutz aktiv — kein erneutes Hochladen.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
+        }
+      },
+      "webhookId": "256f988d-a16c-455b-bc20-b8953aa3d6fc"
+    },
+    {
+      "id": "github-commit-article",
+      "name": "GitHub: Artikel committen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2280,
+        440
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/gabrielGR19/AK-Assistance/contents/{{ $('HTML und Pfad berechnen').first().json.filename }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ message: 'Blog: ' + $json.title, content: Buffer.from($json.body_html, 'utf-8').toString('base64') }) }}",
+        "jsonBody": "={{ JSON.stringify({ message: 'Blog-Artikel veröffentlicht: ' + $('HTML und Pfad berechnen').first().json.title, content: $('HTML und Pfad berechnen').first().json.contentBase64 }) }}",
         "options": {
           "timeout": 30000
         }
       },
       "credentials": {
         "httpHeaderAuth": {
-          "id": "PLATZHALTER_GITHUB",
-          "name": "GitHub Token"
+          "name": "GitHub API",
+          "id": "CJf1IoksyuWPDgO9"
         }
       },
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "gh-index-read",
-      "name": "GitHub: index.json laden",
+      "id": "github-get-index",
+      "name": "GitHub: Index lesen",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1660,
-        240
+        2500,
+        440
       ],
       "parameters": {
         "method": "GET",
@@ -354,6 +677,10 @@
             {
               "name": "Accept",
               "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
             }
           ]
         },
@@ -363,33 +690,33 @@
       },
       "credentials": {
         "httpHeaderAuth": {
-          "id": "PLATZHALTER_GITHUB",
-          "name": "GitHub Token"
+          "name": "GitHub API",
+          "id": "CJf1IoksyuWPDgO9"
         }
       },
       "onError": "continueErrorOutput"
     },
     {
-      "id": "gh-index-update",
-      "name": "index.json aktualisieren",
+      "id": "build-index",
+      "name": "Index aktualisieren",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1880,
-        240
+        2720,
+        440
       ],
       "parameters": {
-        "jsCode": "// Neuen Artikel in index.json einfügen.\nvar ghResp = $input.first().json;\nvar content = Buffer.from(ghResp.content || '', 'base64').toString('utf-8');\nvar articles = [];\ntry { articles = JSON.parse(content); } catch(e) { articles = []; }\nif (!Array.isArray(articles)) articles = [];\nvar data = $('HTML generieren').first().json;\nvar kw = (data.keywords || '').split(', ').filter(Boolean);\narticles.unshift({\n  path: 'blog/' + data.article_filename,\n  title: data.title,\n  meta_description: data.meta_description,\n  published_at: new Date().toISOString(),\n  keywords: kw\n});\nvar updated = JSON.stringify(articles, null, 2);\nreturn [{ json: {\n  sha: ghResp.sha,\n  content_b64: Buffer.from(updated, 'utf-8').toString('base64'),\n  message: 'Blog: ' + data.title + ' zur Artikelliste hinzugefügt'\n}}];"
+        "jsCode": "\nconst ghResponse = $input.first().json;\nconst sha = ghResponse.sha || '';\nlet existing = [];\ntry {\n  const raw = Buffer.from(ghResponse.content || '', 'base64').toString('utf-8') || '[]';\n  existing = JSON.parse(raw);\n  if (!Array.isArray(existing)) existing = [];\n} catch(e) { existing = []; }\nconst newEntry = $('HTML und Pfad berechnen').first().json.indexEntry;\nconst filtered = existing.filter(e => e.path !== newEntry.path);\nfiltered.unshift(newEntry);\nconst updatedContent = Buffer.from(JSON.stringify(filtered, null, 2)).toString('base64');\nreturn [{ json: { sha, updatedContent } }];\n"
       }
     },
     {
-      "id": "gh-index-commit",
-      "name": "GitHub: index.json committen",
+      "id": "github-commit-index",
+      "name": "GitHub: Index committen",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2100,
-        240
+        2940,
+        440
       ],
       "parameters": {
         "method": "PUT",
@@ -402,51 +729,165 @@
             {
               "name": "Accept",
               "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ message: $json.message, content: $json.content_b64, sha: $json.sha }) }}",
+        "jsonBody": "={{ JSON.stringify({ message: 'Blog-Index aktualisiert: ' + $('HTML und Pfad berechnen').first().json.title, content: $json.updatedContent, sha: $json.sha }) }}",
         "options": {
           "timeout": 30000
         }
       },
       "credentials": {
         "httpHeaderAuth": {
-          "id": "PLATZHALTER_GITHUB",
-          "name": "GitHub Token"
+          "name": "GitHub API",
+          "id": "CJf1IoksyuWPDgO9"
         }
       },
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "tg-gh-error",
-      "name": "Telegram: GitHub-Fehler",
+      "id": "tg-live",
+      "name": "Telegram: Artikel live",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1660,
+        3160,
         440
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
-        "text": "=❌ GitHub-Fehler beim Veröffentlichen.\nArtikel konnte nicht committed werden. Bitte manuell prüfen.\n\nFehler: {{ $json.error || $json.message || 'unbekannt' }}",
+        "text": "=✅ Artikel veröffentlicht!\n\n*{{ $('HTML und Pfad berechnen').first().json.title }}*\n\n🔗 {{ $('HTML und Pfad berechnen').first().json.articleUrl }}\n\nGitHub-Commit durch — sobald der VPS pullt, ist er live.",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
+        }
+      },
+      "webhookId": "ad128e4f-bae2-41b3-8227-cd6f9e8a9654"
+    },
+    {
+      "id": "tg-github-error",
+      "name": "Telegram: GitHub-Fehler",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2500,
+        580
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
+        "text": "=❌ GitHub-Fehler beim Veröffentlichen.\nPost-ID: {{ $('Callback parsen').first().json.post_id }}\nBitte n8n-Log prüfen.",
         "additionalFields": {
           "appendAttribution": false
         }
       },
       "credentials": {
         "telegramApi": {
-          "id": "PLATZHALTER_TELEGRAM",
-          "name": "Telegram account"
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
         }
+      },
+      "webhookId": "2b985dcf-c946-4ae2-a398-fd8e86a19f5d"
+    },
+    {
+      "id": "daten-aufbereiten",
+      "name": "Daten aufbereiten",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        -100
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "post_id",
+              "value": "={{ $json.body.post_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "title",
+              "value": "={{ $json.body.title }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "topic_slug",
+              "value": "={{ $json.body.slug }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "meta_description",
+              "value": "={{ $json.body.meta_description }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "keywords",
+              "value": "={{ $json.body.keywords }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "body_markdown",
+              "value": "={{ $json.body.body_markdown }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "dry_run",
+              "value": "={{ $json.body.dry_run }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       }
+    },
+    {
+      "id": "tg-archive-error",
+      "name": "Telegram: Archiv-Fehler",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1132,
+        308
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
+        "text": "=❌ Archiv-Fehler (Post-ID: {{ $('Callback parsen').first().json.post_id }}).\nArtikel konnte nicht im Archiv gefunden oder aktualisiert werden.\nBitte n8n-Log prüfen.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account",
+          "id": "9Vp8wPx7MROw0sAO"
+        }
+      },
+      "webhookId": "d3177b55-ecf0-4b62-b2e1-4d2da2e7d788"
     }
   ],
   "connections": {
@@ -487,7 +928,7 @@
       "main": [
         [
           {
-            "node": "Archiv-Daten laden",
+            "node": "Archiv: published_at setzen",
             "type": "main",
             "index": 0
           }
@@ -501,116 +942,18 @@
         ]
       ]
     },
-    "Archiv-Daten laden": {
-      "main": [
-        [
-          {
-            "node": "Eintrag finden",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: GitHub-Fehler",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Eintrag finden": {
-      "main": [
-        [
-          {
-            "node": "HTML generieren",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTML generieren": {
-      "main": [
-        [
-          {
-            "node": "GitHub: Artikel committen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GitHub: Artikel committen": {
-      "main": [
-        [
-          {
-            "node": "GitHub: index.json laden",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: GitHub-Fehler",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GitHub: index.json laden": {
-      "main": [
-        [
-          {
-            "node": "index.json aktualisieren",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: GitHub-Fehler",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "index.json aktualisieren": {
-      "main": [
-        [
-          {
-            "node": "GitHub: index.json committen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GitHub: index.json committen": {
-      "main": [
-        [
-          {
-            "node": "Archiv: published_at setzen",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Telegram: GitHub-Fehler",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Archiv: published_at setzen": {
       "main": [
         [
           {
-            "node": "Telegram: Veröffentlicht",
+            "node": "Archiv: Artikel-Daten lesen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Archiv-Fehler",
             "type": "main",
             "index": 0
           }
@@ -627,15 +970,246 @@
           }
         ]
       ]
+    },
+    "Webhook: Artikel-Eingang": {
+      "main": [
+        [
+          {
+            "node": "Daten aufbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archiv-Eintrag anlegen": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Entwurf-Benachrichtigung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Entwurf-Benachrichtigung": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Artikel-Volltext",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archiv: Artikel-Daten lesen": {
+      "main": [
+        [
+          {
+            "node": "HTML und Pfad berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archiv-Eintrag vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "HTML und Pfad berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Artikel nicht gefunden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML und Pfad berechnen": {
+      "main": [
+        [
+          {
+            "node": "Dry-Run aktiv?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dry-Run aktiv?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Dry-Run bestätigt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GitHub: Artikel-Datei prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Artikel-Datei prüfen": {
+      "main": [
+        [
+          {
+            "node": "Artikel bereits vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GitHub: Artikel committen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Artikel bereits vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Bereits hochgeladen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GitHub: Artikel committen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Artikel committen": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Index lesen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Index lesen": {
+      "main": [
+        [
+          {
+            "node": "Index aktualisieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Index aktualisieren": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Index committen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Index committen": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Artikel live",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daten aufbereiten": {
+      "main": [
+        [
+          {
+            "node": "Archiv-Eintrag anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
   "settings": {
     "executionOrder": "v1",
-    "timezone": "Europe/Berlin"
+    "binaryMode": "separate"
   },
+  "staticData": null,
   "meta": {
-    "templateId": "ak-blog-approval-handler"
+    "templateCredsSetupCompleted": true
   },
-  "tags": []
+  "pinData": {},
+  "versionId": "0467ba32-092f-41b3-8596-014fb699a853",
+  "activeVersionId": "0467ba32-092f-41b3-8596-014fb699a853",
+  "versionCounter": 42,
+  "triggerCount": 2,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-06-02T21:46:41.894Z",
+      "createdAt": "2026-06-02T21:46:41.894Z",
+      "role": "workflow:owner",
+      "workflowId": "ispDA5uyFhkkZT37",
+      "projectId": "a9T2t83fThlISn9u",
+      "project": {
+        "updatedAt": "2026-04-21T20:47:05.365Z",
+        "createdAt": "2026-04-21T20:34:33.830Z",
+        "id": "a9T2t83fThlISn9u",
+        "name": "Moritz Koch <koch_moritz12@gmx.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "156eef8d-1ffc-4930-8ec3-98ca7ae9c972"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }
