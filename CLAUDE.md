@@ -1,174 +1,100 @@
-# CLAUDE.md — AK-Assistance
+# CLAUDE.md — AK Assistance
 
 ## Sprache & Kommunikation
 
-- Antworte **immer auf Deutsch**, unabhängig von der Eingabesprache.
-- Schreibe Kommentare im Code ebenfalls auf Deutsch.
-- Kommuniziere direkt, sachlich und ohne Fülltext.
+- Antworte immer auf Deutsch, unabhängig von der Eingabesprache.
+- Kommentare im Code auf Deutsch.
+- Direkt, sachlich, ohne Fülltext.
+- Beginne jede Antwort mit "Gabriel," — ohne Ausnahme.
+  Fehlt der Name: Warnsignal für nachlassende Kontextqualität →
+  neue Session starten oder /rewind ausführen.
 
 ---
 
-## Projektbeschreibung
+## Kontext-Management
 
-**AK-Assistance** ist ein Startup von Gabriel Adam und Moritz Koch mit dem Ziel, das Handwerk vollständig zu digitalisieren.
-
-Der Assistent übernimmt eingehende Anrufe, vereinbart Termine, beantwortet häufige Kundenfragen und entlastet damit Handwerker im stressigen Arbeitsalltag — damit sie sich auf ihre eigentliche Arbeit konzentrieren können, ohne wichtige Kundenanfragen zu verpassen.
-
-### Roadmap
-
-**Phase 1 — KI-Telefon-Agent**
-- Anrufe entgegennehmen und Informationen aufnehmen
-- Kundenfragen beantworten
-- Automatisch WhatsApp-Nachrichten senden
-- Kalendereinträge automatisch erstellen
-
-**Phase 2 — Vollständige Digitalisierung**
-Schrittweise Digitalisierung aller organisatorischen Abläufe im Handwerk mit KI.
-
-**Phase 3 — Marketing-Automatisierung**
-- Lokale Handwerksbetriebe automatisch identifizieren (Apify Scraping)
-- Websites analysieren und bewerten
-- Personalisierte Akquise-E-Mails generieren und versenden
-- Workflow über n8n automatisiert triggern
-
-### Geschäftsmodell
-
-Gabriel installiert und konfiguriert das System direkt beim Kunden:
-- **Einmalige Setupgebühr** für Installation und Konfiguration
-- **Monatliches Abo** für laufenden Betrieb und Support
-
-### Zielkunden
-
-Kleine und mittelständische Handwerksbetriebe, z.B. Elektriker, Klempner, Maler, Schreiner.
-
-### Inhaber
-
-Gabriel Adam und moritz koch
+- Bei 50–60 % Kontext-Auslastung: Gabriel aktiv darauf hinweisen
+  und /compact empfehlen, bevor die Session-Qualität nachlässt.
 
 ---
 
-## Technischer Stack
+## Projekt
 
-| Komponente | Technologie |
-|---|---|
-| Telefon-KI | Retell.ai |
-| Sprachmodell | Claude API (Anthropic) |
-| Automatisierung | n8n (lokal gehostet) |
-| Messaging | WhatsApp Business API |
-| CRM / Datenbank | Airtable oder Notion |
-| Web-Scraping | Apify |
-| Tunneling (lokal→extern) | ngrok |
-| Versionskontrolle | GitHub |
+AK Assistance — Startup von Gabriel Adam und Moritz Koch.
+Ziel: Handwerksbetriebe und andere Dienstleister digitalisieren.
+Erstes Produkt: KI-Telefonagent.
+Weitere Produkte: Marketing-Automatisierung, weitere Agenten, App.
 
 ---
 
 ## Nicht verhandelbare Regeln
 
-### Legalität & Datenschutz
-- **Alle Aktionen müssen in jeder Hinsicht legal sein.** Bei Unsicherheit: sofort stoppen und explizit nachfragen, bevor weitergearbeitet wird.
-- **Kein Scraping ohne Prüfung der robots.txt** der Zielwebsite. Websites, die Scraping ausdrücklich verbieten, werden nicht gescrapt.
-- **Keine personenbezogenen Daten** (Namen, E-Mail-Adressen, Telefonnummern von Privatpersonen) ohne klaren, dokumentierten Verwendungszweck speichern.
-- **DSGVO-Konformität** hat Priorität: Daten nur so lange speichern wie nötig, keine unnötige Weitergabe an Dritte.
-- Bei E-Mail-Outreach: Nur geschäftliche Kontakte von Unternehmen (keine Privatadressen), immer mit Abmeldemöglichkeit gemäß UWG.
-- Bei rechtlichen oder steuerlichen Themen: klar kennzeichnen und Expertenkontakt empfehlen.
+### Legalität
+
+- Alle Aktionen müssen legal sein. Bei Unsicherheit: sofort stoppen,
+  explizit nachfragen, bevor weitergearbeitet wird.
+- Kein Scraping ohne robots.txt-Prüfung der Zielwebsite.
+  Websites, die Scraping ausdrücklich verbieten, werden nicht gescrapt.
+- Keine personenbezogenen Daten ohne klaren, dokumentierten
+  Verwendungszweck speichern oder verarbeiten (DSGVO).
+- Bei rechtlichen oder steuerlichen Fragen, die im Code-Kontext
+  entstehen: explizit kennzeichnen und empfehlen, einen Fachanwalt
+  oder Steuerberater hinzuzuziehen. Nicht selbst rechtlich bewerten.
 
 ### GitHub & Versionskontrolle
-- **Jede abgeschlossene Funktionseinheit wird committed.** Kein Feature bleibt uncommitted, wenn es funktioniert.
-- **Commit-Messages auf Deutsch**, beschreibend und nachvollziehbar (z.B. `Apify-Scraper Grundstruktur hinzugefügt`).
-- **Vor größeren Änderungen:** neuen Branch erstellen, nie direkt auf `main` entwickeln.
-- **Niemals ins Repository committen:** API-Keys, Passwörter, `.env`-Dateien, temporäre Daten (`/data/`).
-- `.gitignore` muss von Beginn an korrekt konfiguriert sein.
-- Ziel: Jederzeit auf einen funktionierenden Stand zurückrollen können.
+
+- Zu Beginn jeder Session: git pull —
+  Moritz Koch hat Repo-Zugriff und kann Änderungen gepusht haben.
+- Jede abgeschlossene Funktionseinheit committen.
+  Kein funktionierendes Feature bleibt uncommitted.
+- Commit-Messages auf Deutsch, beschreibend.
+- Vor größeren Änderungen: neuen Branch erstellen,
+  nie direkt auf main entwickeln.
+- Niemals committen: .env, .env.*, .claude/settings.local.json,
+  data/, *.log, API-Keys, Tokens, Passwörter.
+- .gitignore muss von Anfang an korrekt konfiguriert sein.
+- Getrackte Secrets prüfen:
+  git ls-files | grep -iE "\.env|key|token|secret"
+
+### Produktions-Deployments
+
+- Vor jedem Deployment auf eine Live-Umgebung
+  (Website, Server, DNS, Datenbank-Produktion):
+  1. Aktuellen Stand prüfen: git status, git log, was ist live.
+  2. Zeigen, was sich ändern wird — Diff oder klare Beschreibung.
+  3. Explizite Bestätigung abwarten, bevor deployed wird.
+- Niemals automatisch deployen, auch wenn der Auftrag es impliziert.
 
 ### Codequalität & Sicherheit
-- Keine hartcodierten API-Keys oder Secrets im Code — immer `.env`-Datei verwenden.
-- Alle externen API-Calls mit Fehlerbehandlung (try/catch) absichern.
-- Vor jedem Datenbankschreibvorgang: Eingabe validieren.
-- Kein Code in Produktion ohne vorherige Validierung der Kernlogik.
 
-### Verhalten bei Unsicherheit
-- Wenn eine Anforderung unklar ist: **nachfragen, nicht raten.**
-- Wenn eine Aktion potenziell irreversibel ist (Datenlöschung, Massenversand, Produktions-Deployment): explizit bestätigen lassen.
+- Keine hardcodierten API-Keys oder Secrets — immer .env.
+- Alle externen API-Calls mit Fehlerbehandlung (try/catch) absichern.
+- Eingaben vor jedem Datenbankschreibvorgang validieren.
+- settings.local.json enthält MCP-Credentials —
+  darf niemals committed werden.
+
+### Verifikation
+
+- Vor Erstellung von Credentials, API-Keys oder Integrationen:
+  zuerst live prüfen, ob bereits etwas Passendes existiert
+  (z.B. n8n_manage_credentials list, .env auf vorhandene Keys prüfen).
+- Niemals aus Erinnerung vorheriger Sessions annehmen,
+  dass etwas existiert oder fehlt.
+- Bei Unsicherheit: nachfragen, nicht raten.
 
 ---
 
 ## Arbeitsweise
 
-- **Plan vor Code:** Bei neuen Features zuerst den Plan beschreiben und bestätigen lassen, dann implementieren.
-- **Schritt für Schritt:** Keine mehrfachen großen Änderungen auf einmal — lieber kleine, testbare Einheiten.
-- **Keine vollständige Blaupause** ohne Rückfrage bei komplexen Aufgaben.
-- **Fehler erklären:** Bei Fehlern immer die Ursache erläutern, nicht nur den Fix liefern.
-
----
-
-## Kritisches Denken & Widerspruch
-
-Der Assistent ist kein Ja-Sager. Seine Aufgabe ist nicht, Gabriels Pläne zu bestätigen, sondern die **beste und effektivste Lösung** zu finden.
-
-**Pflichten des Assistenten:**
-- **Jeden Plan kritisch prüfen** — Logik, Aufwand, Risiken, Alternativen — bevor er ihn umsetzt oder bestätigt.
-- **Klar widersprechen**, wenn ein Plan suboptimal, riskant, unnötig komplex oder technisch falsch ist. Kein höfliches Umformulieren — direkt sagen, was nicht stimmt.
-- **Immer eine Alternative anbieten**, wenn ein Ansatz problematisch ist — mit kurzer Begründung, warum die Alternative besser ist.
-- **Nicht einfach umsetzen**, was verlangt wird, wenn es eine deutlich bessere Option gibt. Stattdessen: Option erklären, Unterschied benennen, Gabriel entscheiden lassen.
-- **Aufwand und Komplexität realistisch einschätzen** — keine Unterschätzung, um den Plan angenehmer klingen zu lassen.
-
-**Wann widersprechen:**
-- Der Plan ist technisch falsch oder führt zu einem bekannten Problem.
-- Es gibt eine einfachere, schnellere oder zuverlässigere Lösung.
-- Der Aufwand steht nicht im Verhältnis zum Nutzen.
-- Die gewählte Technologie ist für den Use Case ungeeignet.
-- Ein Schritt verstößt gegen Datenschutz, Legalität oder Sicherheitsregeln.
-
-**Format bei Widerspruch:**
-1. Direkt benennen, was am Plan nicht stimmt.
-2. Begründung in 1–2 Sätzen.
-3. Konkrete bessere Alternative vorschlagen.
-4. Gabriel trifft die finale Entscheidung.
-
----
-
-## Subagenten-Strategie
-
-Subagenten werden auf ausdrückliche Aufforderung eingesetzt, um den Hauptagenten zu entlasten:
-
-**Einsatzbereiche:**
-- **Code-Review:** Ein Subagent prüft einen definierten Codeabschnitt auf Qualität, Sicherheit und Logikfehler — gibt dem Hauptagenten nur eine strukturierte Zusammenfassung der Befunde zurück.
-- **Fehlersuche:** Ein Subagent analysiert Fehlermeldungen und relevante Codezeilen — liefert dem Hauptagenten nur die relevanten Zeilen und die wahrscheinliche Ursache, nicht den gesamten Kontext.
-- **Kontextkomprimierung:** Irrelevanter Kontext wird durch Subagenten gefiltert und komprimiert, bevor er an den Hauptagenten weitergegeben wird — spart Kontextfenster und erhöht die Genauigkeit.
-
-**Regel:** Subagenten geben dem Hauptagenten immer nur das Minimum an Information zurück, das zur Lösung der Aufgabe notwendig ist.
-
----
-
-## Projektstruktur (Referenz)
-
-```
-AK-Assistance/
-├── .claude/                    # Claude Code System (Skills, Hooks, Agenten)
-├── .github/workflows/          # GitHub Actions (Auto-Review, @claude-Assistent)
-├── CLAUDE.md                   # Diese Datei
-├── .env                        # API-Keys (nicht ins Git!)
-├── .env.example                # Vorlage für Umgebungsvariablen
-├── .gitignore
-├── assets/                     # Logo, Medien
-├── phone-agents/               # Telefon-Agenten
-│   ├── demo/                   # Neutraler Demo-Agent (für Präsentationen)
-│   └── ak-assistance/          # Eigener interner Agent
-│       └── src/                # Backend-Code (Router, Webhooks, Services)
-├── client-templates/           # Vorlagen für Pilot-Kunden
-│   └── _basis/                 # Basis zum Kopieren & Nummern/Keys anpassen
-├── n8n-workflows/              # n8n Automatisierungen
-├── website/                    # Marketing-Website ak-assistance.de
-│   └── blog-agent/             # Vorbereitet für Blog-Schreib-Agent
-├── marketing/                  # Marketing-Automatisierung
-│   └── lead-generation/        # KI-gestützte Lead-Generierung (Apify, E-Mail)
-└── docs/                       # Technische Dokumentation
-```
-
----
-
-## Aktuelle Prioritäten
-
-1. **Marketing-Agent:** Lokale Handwerksbetriebe scrapen (Apify) → Website analysieren → personalisierte Akquise-E-Mail generieren
-2. **n8n-Integration:** Workflow für automatisierten Trigger des Marketing-Agenten (via ngrok-Webhook)
-3. **Retell.ai + Claude API:** Telefon-Agent konfigurieren und testen
+1. Plan vor Code: Bei komplexen Features zuerst Plan vorlegen
+   und bestätigen lassen. Plan Mode (Shift+Tab) aktiv nutzen.
+2. Schritt für Schritt: Kleine, testbare Einheiten —
+   keine mehrfachen großen Änderungen auf einmal.
+3. Nicht im Kreis drehen: Nach zwei erfolglosen Versuchen
+   Ursache analysieren und anderen Ansatz vorschlagen.
+   Nie tiefer in eine falsche Richtung.
+4. Fehler erklären: Immer die Ursache benennen,
+   nicht nur den Fix liefern.
+5. Irreversible Aktionen immer bestätigen lassen:
+   Datenlöschung, Massenversand, Deployments, DNS-Änderungen.
+6. Unklar = nachfragen. Nicht mit Annahmen weiterarbeiten.
