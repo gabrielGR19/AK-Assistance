@@ -1,8 +1,8 @@
-# n8n-review — Baut n8n-Workflows und überprüft sie aus unabhängiger Perspektive
-
-## Trigger
-
-Verwende diesen Skill automatisch, wenn der Nutzer eine Aufgabe beschreibt, die das Erstellen, Erweitern oder Debuggen eines n8n-Workflows betrifft.
+---
+name: n8n-review
+description: Baut n8n-Workflows und überprüft sie aus unabhängiger Perspektive. Verwenden bei jeder Aufgabe, die das Erstellen, Erweitern oder Debuggen eines n8n-Workflows betrifft.
+model: sonnet
+---
 
 ## Ablauf (immer in dieser Reihenfolge)
 
