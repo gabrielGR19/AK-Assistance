@@ -26,6 +26,11 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Blog-Artikel in dist synchronisieren
+        run: |
+          mkdir -p website/dist/blog
+          cp -r website/blog/* website/dist/blog/
+
       - name: Website auf Server übertragen
         run: |
           rsync -avz --delete \
