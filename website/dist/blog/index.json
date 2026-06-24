@@ -1,5 +1,16 @@
 [
   {
+    "path": "blog/2026-06-24-ki-wochenrueckblick-chatgpt-unternehmen-gesundheit-recht-juni-2026.html",
+    "title": "KI-Wochenrückblick: ChatGPT dringt in Unternehmen, Gesundheit und Recht vor – was Handwerksbetriebe wissen sollten",
+    "meta_description": "KI-Wochenrückblick 24.06.2026: Samsung, Getty Images und ChatGPT im Gesundheitsbereich – das bedeutet es für Handwerksbetriebe.",
+    "published_at": "2026-06-24T10:43:07.110+02:00",
+    "keywords": [
+      "KI-Wochenrückblick",
+      "ChatGPT Handwerk",
+      "Künstliche Intelligenz Handwerksbetrieb"
+    ]
+  },
+  {
     "path": "blog/2026-06-22-ki-wochenrueckblick-chatgpt-marktanteil-rechtliche-grenzen-sicherheit-juni-2026.html",
     "title": "KI-Wochenrückblick: ChatGPT verliert Marktführerschaft, rechtliche Grenzen und Sicherheitslücken",
     "meta_description": "KI-Wochenrückblick 22.06.2026: ChatGPT unter 50 % Marktanteil, rechtliche Risiken und Sicherheitslücken – was Handwerker wissen müssen.",
@@ -8,18 +19,6 @@
       "ChatGPT Marktanteil",
       "KI Sicherheit",
       "KI Rechtsberatung"
-    ]
-  },
-  {
-    "path": "blog/2026-06-21-ki-wochenrueckblick-kw25-2026-test-pipeline.html",
-    "title": "KI-Wochenrückblick KW 25/2026: Test-Artikel für Pipeline-Verifizierung",
-    "meta_description": "Test-Artikel zur Verifizierung der automatischen Blog-Publish-Pipeline von AK-Assistance.",
-    "published_at": "2026-06-21T21:57:17.167+02:00",
-    "keywords": [
-      "KI",
-      "Test",
-      "Pipeline",
-      "Blog-Agent"
     ]
   },
   {
