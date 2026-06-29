@@ -98,3 +98,63 @@ Weitere Produkte: Marketing-Automatisierung, weitere Agenten, App.
 5. Irreversible Aktionen immer bestätigen lassen:
    Datenlöschung, Massenversand, Deployments, DNS-Änderungen.
 6. Unklar = nachfragen. Nicht mit Annahmen weiterarbeiten.
+
+---
+
+## Karpathy-Prinzipien gegen typische LLM-Coding-Fehler
+
+Quelle: multica-ai/andrej-karpathy-skills (184k Stars)
+Kompromiss: Diese Regeln bevorzugen Sorgfalt über Geschwindigkeit.
+Bei trivialen Aufgaben mit Augenmaß anwenden.
+
+### 1. Erst denken, dann coden
+
+Keine Annahmen. Keine versteckte Unsicherheit. Abwägungen offen benennen.
+
+- Annahmen explizit nennen. Bei Unsicherheit: nachfragen.
+- Mehrere Interpretationen vorlegen — nicht still eine wählen.
+- Wenn ein einfacherer Ansatz existiert: sagen. Widersprechen, wenn angebracht.
+- Bei Unklarheit stoppen. Benennen, was unklar ist. Fragen.
+
+### 2. Einfachheit zuerst
+
+Minimaler Code, der das Problem löst. Nichts Spekulatives.
+
+- Keine Features über den Auftrag hinaus.
+- Keine Abstraktionen für einmalig genutzten Code.
+- Keine "Flexibilität" oder "Konfigurierbarkeit", die nicht verlangt wurde.
+- Keine Fehlerbehandlung für unmögliche Szenarien.
+- Wenn 200 Zeilen auch 50 sein könnten: umschreiben.
+
+Prüffrage: "Würde ein Senior Engineer das zu kompliziert nennen?" — Wenn ja: vereinfachen.
+
+### 3. Chirurgische Änderungen
+
+Nur anfassen, was geändert werden muss. Nur den eigenen Schmutz aufräumen.
+
+- Keinen angrenzenden Code, Kommentare oder Formatierungen "verbessern".
+- Nichts refactoren, was nicht kaputt ist.
+- Bestehenden Stil übernehmen, auch wenn man es anders täte.
+- Ungenutzten Code, der auffällt, erwähnen — nicht still löschen.
+
+Durch eigene Änderungen verwaiste Imports/Variablen/Funktionen entfernen.
+Vorher existierenden toten Code nur auf explizite Anfrage entfernen.
+
+Test: Jede geänderte Zeile muss direkt auf den Auftrag zurückführbar sein.
+
+### 4. Zielorientierte Ausführung
+
+Erfolgskriterien definieren. Wiederholen bis verifiziert.
+
+Aufgaben in prüfbare Ziele übersetzen:
+- "Validierung hinzufügen" → "Tests für ungültige Eingaben schreiben, dann bestehen lassen"
+- "Bug fixen" → "Test schreiben, der ihn reproduziert, dann bestehen lassen"
+- "X refactoren" → "Tests müssen vor und nach dem Refactoring bestehen"
+
+Bei Mehrschritt-Aufgaben kurzen Plan benennen:
+1. [Schritt] → prüfen: [Kriterium]
+2. [Schritt] → prüfen: [Kriterium]
+3. [Schritt] → prüfen: [Kriterium]
+
+Starke Erfolgskriterien ermöglichen selbstständige Iteration.
+Schwache Kriterien ("mach es lauffähig") erfordern ständige Rückfragen.
