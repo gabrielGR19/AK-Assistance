@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KI-Wochenrückblick KW 26/2026: Neue Chips, neue Deals und staatliche Kontrolle — AK-Assistance Blog</title>
+<meta name="description" content="KI-News der Woche für Handwerker: OpenAI unter Regierungskontrolle, Samsung-Massenrollout und der erste eigene OpenAI-Chip.">
+<link rel="stylesheet" href="../shared.css">
+<style>
+:root{--bg:#fff;--bg-soft:#F6F7F9;--ink:#0B1220;--ink-soft:#455066;--ink-mute:#8892A6;--line:#E6E9EE;--radius:16px;--maxw:1180px;}
+*{box-sizing:border-box;}html,body{margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Inter Tight','Inter',sans-serif;font-weight:700;letter-spacing:-0.025em;margin:0 0 16px;}
+p{margin:0 0 20px;}a{color:var(--ink);}button{font-family:inherit;cursor:pointer;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+.topbar{padding:28px 0 0;position:relative;z-index:200;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);}
+.logo-mark{width:32px;height:32px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;}
+.hamburger{background:none;border:none;padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer;z-index:301;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s;}
+body.nav-open .hamburger span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+body.nav-open .hamburger span:nth-child(2){opacity:0;}
+body.nav-open .hamburger span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.nav-overlay{position:fixed;inset:0;background:rgba(11,18,32,.5);z-index:299;opacity:0;pointer-events:none;transition:opacity .3s;}
+body.nav-open .nav-overlay{opacity:1;pointer-events:all;}
+.nav-drawer{position:fixed;top:0;right:0;width:min(320px,85vw);height:100vh;background:#fff;z-index:300;transform:translateX(100%);transition:transform .35s cubic-bezier(.25,.46,.45,.94);display:flex;flex-direction:column;padding:28px 32px 40px;box-shadow:-4px 0 32px rgba(11,18,32,.12);}
+body.nav-open .nav-drawer{transform:translateX(0);}
+.nav-drawer-logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:17px;text-decoration:none;color:var(--ink);margin-bottom:40px;}
+.nav-drawer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;flex:1;}
+.nav-drawer ul li a{display:block;padding:12px 0;font-size:17px;font-weight:500;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:color .15s;}
+.nav-drawer ul li:last-child a{border-bottom:none;}
+.nav-drawer-contact{margin-top:32px;font-size:14px;color:var(--ink-mute);}
+.nav-drawer-contact a{color:var(--ink-soft);text-decoration:none;display:inline-flex;align-items:center;gap:7px;margin-top:6px;}
+.article-hero{padding:80px 0 56px;border-bottom:1px solid var(--line);}
+.back-link{display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft);text-decoration:none;font-size:15px;margin-bottom:40px;transition:color .15s;}
+.back-link:hover{color:var(--ink);}
+.article-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
+.article-date{font-size:14px;color:var(--ink-mute);font-weight:500;}
+.article-tag{font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:4px 12px;}
+.article-hero h1{font-size:clamp(32px,5vw,60px);line-height:1.05;letter-spacing:-0.03em;max-width:22ch;}
+.article-content{padding:64px 0 80px;}
+.article-content .prose{max-width:72ch;}
+.prose h2{font-size:clamp(22px,2.2vw,28px);margin-top:48px;margin-bottom:16px;}
+.prose h3{font-size:20px;margin-top:32px;margin-bottom:12px;}
+.prose p{color:var(--ink-soft);}
+.prose ul,.prose ol{color:var(--ink-soft);padding-left:24px;margin:0 0 20px;}
+.prose li{margin-bottom:8px;}
+.prose a{color:var(--ink);text-underline-offset:3px;}
+.prose strong{color:var(--ink);}
+footer{border-top:1px solid var(--line);padding:28px 0;}
+.footer-simple{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--ink-mute);font-size:14px;}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap;}
+.footer-links a{color:var(--ink-mute);text-decoration:none;transition:color .15s;}
+.footer-links a:hover{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap topbar-inner">
+<a href="../index.html" class="logo"><span class="logo-mark">AK</span><span>AK-Assistance</span></a>
+<button class="hamburger" aria-label="Menü" onclick="document.body.classList.toggle('nav-open')"><span></span><span></span><span></span></button>
+</div></div>
+<div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
+<nav class="nav-drawer">
+<a href="../index.html" class="nav-drawer-logo"><span class="logo-mark">AK</span><span>AK-Assistance</span></a>
+<ul>
+<li><a href="../leistungen.html">Leistungen</a></li>
+<li><a href="../testen.html">Live testen</a></li>
+<li><a href="../blog.html">Blog</a></li>
+<li><a href="../kontakt.html">Kontakt</a></li>
+<li><a href="../impressum.html">Impressum</a></li>
+</ul>
+<div class="nav-drawer-contact"><div>Direkt schreiben:</div>
+<a href="mailto:AK-Assistance@protonmail.com">AK-Assistance@protonmail.com</a></div>
+</nav>
+<div class="article-hero"><div class="wrap">
+<a href="../blog.html" class="back-link">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+Alle Artikel</a>
+<div class="article-meta"><span class="article-date">29. Juni 2026</span><span class="article-tag">KI-Wochenrückblick</span><span class="article-tag">ChatGPT Handwerk</span><span class="article-tag">OpenAI aktuell</span></div>
+<h1>KI-Wochenrückblick KW 26/2026: Neue Chips, neue Deals und staatliche Kontrolle</h1>
+</div></div>
+<section class="article-content"><div class="wrap"><div class="prose">
+<h1>KI-Wochenrückblick KW 26/2026: Neue Chips, neue Deals und staatliche Kontrolle</h1>
+<p>Die vergangene Woche stand ganz im Zeichen von OpenAI – mit einem staatlichen Eingriff in die Produktveröffentlichung, einem Riesendeal mit Samsung und dem ersten eigenen KI-Chip. Für Handwerksbetriebe, die KI-Werkzeuge im Blick behalten, gibt es einiges zu verstehen.</p>
+<p>---</p>
+<h2>USA: Regierung bremst neues ChatGPT-Modell aus</h2>
+<p>OpenAI hat am Freitag bekanntgegeben, dass sein neuestes KI-Modell, <strong>GPT-5.6 Sol</strong>, vorerst nicht öffentlich verfügbar sein wird. Auf Wunsch der US-Regierung unter Präsident Donald Trump ist das Modell zunächst nur einer „kleinen Gruppe vertrauenswürdiger Partner&quot; zugänglich, die von der Regierung zugelassen wurden.</p>
+<p>Hintergrund ist ein Präsidialerlass, den Trump Anfang Juni unterzeichnet hatte. Dieser gibt der Bundesregierung das Recht, neue KI-Systeme bis zu 30 Tage lang auf nationale Sicherheitsrisiken zu prüfen, bevor sie öffentlich freigegeben werden. AP News und Washington Post berichten übereinstimmend, dass dies der bislang ungewöhnlichste Eingriff einer Regierung in die Veröffentlichung eines KI-Produkts ist.</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Kurzfristig vermutlich wenig – das neue Modell wäre ohnehin nicht sofort im Handwerksalltag angekommen. Mittelfristig zeigt es aber: Der Staat nimmt KI-Regulierung ernst. Wer KI-Tools in Verwaltung, Angebot oder Kundenkommunikation einsetzt, sollte auf dem Radar behalten, wie sich rechtliche Rahmenbedingungen entwickeln.</p>
+<p>---</p>
+<h2>Samsung rüstet seine gesamte Belegschaft mit ChatGPT aus</h2>
+<p>Samsung Electronics hat in dieser Woche einen umfassenden Rollout von <strong>ChatGPT Enterprise</strong> und dem Entwicklertool <strong>Codex</strong> abgeschlossen. Die gesamte südkoreanische Belegschaft sowie die globale Gerätesparte des Konzerns nutzen die Tools nun im Arbeitsalltag – für Aufgaben wie Programmierung, Datenauswertung und Marketing.</p>
+<p>OpenAI-Vertreter bezeichnen dies als einen der größten Unternehmens-Rollouts in der Geschichte des Unternehmens. Laut einem Bericht von PYMNTS nutzen 73 % der Beschäftigten, die überhaupt KI am Arbeitsplatz einsetzen, ChatGPT – vor Googles Gemini (55 %) und Microsofts Copilot (47 %).</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Samsung ist kein Handwerksbetrieb, aber der Schritt ist ein Signal: Wenn ein Weltkonzern mit Hunderttausenden Mitarbeitenden KI als Standard-Arbeitswerkzeug einführt, sinkt der Druck auf kleinere Betriebe nicht – er steigt. Die Frage ist nicht mehr ob, sondern wie KI im Betrieb eingesetzt wird. ChatGPT ist inzwischen das dominierende Tool, auch in Unternehmensumgebungen.</p>
+<p>---</p>
+<h2>OpenAI präsentiert seinen ersten eigenen KI-Chip: „Jalapeño&quot;</h2>
+<p>OpenAI hat am Mittwoch seinen ersten selbst entwickelten KI-Prozessor vorgestellt. Der Chip heißt <strong>Jalapeño</strong> und wurde gemeinsam mit dem Halbleiterhersteller Broadcom entwickelt. Er ist für den Betrieb in Servern ausgelegt und soll aktuelle und künftige Sprachmodelle antreiben.</p>
+<p>Broadcom-Chef Hock Tan erklärte gegenüber Reuters, der Chip sei leistungsfähig wie Nvidias aktuelle Blackwell-Chips und Googles Tensor-Prozessoren. Auch Microsoft, Meta und Amazon haben zuletzt eigene KI-Chips vorgestellt – allerdings liegt Nvidia bei der Gesamtleistung laut The Verge noch vorne.</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Direkt: nichts. Kein Handwerksbetrieb kauft eigene Serverchips. Indirekt aber ist die Entwicklung relevant: Je mehr Unternehmen eigene KI-Infrastruktur aufbauen, desto unabhängiger werden sie von einzelnen Anbietern – was langfristig zu mehr Wettbewerb und möglicherweise günstigeren Konditionen für Endnutzer führen kann.</p>
+<p>---</p>
+<h2>Getty Images kooperiert mit OpenAI – nach Klage gegen andere KI-Anbieter</h2>
+<p>Ein weiterer Deal aus der Woche: <strong>Getty Images</strong> hat eine Vereinbarung mit OpenAI geschlossen. Lizenzierte Bilder aus der Getty-Bibliothek sollen künftig in Such- und Entdeckungsfunktionen innerhalb von ChatGPT erscheinen. Ob ChatGPT die Bilder auch verändern darf, ist laut Forbes noch unklar.</p>
+<p>Bemerkenswert ist die Vorgeschichte: Getty Images hatte zuvor einen anderen KI-Anbieter, Stability AI, wegen unerlaubter Nutzung von urheberrechtlich geschützten Bildern verklagt. Die neue Partnerschaft mit OpenAI ist demnach eine lizenzierte Lösung – kein Freifahrtschein für KI-Bildgenerierung generell.</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Wer ChatGPT für die Erstellung von Angeboten, Flyern oder Social-Media-Inhalten nutzt und dabei Bilder verwendet, sollte weiterhin auf die Herkunft achten. Dass selbst Getty – als jahrzehntelanger Verfechter von Bildrechten – jetzt mit OpenAI zusammenarbeitet, zeigt, dass Lizenzierung das Thema Urheberrecht nicht auflöst, sondern strukturiert.</p>
+<p>---</p>
+<h2>Fazit</h2>
+<p>Die KI-Welt bewegt sich schnell – und das betrifft auch Handwerksbetriebe, auch wenn die meisten Nachrichten dieser Woche auf den ersten Blick weit entfernt wirken. Der staatliche Eingriff in die OpenAI-Produktveröffentlichung zeigt, dass Regulierung zunimmt. Der Samsung-Deal zeigt, dass ChatGPT in Unternehmen zur Standardausstattung wird. Und der Getty-Deal erinnert daran, dass Urheberrechtsfragen rund um KI noch längst nicht abgeschlossen sind.</p>
+<p>---</p>
+<h2>Quellen</h2>
+<p>[1] OpenAI limits its newest ChatGPT product to Trump-approved customers during cybersecurity review — apnews.com (26.06.2026) — https://apnews.com/article/trump-ai-openai-gpt56-sol-cybersecurity-mythos-065d5398baac7f16c8265c2cb8ba2baa</p>
+<p>[2] OpenAI limits its newest ChatGPT product to Trump-approved customers during cybersecurity review — washingtonpost.com (26.06.2026) — https://www.washingtonpost.com/business/2026/06/26/trump-ai-openai-gpt56-sol-cybersecurity-mythos/cdd6f804-7181-11f1-8730-e7fd0e2a6404_story.html</p>
+<p>[3] Samsung Rolls Out OpenAI Tools to Workforce in Major Enterprise Push — pymnts.com (22.06.2026) — https://www.pymnts.com/news/artificial-intelligence/2026/samsung-rolls-out-openai-tools-to-workforce-in-major-enterprise-push/</p>
+<p>[4] Samsung Hands OpenAI's ChatGPT Enterprise and Codex to Its Global Workforce in Massive Deal — androidheadlines.com (23.06.2026) — https://www.androidheadlines.com/2026/06/samsung-chatgpt-enterprise-codex-workforce-deployment.html</p>
+<p>[5] OpenAI reveals its first AI processor: Jalapeño — theverge.com (24.06.2026) — https://www.theverge.com/ai-artificial-intelligence/955939/openai-reveals-its-first-ai-processor-jalapeno</p>
+<p>[6] Getty Images Shares Soar More Than 120% After It Announces Deal With OpenAI — forbes.com (22.06.2026) — https://www.forbes.com/sites/siladityaray/2026/06/22/getty-images-shares-soar-more-than-120-after-it-announces-deal-with-openai/</p>
+
+</div></div></section>
+<footer><div class="wrap footer-simple">
+<div>© 2026 AK-Assistance</div>
+<div class="footer-links">
+<a href="mailto:AK-Assistance@protonmail.com">E-Mail</a>
+<a href="../impressum.html">Impressum</a>
+<a href="../agb.html">AGB</a>
+<a href="../datenschutz.html">Datenschutz</a>
+</div></div></footer>
+<script>document.addEventListener('keydown', e => { if(e.key==='Escape') document.body.classList.remove('nav-open'); });</script>
+</body></html>
