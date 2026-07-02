@@ -629,6 +629,95 @@ textarea {
 }
 
 /* --------------------------------------------------------------------------
+   Claude-API-Guthaben — Überwachung des Blog-Agent-Guthabens
+   -------------------------------------------------------------------------- */
+
+.claude {
+  margin-top: 20px;
+  padding: 20px;
+}
+.claude__kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.claude__sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  text-transform: none;
+}
+.claude__zahlen {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  gap: 24px;
+  align-items: center;
+}
+.claude__rest {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--navy-600);
+  border-radius: var(--radius-klein);
+  background: var(--navy-900);
+}
+.claude__restzahl {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.claude__geschaetzt {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.claude__details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+.claude__details dt {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.claude__details dd {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  color: var(--ink);
+}
+.claude__stand {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.claude__formular {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 14px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--navy-700);
+}
+.claude__aktionen {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.claude__meldung {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* --------------------------------------------------------------------------
    Reaktionsfähig
    -------------------------------------------------------------------------- */
 
@@ -642,6 +731,12 @@ textarea {
   }
   .formular__gitter {
     grid-template-columns: 1fr;
+  }
+  .claude__zahlen {
+    grid-template-columns: 1fr;
+  }
+  .claude__formular {
+    grid-template-columns: 1fr 1fr;
   }
   /* Tabelle wird auf Mobil horizontal scrollbar */
   .tabelle-wrap {

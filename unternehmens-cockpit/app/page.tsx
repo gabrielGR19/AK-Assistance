@@ -8,6 +8,7 @@ import { WarnBand } from "@/components/WarnBand";
 import { KostenHero } from "@/components/KostenHero";
 import { DienstTabelle } from "@/components/DienstTabelle";
 import { DienstFormular } from "@/components/DienstFormular";
+import { ClaudeGuthaben, type LiveInfo } from "@/components/ClaudeGuthaben";
 
 // Leeres Formular als Ausgangszustand für einen neuen Dienst.
 const LEER: DienstEingabe = {
@@ -107,6 +108,44 @@ export default function Cockpit() {
     }
   }
 
+  // Claude-Guthaben: manuelle Basis/Schwelle/Fallback-Verbrauch speichern.
+  async function claudeSpeichern(patch: Record<string, unknown>) {
+    setFehler(null);
+    try {
+      const res = await fetch("/api/claude", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const antwort = await res.json();
+      if (!res.ok) {
+        setFehler(antwort.fehler ?? "Claude-Einstellungen konnten nicht gespeichert werden.");
+        return;
+      }
+      setDaten(antwort.daten);
+    } catch {
+      setFehler("Claude-Einstellungen konnten nicht gespeichert werden (Netzwerk).");
+    }
+  }
+
+  // Claude-Guthaben: Verbrauch live über die Cost-API abrufen. Gibt die Live-Info zurück.
+  async function claudeAbrufen(): Promise<LiveInfo | null> {
+    setFehler(null);
+    try {
+      const res = await fetch("/api/claude", { method: "POST" });
+      const antwort = await res.json();
+      if (!res.ok) {
+        setFehler(antwort.fehler ?? "Live-Abruf fehlgeschlagen.");
+        return null;
+      }
+      setDaten(antwort.daten);
+      return antwort.live ?? null;
+    } catch {
+      setFehler("Live-Abruf fehlgeschlagen (Netzwerk).");
+      return null;
+    }
+  }
+
   function bearbeiten(d: Dienst) {
     setBearbeiteId(d.id);
     setFormular({
@@ -134,6 +173,7 @@ export default function Cockpit() {
   if (!daten || !kosten) return <main className="shell lade">Cockpit lädt …</main>;
 
   const heute = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
+  const claudeDienst = daten.dienste.find((d) => d.claude);
 
   return (
     <main className="shell">
@@ -154,6 +194,14 @@ export default function Cockpit() {
       <WarnBand warnungen={warnungen} />
 
       <KostenHero kosten={kosten} meta={daten.meta} onKursSpeichern={kursSpeichern} />
+
+      {claudeDienst && (
+        <ClaudeGuthaben
+          dienst={claudeDienst}
+          onSpeichern={claudeSpeichern}
+          onAbrufen={claudeAbrufen}
+        />
+      )}
 
       {fehler && <p className="meldung">{fehler}</p>}
 
