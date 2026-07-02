@@ -2,8 +2,11 @@ import { NextRequest } from "next/server";
 import { ladeDaten, speichereDaten } from "@/lib/db";
 import { validiereEingabe, aktualisiereDienst, loescheDienst } from "@/lib/dienste";
 
+// In Next 16 sind Route-Params asynchron (Promise), daher await auf ctx.params.
+type Kontext = { params: Promise<{ id: string }> };
+
 // PUT /api/dienste/[id] — aktualisiert einen bestehenden Dienst.
-export async function PUT(request: NextRequest, ctx: RouteContext<"/api/dienste/[id]">) {
+export async function PUT(request: NextRequest, ctx: Kontext) {
   try {
     const { id } = await ctx.params;
     const roh = await request.json();
