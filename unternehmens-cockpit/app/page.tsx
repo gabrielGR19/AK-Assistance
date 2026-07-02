@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CockpitData, Dienst, DienstEingabe } from "@/lib/types";
+import { berechneKosten } from "@/lib/costs";
+import { berechneWarnungen } from "@/lib/checks";
+import { WarnBand } from "@/components/WarnBand";
+import { KostenHero } from "@/components/KostenHero";
+import { DienstTabelle } from "@/components/DienstTabelle";
+import { DienstFormular } from "@/components/DienstFormular";
 
 // Leeres Formular als Ausgangszustand für einen neuen Dienst.
 const LEER: DienstEingabe = {
@@ -21,14 +27,13 @@ export default function Cockpit() {
   const [fehler, setFehler] = useState<string | null>(null);
   const [formular, setFormular] = useState<DienstEingabe>(LEER);
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
-  const [loescheId, setLoescheId] = useState<string | null>(null);
+  const [formularOffen, setFormularOffen] = useState(false);
 
-  // Dienste beim ersten Rendern laden.
   useEffect(() => {
-    void ladeDienste();
+    void ladeDaten();
   }, []);
 
-  async function ladeDienste() {
+  async function ladeDaten() {
     try {
       const res = await fetch("/api/dienste");
       if (!res.ok) throw new Error("Laden fehlgeschlagen");
@@ -38,9 +43,15 @@ export default function Cockpit() {
     }
   }
 
-  // Legt einen neuen Dienst an oder speichert Änderungen am gerade bearbeiteten.
-  async function speichern(e: React.FormEvent) {
-    e.preventDefault();
+  // Kosten und Warnungen aus den reinen Funktionen ableiten (eine Quelle der Wahrheit).
+  const kosten = useMemo(() => (daten ? berechneKosten(daten) : null), [daten]);
+  const warnungen = useMemo(() => (daten ? berechneWarnungen(daten) : []), [daten]);
+  const kostenIndex = useMemo(
+    () => new Map((kosten?.proDienst ?? []).map((k) => [k.id, k])),
+    [kosten],
+  );
+
+  async function speichern() {
     setFehler(null);
     const url = bearbeiteId ? `/api/dienste/${bearbeiteId}` : "/api/dienste";
     const methode = bearbeiteId ? "PUT" : "POST";
@@ -56,7 +67,7 @@ export default function Cockpit() {
         return;
       }
       setDaten(antwort);
-      abbrechen();
+      schliesseFormular();
     } catch {
       setFehler("Speichern fehlgeschlagen (Netzwerk).");
     }
@@ -72,13 +83,30 @@ export default function Cockpit() {
         return;
       }
       setDaten(antwort);
-      setLoescheId(null);
     } catch {
       setFehler("Löschen fehlgeschlagen (Netzwerk).");
     }
   }
 
-  // Lädt einen bestehenden Dienst zum Bearbeiten ins Formular.
+  async function kursSpeichern(kurs: number) {
+    setFehler(null);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eurUsdKurs: kurs }),
+      });
+      const antwort = await res.json();
+      if (!res.ok) {
+        setFehler(antwort.fehler ?? "Kurs konnte nicht gespeichert werden.");
+        return;
+      }
+      setDaten(antwort);
+    } catch {
+      setFehler("Kurs konnte nicht gespeichert werden (Netzwerk).");
+    }
+  }
+
   function bearbeiten(d: Dienst) {
     setBearbeiteId(d.id);
     setFormular({
@@ -92,170 +120,66 @@ export default function Cockpit() {
       naechsteFaelligkeit: d.naechsteFaelligkeit,
       notiz: d.notiz,
     });
+    setFormularOffen(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   }
 
-  function abbrechen() {
+  function schliesseFormular() {
     setBearbeiteId(null);
     setFormular(LEER);
+    setFormularOffen(false);
   }
 
-  if (fehler && !daten) return <main style={{ padding: 24 }}>{fehler}</main>;
-  if (!daten) return <main style={{ padding: 24 }}>Lädt …</main>;
+  if (fehler && !daten) return <main className="shell lade">{fehler}</main>;
+  if (!daten || !kosten) return <main className="shell lade">Cockpit lädt …</main>;
+
+  const heute = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
 
   return (
-    <main style={{ padding: 24, maxWidth: 1000, margin: "0 auto" }}>
-      <h1>AK Assistance — Betriebs-Cockpit</h1>
-      <p style={{ color: "var(--gedaempft)" }}>
-        Schritt 1: Dienste verwalten (funktionale Vorschau, Design folgt).
-      </p>
+    <main className="shell">
+      <header className="kopf">
+        <div className="marke">
+          <span className="marke__punkt" aria-hidden="true" />
+          <span className="marke__name">AK Assistance</span>
+          <span className="marke__sub">Betriebs-Cockpit</span>
+        </div>
+        <div className="kopf__meta">Stand {heute}</div>
+      </header>
 
-      {fehler && <p style={{ color: "#b00020" }}>{fehler}</p>}
+      <WarnBand warnungen={warnungen} />
 
-      {/* Liste der Dienste */}
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 16 }}>
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid var(--rand)" }}>
-            <th>Name</th>
-            <th>Kategorie</th>
-            <th>Abrechnung</th>
-            <th>Betrag</th>
-            <th>Status</th>
-            <th>Fälligkeit</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {daten.dienste.map((d) => (
-            <tr key={d.id} style={{ borderBottom: "1px solid var(--rand)" }}>
-              <td>{d.name}</td>
-              <td>{d.kategorie}</td>
-              <td>{d.abrechnungsmodell}</td>
-              <td className="betrag">
-                {d.betrag === null ? "—" : `${d.betrag.toFixed(2)} ${d.waehrung}`}
-              </td>
-              <td>{d.statusAmpel}</td>
-              <td className="mono">{d.naechsteFaelligkeit ?? "—"}</td>
-              <td style={{ whiteSpace: "nowrap" }}>
-                <button onClick={() => bearbeiten(d)}>Bearbeiten</button>{" "}
-                {loescheId === d.id ? (
-                  <>
-                    <button onClick={() => loeschen(d.id)} style={{ color: "#b00020" }}>
-                      Wirklich?
-                    </button>{" "}
-                    <button onClick={() => setLoescheId(null)}>Nein</button>
-                  </>
-                ) : (
-                  <button onClick={() => setLoescheId(d.id)}>Löschen</button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <KostenHero kosten={kosten} meta={daten.meta} onKursSpeichern={kursSpeichern} />
 
-      {/* Formular zum Anlegen / Bearbeiten */}
-      <h2 style={{ marginTop: 32 }}>{bearbeiteId ? "Dienst bearbeiten" : "Neuen Dienst anlegen"}</h2>
-      <form onSubmit={speichern} style={{ display: "grid", gap: 8, maxWidth: 480 }}>
-        <label>
-          Name*
-          <input
-            required
-            value={formular.name}
-            onChange={(e) => setFormular({ ...formular, name: e.target.value })}
-          />
-        </label>
-        <label>
-          Kategorie*
-          <input
-            required
-            value={formular.kategorie}
-            onChange={(e) => setFormular({ ...formular, kategorie: e.target.value })}
-          />
-        </label>
-        <label>
-          Inhaber / Account
-          <input
-            value={formular.inhaber}
-            onChange={(e) => setFormular({ ...formular, inhaber: e.target.value })}
-          />
-        </label>
-        <label>
-          Abrechnungsmodell
-          <select
-            value={formular.abrechnungsmodell}
-            onChange={(e) =>
-              setFormular({
-                ...formular,
-                abrechnungsmodell: e.target.value as DienstEingabe["abrechnungsmodell"],
-              })
-            }
-          >
-            <option value="monatlich">monatlich</option>
-            <option value="jaehrlich">jährlich</option>
-            <option value="verbrauch">verbrauch</option>
-          </select>
-        </label>
-        <label>
-          Betrag (leer lassen, wenn unbekannt)
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={formular.betrag ?? ""}
-            onChange={(e) =>
-              setFormular({ ...formular, betrag: e.target.value === "" ? null : Number(e.target.value) })
-            }
-          />
-        </label>
-        <label>
-          Währung
-          <select
-            value={formular.waehrung}
-            onChange={(e) => setFormular({ ...formular, waehrung: e.target.value as DienstEingabe["waehrung"] })}
-          >
-            <option value="EUR">EUR</option>
-            <option value="USD">USD</option>
-          </select>
-        </label>
-        <label>
-          Status
-          <select
-            value={formular.statusAmpel}
-            onChange={(e) =>
-              setFormular({ ...formular, statusAmpel: e.target.value as DienstEingabe["statusAmpel"] })
-            }
-          >
-            <option value="ok">ok</option>
-            <option value="beobachten">beobachten</option>
-            <option value="handlung">Handlung nötig</option>
-          </select>
-        </label>
-        <label>
-          Nächste Fälligkeit
-          <input
-            type="date"
-            value={formular.naechsteFaelligkeit ?? ""}
-            onChange={(e) =>
-              setFormular({ ...formular, naechsteFaelligkeit: e.target.value === "" ? null : e.target.value })
-            }
-          />
-        </label>
-        <label>
-          Notiz / Token-Stand
-          <textarea
-            value={formular.notiz}
-            onChange={(e) => setFormular({ ...formular, notiz: e.target.value })}
-          />
-        </label>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="submit">{bearbeiteId ? "Speichern" : "Anlegen"}</button>
-          {bearbeiteId && (
-            <button type="button" onClick={abbrechen}>
-              Abbrechen
+      {fehler && <p className="meldung">{fehler}</p>}
+
+      <DienstTabelle
+        dienste={daten.dienste}
+        kostenIndex={kostenIndex}
+        onBearbeiten={bearbeiten}
+        onLoeschen={loeschen}
+      />
+
+      <section className="abschnitt">
+        <div className="abschnitt__kopf">
+          <h2 className="abschnitt__titel">
+            {formularOffen && bearbeiteId ? "Dienst bearbeiten" : "Neuen Dienst anlegen"}
+          </h2>
+          {!formularOffen && (
+            <button className="btn btn--primaer" onClick={() => setFormularOffen(true)}>
+              + Dienst hinzufügen
             </button>
           )}
         </div>
-      </form>
+        {formularOffen && (
+          <DienstFormular
+            wert={formular}
+            onChange={setFormular}
+            onSpeichern={speichern}
+            onAbbrechen={schliesseFormular}
+            istBearbeitung={!!bearbeiteId}
+          />
+        )}
+      </section>
     </main>
   );
 }
