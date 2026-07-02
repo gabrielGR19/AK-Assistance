@@ -1,0 +1,207 @@
+/* Reporting-/Druckansicht: bewusst hell, hoher Kontrast, keine Farbflächen — sauber als PDF (Cmd+P). */
+
+.seite {
+  min-height: 100vh;
+  background: #ffffff;
+  color: #101820;
+  padding: 40px 48px 64px;
+  max-width: 940px;
+  margin: 0 auto;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.kopf {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #101820;
+  padding-bottom: 14px;
+  margin-bottom: 28px;
+}
+.titel {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.untertitel {
+  margin: 4px 0 0;
+  color: #5a6b7a;
+  font-size: 13px;
+}
+.stand {
+  text-align: right;
+  font-size: 13px;
+  color: #5a6b7a;
+  white-space: nowrap;
+}
+
+.werkzeug {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.link {
+  display: inline-block;
+  padding: 7px 14px;
+  border: 1px solid #101820;
+  border-radius: 6px;
+  color: #101820;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.link:hover {
+  background: #101820;
+  color: #ffffff;
+}
+
+.abschnitt {
+  margin-bottom: 32px;
+  break-inside: avoid;
+}
+.abschnitt__titel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5a6b7a;
+  margin: 0 0 12px;
+  border-bottom: 1px solid #d4dde4;
+  padding-bottom: 6px;
+}
+
+/* Kostensumme */
+.summe {
+  display: flex;
+  gap: 56px;
+}
+.summe__block {
+  display: flex;
+  flex-direction: column;
+}
+.summe__label {
+  font-size: 12px;
+  color: #5a6b7a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.summe__zahl {
+  font-size: 30px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.hinweis {
+  color: #8a5a00;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Tabellen */
+.tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tabelle th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a6b7a;
+  border-bottom: 1px solid #101820;
+  padding: 6px 10px;
+}
+.tabelle td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e2e8ed;
+  vertical-align: top;
+}
+.rechts {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dienst {
+  font-weight: 600;
+}
+.stand__zelle {
+  color: #5a6b7a;
+  font-size: 12px;
+}
+.leer {
+  color: #9aa8b4;
+}
+
+/* Status als Wort (keine Farbfläche), plus dezentes Zeichen */
+.status--ok::before {
+  content: "● ";
+  color: #2f7d5b;
+}
+.status--beobachten::before {
+  content: "● ";
+  color: #a8842a;
+}
+.status--handlung::before {
+  content: "▲ ";
+  color: #b23b2a;
+}
+
+/* Warnungen */
+.warnliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.warnzeile {
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8ed;
+}
+.warnzeile:last-child {
+  border-bottom: none;
+}
+.warnzeile__titel {
+  font-weight: 600;
+}
+.warnzeile__titel--hoch::before {
+  content: "▲ ";
+  color: #b23b2a;
+}
+.warnzeile__titel--mittel::before {
+  content: "● ";
+  color: #a8842a;
+}
+.warnzeile__detail {
+  color: #5a6b7a;
+  font-size: 12px;
+}
+.ruhig {
+  color: #2f7d5b;
+  font-weight: 600;
+}
+
+.fuss {
+  margin-top: 40px;
+  padding-top: 14px;
+  border-top: 1px solid #d4dde4;
+  color: #7a8a97;
+  font-size: 11px;
+}
+
+/* Druck: Werkzeugleiste ausblenden, Ränder schmaler, Umbrüche schonen */
+@media print {
+  .seite {
+    padding: 0;
+    max-width: none;
+  }
+  .werkzeug {
+    display: none;
+  }
+  .link {
+    display: none;
+  }
+  .seite a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

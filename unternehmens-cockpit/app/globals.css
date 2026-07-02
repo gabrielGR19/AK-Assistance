@@ -144,10 +144,15 @@ a {
   color: var(--ink-muted);
 }
 .kopf__meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink-muted);
-  text-align: right;
+}
+.kopf__meta a {
+  text-decoration: none;
 }
 
 /* --------------------------------------------------------------------------

@@ -143,7 +143,12 @@ export default function Cockpit() {
           <span className="marke__name">AK Assistance</span>
           <span className="marke__sub">Betriebs-Cockpit</span>
         </div>
-        <div className="kopf__meta">Stand {heute}</div>
+        <div className="kopf__meta">
+          <a className="btn btn--klein" href="/report">
+            Report / Druckansicht
+          </a>
+          <span>Stand {heute}</span>
+        </div>
       </header>
 
       <WarnBand warnungen={warnungen} />
