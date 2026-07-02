@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Dienst } from "@/lib/types";
 import type { DienstKosten } from "@/lib/costs";
 import { StatusLed } from "./StatusLed";
+import { HerkunftBadge } from "./HerkunftBadge";
 import { formatBetrag, formatEur, formatDatum } from "@/lib/format";
 
 const MODELL_LABEL: Record<Dienst["abrechnungsmodell"], string> = {
@@ -73,6 +74,7 @@ export function DienstTabelle({
                   <td>
                     <div className="dienst-name">{d.name}</div>
                     {d.inhaber && <div className="dienst-inhaber">{d.inhaber}</div>}
+                    <HerkunftBadge dienst={d} />
                   </td>
                   <td>{d.kategorie}</td>
                   <td>
