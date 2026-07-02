@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest, ctx: Kontext) {
 }
 
 // DELETE /api/dienste/[id] — löscht einen Dienst.
-export async function DELETE(_request: NextRequest, ctx: RouteContext<"/api/dienste/[id]">) {
+export async function DELETE(_request: NextRequest, ctx: Kontext) {
   try {
     const { id } = await ctx.params;
     const daten = await ladeDaten();
