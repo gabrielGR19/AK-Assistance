@@ -1,0 +1,46 @@
+/* Funktionale Basis für Schritt 1. Das gestaltete Design-System folgt in Schritt 2. */
+
+:root {
+  --navy: #0d2233;
+  --orange: #f47321;
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --rand: #dfe3e8;
+  --text: #0d2233;
+  --gedaempft: #5b6b7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+/* Alle Zahlen/Beträge in Mono mit gleichmäßiger Ziffernbreite (tabular nums). */
+.mono,
+.betrag {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Sichtbarer Tastatur-Fokus (Qualitätsboden aus dem Auftrag). */
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
