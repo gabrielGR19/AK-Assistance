@@ -146,6 +146,24 @@ export default function Cockpit() {
     }
   }
 
+  // Retell: Call-Kosten des laufenden Monats live abrufen. Gibt die Live-Info zurück.
+  async function retellAbrufen(): Promise<LiveInfo | null> {
+    setFehler(null);
+    try {
+      const res = await fetch("/api/retell", { method: "POST" });
+      const antwort = await res.json();
+      if (!res.ok) {
+        setFehler(antwort.fehler ?? "Live-Abruf fehlgeschlagen.");
+        return null;
+      }
+      setDaten(antwort.daten);
+      return antwort.live ?? null;
+    } catch {
+      setFehler("Live-Abruf fehlgeschlagen (Netzwerk).");
+      return null;
+    }
+  }
+
   function bearbeiten(d: Dienst) {
     setBearbeiteId(d.id);
     setFormular({
@@ -210,6 +228,7 @@ export default function Cockpit() {
         kostenIndex={kostenIndex}
         onBearbeiten={bearbeiten}
         onLoeschen={loeschen}
+        onLiveAbruf={retellAbrufen}
       />
 
       <section className="abschnitt">

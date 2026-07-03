@@ -31,6 +31,7 @@ Werte werden nur serverseitig gelesen, nie ins Frontend serialisiert, nie gelogg
 | Variable | Zweck | Pflicht |
 | -------- | ----- | ------- |
 | `ANTHROPIC_ADMIN_KEY` | Admin-Key der Anthropic Console für den Cost-API-Live-Abruf des Claude-Guthabens. Ohne Key bleibt die manuelle Verbrauchseingabe als Fallback aktiv. | optional (nur für Live-Abruf) |
+| `RETELL_API_KEY` | Retell.ai API-Key (read-only) für den Live-Abruf der Call-Kosten des laufenden Monats. Ohne Key bleibt die manuelle Betragseingabe als Fallback aktiv. | optional (nur für Live-Abruf) |
 | `COCKPIT_PASSWORT` | Basic-Auth-Passwort (Schritt 6, Deployment) | erst bei Deployment |
 
 Hinweis Cost-API: `amount` kommt in **kleinster Währungseinheit (Cent)** und wird durch 100 geteilt;
@@ -91,15 +92,17 @@ kopiert die Datei mit Zeitstempel nach `backups/` (gitignored) und behält die l
 
 ## Live-Konnektoren (API-Prüfung pro Dienst)
 
-Wird ab Schritt 5/7 befüllt: pro Dienst dokumentiert, ob eine read-only
-Status-/Verbrauchs-/Kosten-API existiert, welcher Endpoint und welcher Scope.
+Pro Dienst dokumentiert, ob eine read-only Status-/Verbrauchs-/Kosten-API existiert, welcher
+Endpoint und welcher Scope. Prüfstand Schritt 7 (07/2026): Nur Anthropic und Retell haben eine
+nutzbare read-only Kosten-API — die übrigen Dienste sind Fixkosten bzw. bieten keine öffentliche
+Kosten-API und werden manuell gepflegt.
 
 | Dienst | Live-API vorhanden? | Endpoint | Scope | Status |
 | ------ | ------------------- | -------- | ----- | ------ |
 | Anthropic / Claude API | ja (live verifiziert) | `GET https://api.anthropic.com/v1/organizations/cost_report` (Header `x-api-key` = Admin-Key, `anthropic-version: 2023-06-01`) | Admin-Key, read-only Usage/Cost | **verifiziert** — Live-Abruf liefert HTTP 200 + echte USD-Zahl |
-| Retell.ai | zu prüfen (Schritt 7) | — | — | offen |
-| Hetzner | zu prüfen (Schritt 7) | — | — | offen |
-| IONOS | zu prüfen (Schritt 7) | — | — | offen |
-| Google Workspace | zu prüfen (Schritt 7) | — | — | offen |
-| Netlify | zu prüfen (Schritt 7) | — | — | offen |
-| GitHub | zu prüfen (Schritt 7) | — | — | offen |
+| Retell.ai | ja (Doku verifiziert) | `POST https://api.retellai.com/v3/list-calls` (Header `Authorization: Bearer <Key>`); Call-Kosten unter `call_cost.combined_cost` in Cent, Filter `filter_criteria.start_timestamp` (ms-Epoch, Range) | API-Key, read-only Calls/Kosten | **implementiert** — Button „Verbrauch live abrufen" summiert die Call-Kosten des laufenden Monats in `betrag` (USD) |
+| Hetzner | nein | — | — | keine öffentliche read-only Kosten-API (Fixkosten Hosting) → manuell |
+| IONOS | nein | — | — | keine öffentliche Domain-Kosten-API (Fixkosten Domain) → manuell |
+| Google Workspace | nein | — | — | Abo-Kosten nur über Reseller/Admin-SDK (komplex, keine read-only Kosten-API) → manuell |
+| Netlify | nein | — | — | keine öffentliche Billing-/Kosten-API → manuell |
+| GitHub | nein (praktisch) | — | — | nur metered Usage (Actions/Storage), nicht der Plan-Preis; braucht Org-Admin → manuell |

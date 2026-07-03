@@ -5,6 +5,7 @@ import type { Dienst } from "@/lib/types";
 import type { DienstKosten } from "@/lib/costs";
 import { StatusLed } from "./StatusLed";
 import { HerkunftBadge } from "./HerkunftBadge";
+import type { LiveInfo } from "./ClaudeGuthaben";
 import { formatBetrag, formatEur, formatDatum } from "@/lib/format";
 
 const MODELL_LABEL: Record<Dienst["abrechnungsmodell"], string> = {
@@ -19,14 +20,35 @@ export function DienstTabelle({
   kostenIndex,
   onBearbeiten,
   onLoeschen,
+  onLiveAbruf,
 }: {
   dienste: Dienst[];
   kostenIndex: Map<string, DienstKosten>;
   onBearbeiten: (d: Dienst) => void;
   onLoeschen: (id: string) => void;
+  onLiveAbruf?: () => Promise<LiveInfo | null>;
 }) {
   const [kategorie, setKategorie] = useState<string>("alle");
   const [loescheId, setLoescheId] = useState<string | null>(null);
+  const [liveLaedt, setLiveLaedt] = useState(false);
+  const [liveMeldung, setLiveMeldung] = useState<string | null>(null);
+
+  // Live-Abruf der Retell-Kosten (einziger Dienst mit read-only Kosten-API).
+  async function liveAbrufen() {
+    if (!onLiveAbruf) return;
+    setLiveMeldung(null);
+    setLiveLaedt(true);
+    const info = await onLiveAbruf();
+    setLiveLaedt(false);
+    if (!info) return;
+    if (info.keinKey) {
+      setLiveMeldung("Kein Retell-API-Key hinterlegt — Live-Abruf nicht aktiv (RETELL_API_KEY in .env.local).");
+    } else if (!info.ok) {
+      setLiveMeldung(`Live-Abruf fehlgeschlagen: ${info.fehler ?? "unbekannter Fehler"}.`);
+    } else {
+      setLiveMeldung("Kosten live aktualisiert.");
+    }
+  }
 
   const kategorien = useMemo(() => {
     const set = new Set(dienste.map((d) => d.kategorie));
@@ -105,6 +127,11 @@ export function DienstTabelle({
                   </td>
                   <td>
                     <div className="zeilen-aktionen">
+                      {d.id === "retell" && onLiveAbruf && (
+                        <button className="btn btn--klein" onClick={liveAbrufen} disabled={liveLaedt}>
+                          {liveLaedt ? "Rufe ab …" : "Verbrauch live abrufen"}
+                        </button>
+                      )}
                       <button className="btn btn--klein" onClick={() => onBearbeiten(d)}>
                         Bearbeiten
                       </button>
@@ -129,6 +156,9 @@ export function DienstTabelle({
                         </button>
                       )}
                     </div>
+                    {d.id === "retell" && liveMeldung && (
+                      <p className="eyebrow" style={{ marginTop: 6 }}>{liveMeldung}</p>
+                    )}
                   </td>
                 </tr>
               );
