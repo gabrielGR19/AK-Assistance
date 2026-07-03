@@ -1,0 +1,21 @@
+{
+  "name": "unternehmens-cockpit",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "20.19.43",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3"
+  }
+}
