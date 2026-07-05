@@ -6,6 +6,7 @@ import type { DienstKosten } from "@/lib/costs";
 import { StatusLed } from "./StatusLed";
 import { HerkunftBadge } from "./HerkunftBadge";
 import type { LiveInfo } from "@/lib/live/runner";
+import { berechneTrend } from "@/lib/trend";
 import { formatBetrag, formatEur, formatDatum } from "@/lib/format";
 
 const MODELL_LABEL: Record<Dienst["abrechnungsmodell"], string> = {
@@ -96,6 +97,7 @@ export function DienstTabelle({
           <tbody>
             {sichtbar.map((d) => {
               const k = kostenIndex.get(d.id);
+              const trend = berechneTrend(d.verlauf);
               return (
                 <tr key={d.id}>
                   <td>
@@ -119,6 +121,21 @@ export function DienstTabelle({
                       <span title={k.umgerechnet ? "aus USD umgerechnet" : undefined}>
                         {formatEur(k.monatEur)}
                         {k.umgerechnet && <span style={{ color: "var(--ink-faint)" }}> *</span>}
+                        {trend && trend.richtung !== "stabil" && (
+                          <span
+                            style={{ color: "var(--ink-faint)" }}
+                            title={
+                              `${trend.richtung === "steigend" ? "Steigt" : "Fällt"}` +
+                              (trend.deltaProzent != null
+                                ? ` ca. ${Math.abs(trend.deltaProzent).toFixed(0)}%`
+                                : "") +
+                              " gegenüber dem letzten Stand."
+                            }
+                          >
+                            {" "}
+                            {trend.richtung === "steigend" ? "↑" : "↓"}
+                          </span>
+                        )}
                       </span>
                     ) : (
                       <span className="leer">—</span>

@@ -1,4 +1,5 @@
 import { speichereDaten } from "@/lib/db";
+import { fuegeVerlaufspunktHinzu } from "@/lib/verlauf";
 import type { CockpitData, Dienst } from "@/lib/types";
 import type { LiveProvider } from "./types";
 
@@ -46,6 +47,7 @@ export async function fuehreLiveAbrufAus(
   d.abrufStatus = "ok";
   d.letzterAbruf = new Date().toISOString();
   d.letzteAenderung = d.letzterAbruf;
+  fuegeVerlaufspunktHinzu(d);
 
   await speichereDaten(daten);
   return { typ: "abgeschlossen", daten, live: { ok: true, keinKey: false, fehler: null } };
