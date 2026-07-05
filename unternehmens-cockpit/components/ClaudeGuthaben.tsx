@@ -2,14 +2,8 @@
 
 import { useState } from "react";
 import type { Dienst } from "@/lib/types";
+import type { LiveInfo } from "@/lib/live/runner";
 import { formatBetrag, formatDatum, relativeTage } from "@/lib/format";
-
-// Ergebnis eines Live-Abrufs, wie es die POST /api/claude-Route zurückgibt.
-export interface LiveInfo {
-  ok: boolean;
-  keinKey: boolean;
-  fehler: string | null;
-}
 
 // Überwachung des Claude-API-Guthabens (Blog-Agent, kein Auto-Reload).
 // Zeigt das geschätzte Restguthaben groß und IMMER als "geschätzt" gelabelt.

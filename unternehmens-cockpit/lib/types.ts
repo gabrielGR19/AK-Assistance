@@ -31,6 +31,9 @@ export interface Dienst {
   letzterAbruf: string | null;
   abrufStatus: AbrufStatus;
   claude?: ClaudeInfo;
+  // Snapshots des betrag-Felds über Zeit (ein Eintrag pro Tag mit Änderung), für Trendanzeige.
+  // Optional, damit Altbestände in cockpit.json ohne dieses Feld kompatibel bleiben.
+  verlauf?: { datum: string; betrag: number }[];
 }
 
 // Vom Nutzer erfassbare Felder eines Dienstes (ohne die vom System verwalteten).

@@ -5,7 +5,8 @@ import type { Dienst } from "@/lib/types";
 import type { DienstKosten } from "@/lib/costs";
 import { StatusLed } from "./StatusLed";
 import { HerkunftBadge } from "./HerkunftBadge";
-import type { LiveInfo } from "./ClaudeGuthaben";
+import type { LiveInfo } from "@/lib/live/runner";
+import { berechneTrend } from "@/lib/trend";
 import { formatBetrag, formatEur, formatDatum } from "@/lib/format";
 
 const MODELL_LABEL: Record<Dienst["abrechnungsmodell"], string> = {
@@ -18,35 +19,40 @@ const MODELL_LABEL: Record<Dienst["abrechnungsmodell"], string> = {
 export function DienstTabelle({
   dienste,
   kostenIndex,
+  liveFaehigIds,
   onBearbeiten,
   onLoeschen,
   onLiveAbruf,
 }: {
   dienste: Dienst[];
   kostenIndex: Map<string, DienstKosten>;
+  liveFaehigIds: Set<string>;
   onBearbeiten: (d: Dienst) => void;
   onLoeschen: (id: string) => void;
-  onLiveAbruf?: () => Promise<LiveInfo | null>;
+  onLiveAbruf?: (dienstId: string) => Promise<LiveInfo | null>;
 }) {
   const [kategorie, setKategorie] = useState<string>("alle");
   const [loescheId, setLoescheId] = useState<string | null>(null);
-  const [liveLaedt, setLiveLaedt] = useState(false);
-  const [liveMeldung, setLiveMeldung] = useState<string | null>(null);
+  const [liveLaedtId, setLiveLaedtId] = useState<string | null>(null);
+  const [liveMeldungId, setLiveMeldungId] = useState<string | null>(null);
+  const [liveMeldungText, setLiveMeldungText] = useState<string | null>(null);
 
-  // Live-Abruf der Retell-Kosten (einziger Dienst mit read-only Kosten-API).
-  async function liveAbrufen() {
+  // Live-Abruf für einen einzelnen Dienst mit registriertem Live-Provider.
+  async function liveAbrufen(dienstId: string) {
     if (!onLiveAbruf) return;
-    setLiveMeldung(null);
-    setLiveLaedt(true);
-    const info = await onLiveAbruf();
-    setLiveLaedt(false);
+    setLiveMeldungId(null);
+    setLiveMeldungText(null);
+    setLiveLaedtId(dienstId);
+    const info = await onLiveAbruf(dienstId);
+    setLiveLaedtId(null);
     if (!info) return;
+    setLiveMeldungId(dienstId);
     if (info.keinKey) {
-      setLiveMeldung("Kein Retell-API-Key hinterlegt — Live-Abruf nicht aktiv (RETELL_API_KEY in .env.local).");
+      setLiveMeldungText("Kein API-Key hinterlegt — Live-Abruf nicht aktiv (siehe .env.local).");
     } else if (!info.ok) {
-      setLiveMeldung(`Live-Abruf fehlgeschlagen: ${info.fehler ?? "unbekannter Fehler"}.`);
+      setLiveMeldungText(`Live-Abruf fehlgeschlagen: ${info.fehler ?? "unbekannter Fehler"}.`);
     } else {
-      setLiveMeldung("Kosten live aktualisiert.");
+      setLiveMeldungText("Kosten live aktualisiert.");
     }
   }
 
@@ -91,6 +97,7 @@ export function DienstTabelle({
           <tbody>
             {sichtbar.map((d) => {
               const k = kostenIndex.get(d.id);
+              const trend = berechneTrend(d.verlauf);
               return (
                 <tr key={d.id}>
                   <td>
@@ -114,6 +121,21 @@ export function DienstTabelle({
                       <span title={k.umgerechnet ? "aus USD umgerechnet" : undefined}>
                         {formatEur(k.monatEur)}
                         {k.umgerechnet && <span style={{ color: "var(--ink-faint)" }}> *</span>}
+                        {trend && trend.richtung !== "stabil" && (
+                          <span
+                            style={{ color: "var(--ink-faint)" }}
+                            title={
+                              `${trend.richtung === "steigend" ? "Steigt" : "Fällt"}` +
+                              (trend.deltaProzent != null
+                                ? ` ca. ${Math.abs(trend.deltaProzent).toFixed(0)}%`
+                                : "") +
+                              " gegenüber dem letzten Stand."
+                            }
+                          >
+                            {" "}
+                            {trend.richtung === "steigend" ? "↑" : "↓"}
+                          </span>
+                        )}
                       </span>
                     ) : (
                       <span className="leer">—</span>
@@ -127,9 +149,13 @@ export function DienstTabelle({
                   </td>
                   <td>
                     <div className="zeilen-aktionen">
-                      {d.id === "retell" && onLiveAbruf && (
-                        <button className="btn btn--klein" onClick={liveAbrufen} disabled={liveLaedt}>
-                          {liveLaedt ? "Rufe ab …" : "Verbrauch live abrufen"}
+                      {liveFaehigIds.has(d.id) && onLiveAbruf && (
+                        <button
+                          className="btn btn--klein"
+                          onClick={() => liveAbrufen(d.id)}
+                          disabled={liveLaedtId === d.id}
+                        >
+                          {liveLaedtId === d.id ? "Rufe ab …" : "Verbrauch live abrufen"}
                         </button>
                       )}
                       <button className="btn btn--klein" onClick={() => onBearbeiten(d)}>
@@ -156,8 +182,8 @@ export function DienstTabelle({
                         </button>
                       )}
                     </div>
-                    {d.id === "retell" && liveMeldung && (
-                      <p className="eyebrow" style={{ marginTop: 6 }}>{liveMeldung}</p>
+                    {liveMeldungId === d.id && liveMeldungText && (
+                      <p className="eyebrow" style={{ marginTop: 6 }}>{liveMeldungText}</p>
                     )}
                   </td>
                 </tr>

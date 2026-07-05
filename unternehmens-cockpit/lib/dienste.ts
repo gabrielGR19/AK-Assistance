@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { CockpitData, Dienst, DienstEingabe } from "./types";
+import { fuegeVerlaufspunktHinzu } from "./verlauf";
 
 const ABRECHNUNGSMODELLE = ["monatlich", "jaehrlich", "verbrauch"] as const;
 const WAEHRUNGEN = ["EUR", "USD"] as const;
@@ -79,6 +80,7 @@ export function fuegeDienstHinzu(daten: CockpitData, eingabe: DienstEingabe): Co
     letzterAbruf: null,
     abrufStatus: null,
   };
+  fuegeVerlaufspunktHinzu(neu);
   return { ...daten, dienste: [...daten.dienste, neu] };
 }
 
@@ -97,6 +99,7 @@ export function aktualisiereDienst(
     ...eingabe,
     letzteAenderung: new Date().toISOString(),
   };
+  fuegeVerlaufspunktHinzu(aktualisiert);
   const dienste = [...daten.dienste];
   dienste[index] = aktualisiert;
   return { ...daten, dienste };
