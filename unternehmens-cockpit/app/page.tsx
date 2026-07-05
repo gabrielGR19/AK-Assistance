@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { CockpitData, Dienst, DienstEingabe } from "@/lib/types";
+import type { LiveInfo } from "@/lib/live/runner";
 import { berechneKosten } from "@/lib/costs";
 import { berechneWarnungen } from "@/lib/checks";
 import { WarnBand } from "@/components/WarnBand";
 import { KostenHero } from "@/components/KostenHero";
 import { DienstTabelle } from "@/components/DienstTabelle";
 import { DienstFormular } from "@/components/DienstFormular";
-import { ClaudeGuthaben, type LiveInfo } from "@/components/ClaudeGuthaben";
+import { ClaudeGuthaben } from "@/components/ClaudeGuthaben";
 
 // Leeres Formular als Ausgangszustand für einen neuen Dienst.
 const LEER: DienstEingabe = {
@@ -29,9 +30,11 @@ export default function Cockpit() {
   const [formular, setFormular] = useState<DienstEingabe>(LEER);
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
   const [formularOffen, setFormularOffen] = useState(false);
+  const [liveFaehigIds, setLiveFaehigIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     void ladeDaten();
+    void ladeLiveFaehigkeit();
   }, []);
 
   async function ladeDaten() {
@@ -41,6 +44,19 @@ export default function Cockpit() {
       setDaten(await res.json());
     } catch {
       setFehler("Dienste konnten nicht geladen werden.");
+    }
+  }
+
+  // Welche Dienste einen registrierten Live-Provider haben — unabhängig vom Dienste-Payload,
+  // damit der Live-Button auch nach anderen Aktionen (Bearbeiten, Löschen) sichtbar bleibt.
+  async function ladeLiveFaehigkeit() {
+    try {
+      const res = await fetch("/api/live");
+      if (!res.ok) return;
+      const antwort = await res.json();
+      setLiveFaehigIds(new Set<string>(antwort.ids ?? []));
+    } catch {
+      // Live-Buttons bleiben einfach ausgeblendet, kein kritischer Fehler.
     }
   }
 
@@ -128,29 +144,12 @@ export default function Cockpit() {
     }
   }
 
-  // Claude-Guthaben: Verbrauch live über die Cost-API abrufen. Gibt die Live-Info zurück.
-  async function claudeAbrufen(): Promise<LiveInfo | null> {
+  // Generischer Live-Abruf über die Provider-Registry — nutzbar für jeden Dienst mit
+  // registriertem Live-Provider (Claude, Retell, künftige Dienste), ohne Sonderfälle.
+  async function liveAbrufen(dienstId: string): Promise<LiveInfo | null> {
     setFehler(null);
     try {
-      const res = await fetch("/api/claude", { method: "POST" });
-      const antwort = await res.json();
-      if (!res.ok) {
-        setFehler(antwort.fehler ?? "Live-Abruf fehlgeschlagen.");
-        return null;
-      }
-      setDaten(antwort.daten);
-      return antwort.live ?? null;
-    } catch {
-      setFehler("Live-Abruf fehlgeschlagen (Netzwerk).");
-      return null;
-    }
-  }
-
-  // Retell: Call-Kosten des laufenden Monats live abrufen. Gibt die Live-Info zurück.
-  async function retellAbrufen(): Promise<LiveInfo | null> {
-    setFehler(null);
-    try {
-      const res = await fetch("/api/retell", { method: "POST" });
+      const res = await fetch(`/api/live/${dienstId}`, { method: "POST" });
       const antwort = await res.json();
       if (!res.ok) {
         setFehler(antwort.fehler ?? "Live-Abruf fehlgeschlagen.");
@@ -217,7 +216,7 @@ export default function Cockpit() {
         <ClaudeGuthaben
           dienst={claudeDienst}
           onSpeichern={claudeSpeichern}
-          onAbrufen={claudeAbrufen}
+          onAbrufen={() => liveAbrufen(claudeDienst.id)}
         />
       )}
 
@@ -226,9 +225,10 @@ export default function Cockpit() {
       <DienstTabelle
         dienste={daten.dienste}
         kostenIndex={kostenIndex}
+        liveFaehigIds={liveFaehigIds}
         onBearbeiten={bearbeiten}
         onLoeschen={loeschen}
-        onLiveAbruf={retellAbrufen}
+        onLiveAbruf={liveAbrufen}
       />
 
       <section className="abschnitt">
