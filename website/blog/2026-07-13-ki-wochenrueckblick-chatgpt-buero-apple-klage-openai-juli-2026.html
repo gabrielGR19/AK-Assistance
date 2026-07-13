@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KI-Wochenrückblick: ChatGPT drängt ins Büro – und Apple klagt gegen OpenAI — AK-Assistance Blog</title>
+<meta name="description" content="KI-News der Woche: ChatGPT Work für den Büroalltag, neue Familienprodukte und der Rechtsstreit zwischen Apple und OpenAI.">
+<link rel="stylesheet" href="../shared.css">
+<style>
+:root{--bg:#fff;--bg-soft:#F6F7F9;--ink:#0B1220;--ink-soft:#455066;--ink-mute:#8892A6;--line:#E6E9EE;--radius:16px;--maxw:1180px;}
+*{box-sizing:border-box;}html,body{margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Inter Tight','Inter',sans-serif;font-weight:700;letter-spacing:-0.025em;margin:0 0 16px;}
+p{margin:0 0 20px;}a{color:var(--ink);}button{font-family:inherit;cursor:pointer;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+.topbar{padding:28px 0 0;position:relative;z-index:200;}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);}
+.logo-mark{width:32px;height:32px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;}
+.hamburger{background:none;border:none;padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer;z-index:301;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .3s,opacity .3s;}
+body.nav-open .hamburger span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+body.nav-open .hamburger span:nth-child(2){opacity:0;}
+body.nav-open .hamburger span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.nav-overlay{position:fixed;inset:0;background:rgba(11,18,32,.5);z-index:299;opacity:0;pointer-events:none;transition:opacity .3s;}
+body.nav-open .nav-overlay{opacity:1;pointer-events:all;}
+.nav-drawer{position:fixed;top:0;right:0;width:min(320px,85vw);height:100vh;background:#fff;z-index:300;transform:translateX(100%);transition:transform .35s cubic-bezier(.25,.46,.45,.94);display:flex;flex-direction:column;padding:28px 32px 40px;box-shadow:-4px 0 32px rgba(11,18,32,.12);}
+body.nav-open .nav-drawer{transform:translateX(0);}
+.nav-drawer-logo{display:flex;align-items:center;gap:10px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:17px;text-decoration:none;color:var(--ink);margin-bottom:40px;}
+.nav-drawer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;flex:1;}
+.nav-drawer ul li a{display:block;padding:12px 0;font-size:17px;font-weight:500;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:color .15s;}
+.nav-drawer ul li:last-child a{border-bottom:none;}
+.nav-drawer-contact{margin-top:32px;font-size:14px;color:var(--ink-mute);}
+.nav-drawer-contact a{color:var(--ink-soft);text-decoration:none;display:inline-flex;align-items:center;gap:7px;margin-top:6px;}
+.article-hero{padding:80px 0 56px;border-bottom:1px solid var(--line);}
+.back-link{display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft);text-decoration:none;font-size:15px;margin-bottom:40px;transition:color .15s;}
+.back-link:hover{color:var(--ink);}
+.article-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
+.article-date{font-size:14px;color:var(--ink-mute);font-weight:500;}
+.article-tag{font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:4px 12px;}
+.article-hero h1{font-size:clamp(32px,5vw,60px);line-height:1.05;letter-spacing:-0.03em;max-width:22ch;}
+.article-content{padding:64px 0 80px;}
+.article-content .prose{max-width:72ch;}
+.prose h2{font-size:clamp(22px,2.2vw,28px);margin-top:48px;margin-bottom:16px;}
+.prose h3{font-size:20px;margin-top:32px;margin-bottom:12px;}
+.prose p{color:var(--ink-soft);}
+.prose ul,.prose ol{color:var(--ink-soft);padding-left:24px;margin:0 0 20px;}
+.prose li{margin-bottom:8px;}
+.prose a{color:var(--ink);text-underline-offset:3px;}
+.prose strong{color:var(--ink);}
+footer{border-top:1px solid var(--line);padding:28px 0;}
+.footer-simple{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--ink-mute);font-size:14px;}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap;}
+.footer-links a{color:var(--ink-mute);text-decoration:none;transition:color .15s;}
+.footer-links a:hover{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap topbar-inner">
+<a href="../index.html" class="logo"><span class="logo-mark">AK</span><span>AK-Assistance</span></a>
+<button class="hamburger" aria-label="Menü" onclick="document.body.classList.toggle('nav-open')"><span></span><span></span><span></span></button>
+</div></div>
+<div class="nav-overlay" onclick="document.body.classList.remove('nav-open')"></div>
+<nav class="nav-drawer">
+<a href="../index.html" class="nav-drawer-logo"><span class="logo-mark">AK</span><span>AK-Assistance</span></a>
+<ul>
+<li><a href="../leistungen.html">Leistungen</a></li>
+<li><a href="../testen.html">Live testen</a></li>
+<li><a href="../blog.html">Blog</a></li>
+<li><a href="../kontakt.html">Kontakt</a></li>
+<li><a href="../impressum.html">Impressum</a></li>
+</ul>
+<div class="nav-drawer-contact"><div>Direkt schreiben:</div>
+<a href="mailto:AK-Assistance@protonmail.com">AK-Assistance@protonmail.com</a></div>
+</nav>
+<div class="article-hero"><div class="wrap">
+<a href="../blog.html" class="back-link">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+Alle Artikel</a>
+<div class="article-meta"><span class="article-date">13. Juli 2026</span><span class="article-tag">ChatGPT Work</span><span class="article-tag">Apple OpenAI Klage</span><span class="article-tag">KI Handwerk</span><span class="article-tag">KI Wochenrückblick</span></div>
+<h1>KI-Wochenrückblick: ChatGPT drängt ins Büro – und Apple klagt gegen OpenAI</h1>
+</div></div>
+<section class="article-content"><div class="wrap"><div class="prose">
+<h1>KI-Wochenrückblick: ChatGPT drängt ins Büro – und Apple klagt gegen OpenAI</h1>
+<p>Die Woche vom 7. bis 13. Juli 2026 war geprägt von einer klaren Botschaft: OpenAI will überall sein – im Büro, im Browser, im Haushalt. Gleichzeitig eskaliert der Konflikt mit Apple zu einem handfesten Rechtsstreit. Was das für Handwerksbetriebe bedeutet, lesen Sie hier.</p>
+<h2>ChatGPT Work: Der KI-Assistent soll den Arbeitsalltag übernehmen</h2>
+<p>OpenAI hat am 9. Juli 2026 „ChatGPT Work&quot; gestartet – eine neue Funktion innerhalb des bekannten Chatbots, die eigenständig Aufgaben über verschiedene Anwendungen und Dateien hinweg ausführen soll. Laut Reuters steht das Werkzeug zunächst für Pro-, Enterprise- und Edu-Nutzer bereit und wird in den darauffolgenden Tagen auf Plus- und Business-Nutzer ausgeweitet.</p>
+<p>Parallel dazu integriert OpenAI sein bisheriges Coding-Werkzeug Codex in die ChatGPT-Desktop-App. Laut Business Insider soll die App so zur zentralen Anlaufstelle für Fachleute werden – mit der Fähigkeit, Dateien zu bearbeiten und selbstständig im Browser zu agieren. OpenAI hat außerdem eine neue Modellreihe namens GPT-5.6 angekündigt.</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Wer ChatGPT bereits für Angebote, E-Mails oder Dokumentation nutzt, bekommt mit „Work&quot; mehr Automatisierungsmöglichkeiten. Die Funktion könnte etwa dabei helfen, Dateien zu sortieren, Formulare auszufüllen oder Aufgaben zwischen Programmen zu übertragen – ohne jeden Schritt selbst anzustoßen. Allerdings richtet sich der Launch zunächst an teurere Abo-Stufen. Kleinbetriebe sollten die Verfügbarkeit und Kosten im Blick behalten, bevor sie umsteigen.</p>
+<h2>ChatGPT im Browser: Atlas ist Geschichte, Chrome-Erweiterung kommt</h2>
+<p>Gleichzeitig zieht OpenAI seinen eigenständigen KI-Browser „Atlas&quot; zurück, der im Oktober 2025 gestartet war. Die Browser-Funktionen werden stattdessen in die ChatGPT-Desktop-App und in eine neue Google-Chrome-Erweiterung überführt, berichtet TechCrunch. Die Erweiterung ermöglicht es, direkt aus dem Browser heraus Fragen zu Webseiten zu stellen, Inhalte zusammenzufassen oder längere Aufgaben zu starten.</p>
+<p>Der Rückzug von Atlas passt zu einer internen Ansage von OpenAIs Anwendungschefin Fidji Simo, die das Team aufgefordert hatte, sich auf das Wesentliche zu konzentrieren – was bereits zur Einstellung des KI-Videogenerators Sora geführt hatte.</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Wer viel im Browser recherchiert – etwa Preise vergleicht, Produktdatenblätter liest oder Ausschreibungen prüft – könnte von der Chrome-Erweiterung profitieren. Texte lassen sich direkt zusammenfassen, ohne zwischen Anwendungen wechseln zu müssen. Die Nutzung setzt einen Google-Chrome-Browser voraus.</p>
+<h2>ChatGPT für Familien: OpenAI sucht neue Zielgruppen</h2>
+<p>Laut einem Bericht von Zamin.uz, der sich auf TechCrunch beruft, hat OpenAI eine Stelle für einen Produktmanager ausgeschrieben, der spezifische Angebote für Familien, Eltern und Senioren entwickeln soll. Ziel ist eine vertrauensbasierte digitale Umgebung für Nutzer aller Altersgruppen – also ein sicherer Rahmen für Kinder ebenso wie für ältere Menschen.</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Direkt wenig – aber mittelbar zeigt dieser Schritt, dass KI-Anbieter zunehmend auf breitere Bevölkerungsschichten zielen. Das erhöht langfristig die gesellschaftliche Akzeptanz und dürfte auch Kunden von Handwerksbetrieben vertrauter mit KI-basierten Kommunikationsmitteln machen.</p>
+<h2>Apple klagt gegen OpenAI: Streit um gestohlene Betriebsgeheimnisse</h2>
+<p>Der bislang aufsehenerregendste Vorgang der Woche: Apple hat am 10. Juli 2026 Klage gegen OpenAI beim Bundesgericht in Kalifornien eingereicht. Der Vorwurf laut AP News und HuffPost: Ehemalige Apple-Mitarbeiter sollen beim Wechsel zu OpenAI systematisch Betriebsgeheimnisse mitgenommen haben. Apple spricht von einem „koordinierten Fehlverhalten auf institutioneller Ebene&quot;.</p>
+<p>Hintergrund ist offenbar OpenAIs Bemühen, eigene Hardware zu entwickeln – ein Gerät, das eine neue Art der KI-Interaktion ermöglichen soll, jenseits klassischer Bildschirme und Tastaturen. OpenAI hat sich bislang nicht öffentlich zu den genauen Plänen geäußert. Die bisherige Partnerschaft zwischen Apple und OpenAI – ChatGPT ist in iPhones integriert – steht damit unter erheblichem Druck.</p>
+<p><strong>Was bedeutet das für Handwerksbetriebe?</strong> Unmittelbar nichts. Aber wer auf Apple-Geräten arbeitet und ChatGPT über Siri oder Apple-Produkte nutzt, sollte verfolgen, ob dieser Rechtsstreit die Integration beeinträchtigt. Langfristig könnten solche Konflikte die Produktlandschaft verändern.</p>
+<h2>Fazit</h2>
+<p>OpenAI hat in dieser Woche mehrere Weichen gestellt: mehr Automatisierung im Büro, mehr Präsenz im Browser, breitere Zielgruppen. Für Handwerksbetriebe sind vor allem ChatGPT Work und die Chrome-Erweiterung interessant – beide können Routineaufgaben vereinfachen. Der Rechtsstreit mit Apple ist vorerst eine Hintergrundgeschichte, verdient aber Beobachtung. Die KI-Welt bewegt sich schnell; es lohnt sich, die Entwicklungen regelmäßig im Blick zu behalten, ohne bei jedem neuen Feature sofort umzusatteln.</p>
+<p>---</p>
+<h2>Quellen</h2>
+<ol>
+<li>OpenAI at a new stage: ChatGPT is becoming a safe assistant for the whole family — zamin.uz (11.07.2026) — https://zamin.uz/en/technology/211853-openai-at-a-new-stage-chatgpt-is-becoming-a-safe-assistant-for-the-whole-family.html</li>
+<li>OpenAI launches ChatGPT Work, adding to competition for professional AI tools — reuters.com (09.07.2026) — https://www.reuters.com/business/openai-launches-chatgpt-work-2026-07-09/</li>
+<li>OpenAI is shutting down Atlas, but its AI browser ambitions are still growing — techcrunch.com (09.07.2026) — https://techcrunch.com/2026/07/09/openai-is-shutting-down-atlas-but-its-ai-browser-ambitions-are-still-growing/</li>
+<li>Apple files lawsuit accusing ChatGPT maker OpenAI of stealing trade secrets — apnews.com (10.07.2026) — https://apnews.com/article/apple-openai-lawsuit-trade-secrets-theft-6fff8833f5889d86406b89a02dd8fb16</li>
+<li>Apple Files Lawsuit Accusing ChatGPT Maker OpenAI Of Stealing Trade Secrets — huffpost.com (10.07.2026) — https://www.huffpost.com/entry/apple-files-lawsuit-accusing-chatgpt-maker-openai-of-stealing-trade-secrets_n_6a5164d4e4b0aaa374279a45</li>
+<li>OpenAI is making its biggest play for the office — businessinsider.com (09.07.2026) — https://www.businessinsider.com/openai-codex-chatgpt-app-releases-gpt-5-6-models-2026-7</li>
+</ol>
+
+</div></div></section>
+<footer><div class="wrap footer-simple">
+<div>© 2026 AK-Assistance</div>
+<div class="footer-links">
+<a href="mailto:AK-Assistance@protonmail.com">E-Mail</a>
+<a href="../impressum.html">Impressum</a>
+<a href="../agb.html">AGB</a>
+<a href="../datenschutz.html">Datenschutz</a>
+</div></div></footer>
+<script>document.addEventListener('keydown', e => { if(e.key==='Escape') document.body.classList.remove('nav-open'); });</script>
+</body></html>
