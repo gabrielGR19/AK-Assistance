@@ -1,22 +1,8 @@
 # CLAUDE.md — AK Assistance
 
-## Sprache & Kommunikation
-
-- Antworte immer auf Deutsch, unabhängig von der Eingabesprache.
-- Kommentare im Code auf Deutsch.
-- Direkt, sachlich, ohne Fülltext.
-- Beginne jede Antwort mit "Gabriel," — ohne Ausnahme.
-  Fehlt der Name: Warnsignal für nachlassende Kontextqualität →
-  neue Session starten oder /rewind ausführen.
-
----
-
-## Kontext-Management
-
-- Bei 50–60 % Kontext-Auslastung: Gabriel aktiv darauf hinweisen
-  und /compact empfehlen, bevor die Session-Qualität nachlässt.
-
----
+Globalregeln (Sprache, Legalität, Git, Deployments, Karpathy-Prinzipien)
+stehen in `~/CLAUDE.md` und gelten hier vollständig.
+Diese Datei enthält nur Projektwissen.
 
 ## Projekt
 
@@ -25,136 +11,25 @@ Ziel: Handwerksbetriebe und andere Dienstleister digitalisieren.
 Erstes Produkt: KI-Telefonagent.
 Weitere Produkte: Marketing-Automatisierung, weitere Agenten, App.
 
----
+## Zusammenarbeit
 
-## Nicht verhandelbare Regeln
+- Moritz Koch hat Repo-Zugriff und kann Änderungen gepusht haben —
+  deshalb zu Sessionbeginn immer git pull (Globalregel, hier besonders wichtig).
 
-### Legalität
+## Monorepo-Struktur
 
-- Alle Aktionen müssen legal sein. Bei Unsicherheit: sofort stoppen,
-  explizit nachfragen, bevor weitergearbeitet wird.
-- Kein Scraping ohne robots.txt-Prüfung der Zielwebsite.
-  Websites, die Scraping ausdrücklich verbieten, werden nicht gescrapt.
-- Keine personenbezogenen Daten ohne klaren, dokumentierten
-  Verwendungszweck speichern oder verarbeiten (DSGVO).
-- Bei rechtlichen oder steuerlichen Fragen, die im Code-Kontext
-  entstehen: explizit kennzeichnen und empfehlen, einen Fachanwalt
-  oder Steuerberater hinzuzuziehen. Nicht selbst rechtlich bewerten.
+| Verzeichnis | Inhalt |
+|---|---|
+| `unternehmens-cockpit/` | Betriebs-Cockpit, Next.js 16 |
+| `phone-agents/` | Telefonagent-Backend: Express + Anthropic SDK + Retell + WhatsApp |
+| `website/` | ak-assistance.de, statisches HTML, deployed auf Hetzner VPS |
+| `n8n-workflows/` | JSON-Exporte der n8n-Workflows (inkl. Blog-Agent) |
+| `client-templates/` | Vorlagen für Kundenprojekte |
+| `docs/`, `marketing/`, `assets/` | Doku, Marketing-Material, Medien |
 
-### GitHub & Versionskontrolle
+## n8n
 
-- Zu Beginn jeder Session: git pull —
-  Moritz Koch hat Repo-Zugriff und kann Änderungen gepusht haben.
-- Jede abgeschlossene Funktionseinheit committen.
-  Kein funktionierendes Feature bleibt uncommitted.
-- Commit-Messages auf Deutsch, beschreibend.
-- Vor größeren Änderungen: neuen Branch erstellen,
-  nie direkt auf main entwickeln.
-- Niemals committen: .env, .env.*, .claude/settings.local.json,
-  data/, *.log, API-Keys, Tokens, Passwörter.
-- .gitignore muss von Anfang an korrekt konfiguriert sein.
-- Getrackte Secrets prüfen:
-  git ls-files | grep -iE "\.env|key|token|secret"
-
-### Produktions-Deployments
-
-- Vor jedem Deployment auf eine Live-Umgebung
-  (Website, Server, DNS, Datenbank-Produktion):
-  1. Aktuellen Stand prüfen: git status, git log, was ist live.
-  2. Zeigen, was sich ändern wird — Diff oder klare Beschreibung.
-  3. Explizite Bestätigung abwarten, bevor deployed wird.
-- Niemals automatisch deployen, auch wenn der Auftrag es impliziert.
-
-### Codequalität & Sicherheit
-
-- Keine hardcodierten API-Keys oder Secrets — immer .env.
-- Alle externen API-Calls mit Fehlerbehandlung (try/catch) absichern.
-- Eingaben vor jedem Datenbankschreibvorgang validieren.
-- settings.local.json enthält MCP-Credentials —
-  darf niemals committed werden.
-
-### Verifikation
-
-- Vor Erstellung von Credentials, API-Keys oder Integrationen:
-  zuerst live prüfen, ob bereits etwas Passendes existiert
-  (z.B. n8n_manage_credentials list, .env auf vorhandene Keys prüfen).
-- Niemals aus Erinnerung vorheriger Sessions annehmen,
-  dass etwas existiert oder fehlt.
-- Bei Unsicherheit: nachfragen, nicht raten.
-
----
-
-## Arbeitsweise
-
-1. Plan vor Code: Bei komplexen Features zuerst Plan vorlegen
-   und bestätigen lassen. Plan Mode (Shift+Tab) aktiv nutzen.
-2. Schritt für Schritt: Kleine, testbare Einheiten —
-   keine mehrfachen großen Änderungen auf einmal.
-3. Nicht im Kreis drehen: Nach zwei erfolglosen Versuchen
-   Ursache analysieren und anderen Ansatz vorschlagen.
-   Nie tiefer in eine falsche Richtung.
-4. Fehler erklären: Immer die Ursache benennen,
-   nicht nur den Fix liefern.
-5. Irreversible Aktionen immer bestätigen lassen:
-   Datenlöschung, Massenversand, Deployments, DNS-Änderungen.
-6. Unklar = nachfragen. Nicht mit Annahmen weiterarbeiten.
-
----
-
-## Karpathy-Prinzipien gegen typische LLM-Coding-Fehler
-
-Quelle: multica-ai/andrej-karpathy-skills (184k Stars)
-Kompromiss: Diese Regeln bevorzugen Sorgfalt über Geschwindigkeit.
-Bei trivialen Aufgaben mit Augenmaß anwenden.
-
-### 1. Erst denken, dann coden
-
-Keine Annahmen. Keine versteckte Unsicherheit. Abwägungen offen benennen.
-
-- Annahmen explizit nennen. Bei Unsicherheit: nachfragen.
-- Mehrere Interpretationen vorlegen — nicht still eine wählen.
-- Wenn ein einfacherer Ansatz existiert: sagen. Widersprechen, wenn angebracht.
-- Bei Unklarheit stoppen. Benennen, was unklar ist. Fragen.
-
-### 2. Einfachheit zuerst
-
-Minimaler Code, der das Problem löst. Nichts Spekulatives.
-
-- Keine Features über den Auftrag hinaus.
-- Keine Abstraktionen für einmalig genutzten Code.
-- Keine "Flexibilität" oder "Konfigurierbarkeit", die nicht verlangt wurde.
-- Keine Fehlerbehandlung für unmögliche Szenarien.
-- Wenn 200 Zeilen auch 50 sein könnten: umschreiben.
-
-Prüffrage: "Würde ein Senior Engineer das zu kompliziert nennen?" — Wenn ja: vereinfachen.
-
-### 3. Chirurgische Änderungen
-
-Nur anfassen, was geändert werden muss. Nur den eigenen Schmutz aufräumen.
-
-- Keinen angrenzenden Code, Kommentare oder Formatierungen "verbessern".
-- Nichts refactoren, was nicht kaputt ist.
-- Bestehenden Stil übernehmen, auch wenn man es anders täte.
-- Ungenutzten Code, der auffällt, erwähnen — nicht still löschen.
-
-Durch eigene Änderungen verwaiste Imports/Variablen/Funktionen entfernen.
-Vorher existierenden toten Code nur auf explizite Anfrage entfernen.
-
-Test: Jede geänderte Zeile muss direkt auf den Auftrag zurückführbar sein.
-
-### 4. Zielorientierte Ausführung
-
-Erfolgskriterien definieren. Wiederholen bis verifiziert.
-
-Aufgaben in prüfbare Ziele übersetzen:
-- "Validierung hinzufügen" → "Tests für ungültige Eingaben schreiben, dann bestehen lassen"
-- "Bug fixen" → "Test schreiben, der ihn reproduziert, dann bestehen lassen"
-- "X refactoren" → "Tests müssen vor und nach dem Refactoring bestehen"
-
-Bei Mehrschritt-Aufgaben kurzen Plan benennen:
-1. [Schritt] → prüfen: [Kriterium]
-2. [Schritt] → prüfen: [Kriterium]
-3. [Schritt] → prüfen: [Kriterium]
-
-Starke Erfolgskriterien ermöglichen selbstständige Iteration.
-Schwache Kriterien ("mach es lauffähig") erfordern ständige Rückfragen.
+- Produktions-Instanz: n8n.ak-assistance.de (Zugriff via n8n-MCP).
+- n8n v2.0: Workflow aktivieren = "Publish"-Button, kein Active-Toggle.
+- Workflows erst bauen, dann unabhängig reviewen (/n8n-review).
+- Workflow-Änderungen als JSON-Export in `n8n-workflows/` versionieren.
