@@ -55,7 +55,8 @@ describe("config (Env-Validierung via Zod)", () => {
   });
 
   it("beendet den Prozess (exit 1) bei fehlender Pflicht-Variable", async () => {
-    const { ANTHROPIC_API_KEY: _weg, ...unvollstaendig } = PFLICHT_VARS;
+    const unvollstaendig = { ...PFLICHT_VARS };
+    delete unvollstaendig.ANTHROPIC_API_KEY;
     Object.assign(process.env, unvollstaendig);
 
     const exitSpy = vi

@@ -72,6 +72,30 @@ describe("extractCallData", () => {
     expect(daten.appointmentRequested).toBe(false);
   });
 
+  it("lässt ein Monatsnamen-Datum nicht von einem Preis verdrängen", () => {
+    const daten = extractCallData(
+      ereignis({ transcript: "Termin am 3. Juli, das kostet 12.50." })
+    );
+
+    expect(daten.appointmentDate).toBe("3. Juli");
+  });
+
+  it("lässt ein Monatsnamen-Datum nicht von einer Nummernfolge verdrängen", () => {
+    const daten = extractCallData(
+      ereignis({ transcript: "Kundennummer 12.34.56, Termin am 5. August" })
+    );
+
+    expect(daten.appointmentDate).toBe("5. August");
+  });
+
+  it("erkennt Monatsnamen-Datum mit Jahr ('am 3. Juli 2026')", () => {
+    const daten = extractCallData(
+      ereignis({ transcript: "Wir kommen am 3. Juli 2026 vorbei." })
+    );
+
+    expect(daten.appointmentDate).toBe("3. Juli 2026");
+  });
+
   it("erkennt einteilige Namen ('ich heiße Petra')", () => {
     const daten = extractCallData(ereignis({ transcript: "Ja hallo, ich heiße Petra." }));
 
