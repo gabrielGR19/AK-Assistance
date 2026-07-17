@@ -6,7 +6,11 @@ const NAME_PATTERNS = [
 ];
 
 const DATE_PATTERNS = [
-  /(?:am|den|für den|nächsten?)\s+(\d{1,2}\.\s*(?:januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|\d{1,2})(?:\s*\d{4})?)/i,
+  // Das verankerte Pattern ("am/den ...") muss zuerst stehen: das numerische
+  // Pattern darunter ist unverankert und würde sonst jede dd.dd.-Sequenz im
+  // Transkript (z.B. Preise wie "12.50.") einem echten Datum vorziehen.
+  // \.? vor der Jahreszahl, damit bei "am 12.05.2026" das Jahr erhalten bleibt.
+  /(?:am|den|für den|nächsten?)\s+(\d{1,2}\.\s*(?:januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|\d{1,2})(?:\.?\s*\d{4})?)/i,
   /(\d{1,2}\.\d{1,2}\.(?:\d{4})?)/,
 ];
 

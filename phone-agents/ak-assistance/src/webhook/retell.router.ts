@@ -14,7 +14,14 @@ function verifyRetellSignature(req: Request): boolean {
   hmac.update(JSON.stringify(req.body));
   const expected = hmac.digest("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  const signatureBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+
+  // timingSafeEqual wirft bei unterschiedlicher Länge — Längen vorher prüfen,
+  // damit der Handler nie eine unbehandelte Exception auslöst.
+  if (signatureBuffer.length !== expectedBuffer.length) return false;
+
+  return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
 }
 
 retellRouter.post("/", async (req: Request, res: Response) => {
