@@ -28,11 +28,7 @@ describe("extractCallData", () => {
     );
 
     expect(daten.customerName).toBe("Max Mustermann");
-    // BEFUND (src nicht geändert, Guardrail): Das erste DATE_PATTERN greift
-    // vor dem zweiten und schneidet bei "am 12.05.2026" das Jahr ab, weil
-    // (?:\s*\d{4})? den Punkt vor der Jahreszahl nicht matcht.
-    // Erwartet wäre "12.05.2026" — Ist-Verhalten: "12.05".
-    expect(daten.appointmentDate).toBe("12.05");
+    expect(daten.appointmentDate).toBe("12.05.2026");
     expect(daten.appointmentRequested).toBe(true);
     expect(daten.summary).toBe("Kunde wünscht Reparaturtermin.");
     expect(daten.customerPhone).toBe("+491701234567");

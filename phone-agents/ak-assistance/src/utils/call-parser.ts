@@ -6,8 +6,11 @@ const NAME_PATTERNS = [
 ];
 
 const DATE_PATTERNS = [
-  /(?:am|den|für den|nächsten?)\s+(\d{1,2}\.\s*(?:januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|\d{1,2})(?:\s*\d{4})?)/i,
+  // Numerisches Datum zuerst prüfen, da das nachfolgende Pattern sonst
+  // bei z.B. "12.05.2026" das Jahr abschneidet (Punkt vor der Jahreszahl
+  // wird von \s* nicht erfasst).
   /(\d{1,2}\.\d{1,2}\.(?:\d{4})?)/,
+  /(?:am|den|für den|nächsten?)\s+(\d{1,2}\.\s*(?:januar|februar|märz|april|mai|juni|juli|august|september|oktober|november|dezember|\d{1,2})(?:\s*\d{4})?)/i,
 ];
 
 export function extractCallData(event: RetellCallEndedEvent): CallSummaryData {

@@ -90,23 +90,16 @@ describe("Retell-Webhook Signaturprüfung", () => {
     expect(antwort.status).toBe(401);
   });
 
-  // BEFUND (src nicht geändert, Guardrail): crypto.timingSafeEqual wirft bei
-  // unterschiedlich langen Buffern eine RangeError. Da der Route-Handler async
-  // ist und Express 4 rejected Promises nicht fängt, wird die Exception zur
-  // unbehandelten Rejection — der Request bekommt NIE eine Antwort (weder 401
-  // noch 500). Der Test dokumentiert das Ist-Verhalten: Timeout statt Antwort.
-  it("Ist-Verhalten: Signatur mit falscher Länge → keine Antwort (sollte 401 sein)", async () => {
-    process.on("unhandledRejection", () => {}); // erwartete Rejection nicht als Testfehler werten
-    await expect(
-      fetch(basisUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-retell-signature": "zu-kurz",
-        },
-        body: JSON.stringify(beispielEvent),
-        signal: AbortSignal.timeout(1000),
-      })
-    ).rejects.toThrow(/timeout|abort/i);
+  it("lehnt eine Signatur mit falscher Länge ab (401)", async () => {
+    const antwort = await fetch(basisUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-retell-signature": "zu-kurz",
+      },
+      body: JSON.stringify(beispielEvent),
+    });
+
+    expect(antwort.status).toBe(401);
   });
 });
