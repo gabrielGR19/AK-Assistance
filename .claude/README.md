@@ -19,10 +19,12 @@
         └── references/     # Optional. Zusätzliche Dateien.
 ```
 
-**Setup für ein neues Teammitglied:** Repo klonen, Claude Code
-installieren, fertig — settings.json, Hooks und Skills wirken
-automatisch. Für Deployments zusätzlich SSH-Key `~/.ssh/hetzner_deploy`
-von Gabriel erhalten.
+**Setup für ein Teammitglied mit Claude Code:** Repo einmal frisch
+klonen (bzw. `git pull`, falls schon vorhanden) und Claude Code im
+Repo-Ordner starten — settings.json, Hooks und Skills wirken
+automatisch, keine Installation oder Extra-Konfiguration nötig.
+Für Deployments zusätzlich SSH-Key `~/.ssh/hetzner_deploy` von
+Gabriel erhalten.
 
 ## Skill erstellen
 
