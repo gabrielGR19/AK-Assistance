@@ -5,12 +5,24 @@
 ```
 .claude/
 ├── README.md              # Diese Datei
+├── settings.json          # Geteilte Team-Konfiguration (im Git): Hooks für
+│                          # Auto-Pull (SessionStart), Auto-Push (Stop),
+│                          # Secrets-Schutz und Produktions-Schutz (PreToolUse)
 ├── settings.local.json    # Lokale Permissions (nicht im Git!)
+├── hooks/                 # Geteilte Hook-Skripte (im Git)
+│   ├── schutz-secrets.py     # Blockiert Änderungen an .env & Co.
+│   └── schutz-produktion.py  # Fragt nach bei riskanten Server-/Git-Befehlen
 └── skills/                # Agent Skills
+    ├── deploy/            # Pflicht-Ablauf für jedes Server-Deployment
     └── <skill-name>/      # Jeder Skill = ein Verzeichnis
         ├── SKILL.md        # Pflicht. Frontmatter + Anweisungen.
         └── references/     # Optional. Zusätzliche Dateien.
 ```
+
+**Setup für ein neues Teammitglied:** Repo klonen, Claude Code
+installieren, fertig — settings.json, Hooks und Skills wirken
+automatisch. Für Deployments zusätzlich SSH-Key `~/.ssh/hetzner_deploy`
+von Gabriel erhalten.
 
 ## Skill erstellen
 
