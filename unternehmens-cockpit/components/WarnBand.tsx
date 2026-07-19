@@ -1,6 +1,7 @@
 import type { Warnung } from "@/lib/checks";
 
-// Warnband ganz oben — die "Warnleuchte". Ohne Warnungen ein ruhiger grüner Zustand.
+// Kompaktes Warnband: eine ruhige Zeile, die zusammenfasst statt zu drängen.
+// Details klappen erst auf Klick auf — die Startseite bleibt aufgeräumt.
 export function WarnBand({ warnungen }: { warnungen: Warnung[] }) {
   if (warnungen.length === 0) {
     return (
@@ -14,14 +15,19 @@ export function WarnBand({ warnungen }: { warnungen: Warnung[] }) {
   }
 
   const anzahl = warnungen.length;
+  const kritisch = warnungen.some((w) => w.schwere === "hoch");
+  const zusammenfassung = warnungen.map((w) => w.titel).join(" · ");
+
   return (
-    <section className="warnband" aria-label="Warnungen">
-      <div className="warnband__kopf">
+    <details className={`warnband${kritisch ? " warnband--kritisch" : ""}`}>
+      <summary className="warnband__kopf">
         <span className="warnband__leuchte" aria-hidden="true" />
         <span className="warnband__titel">
           {anzahl} Warnung{anzahl === 1 ? "" : "en"}
         </span>
-      </div>
+        <span className="warnband__zusammenfassung">{zusammenfassung}</span>
+        <span className="warnband__pfeil">Details</span>
+      </summary>
       <ul className="warnliste">
         {warnungen.map((w, i) => (
           <li key={`${w.dienstId}-${i}`} className="warnzeile">
@@ -33,6 +39,6 @@ export function WarnBand({ warnungen }: { warnungen: Warnung[] }) {
           </li>
         ))}
       </ul>
-    </section>
+    </details>
   );
 }

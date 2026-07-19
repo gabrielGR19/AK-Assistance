@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { CockpitData, Dienst, DienstEingabe } from "@/lib/types";
 import type { LiveInfo } from "@/lib/live/runner";
 import { berechneKosten } from "@/lib/costs";
-import { berechneWarnungen } from "@/lib/checks";
-import { WarnBand } from "@/components/WarnBand";
 import { KostenHero } from "@/components/KostenHero";
 import { DienstTabelle } from "@/components/DienstTabelle";
 import { DienstFormular } from "@/components/DienstFormular";
@@ -24,7 +22,7 @@ const LEER: DienstEingabe = {
   notiz: "",
 };
 
-export default function Cockpit() {
+export default function KostenSeite() {
   const [daten, setDaten] = useState<CockpitData | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [formular, setFormular] = useState<DienstEingabe>(LEER);
@@ -60,9 +58,8 @@ export default function Cockpit() {
     }
   }
 
-  // Kosten und Warnungen aus den reinen Funktionen ableiten (eine Quelle der Wahrheit).
+  // Kosten aus der reinen Funktion ableiten (eine Quelle der Wahrheit).
   const kosten = useMemo(() => (daten ? berechneKosten(daten) : null), [daten]);
-  const warnungen = useMemo(() => (daten ? berechneWarnungen(daten) : []), [daten]);
   const kostenIndex = useMemo(
     () => new Map((kosten?.proDienst ?? []).map((k) => [k.id, k])),
     [kosten],
@@ -194,21 +191,13 @@ export default function Cockpit() {
 
   return (
     <main className="shell">
-      <header className="kopf">
-        <div className="marke">
-          <span className="marke__punkt" aria-hidden="true" />
-          <span className="marke__name">AK Assistance</span>
-          <span className="marke__sub">Betriebs-Cockpit</span>
-        </div>
-        <div className="kopf__meta">
-          <a className="btn btn--klein" href="/report">
-            Report / Druckansicht
-          </a>
+      <header className="seitenkopf">
+        <h1 className="seitenkopf__titel">Kosten</h1>
+        <div className="seitenkopf__meta">
+          <a className="btn btn--klein" href="/report">Report / Druckansicht</a>
           <span>Stand {heute}</span>
         </div>
       </header>
-
-      <WarnBand warnungen={warnungen} />
 
       <KostenHero kosten={kosten} meta={daten.meta} onKursSpeichern={kursSpeichern} />
 

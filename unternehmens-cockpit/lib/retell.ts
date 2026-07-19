@@ -1,6 +1,6 @@
-// Client für die Retell.ai-API (POST /v3/list-calls), um die Call-Kosten des laufenden
-// Monats zu summieren. Retell rechnet verbrauchsbasiert ab; einen Kontostand-Endpoint gibt
-// es nicht — daher: alle Calls seit Monatsanfang holen und ihre Kosten aufaddieren.
+// Client für die Retell.ai-API (POST /v3/list-calls), um Call-Kosten zusammenzufassen.
+// Retell rechnet verbrauchsbasiert ab; einen Kontostand-Endpoint gibt es nicht — daher:
+// alle Calls im gewünschten Zeitraum holen und ihre Kosten/Dauer aufaddieren.
 //
 // Sicherheit: Der API-Key wird AUSSCHLIESSLICH serverseitig aus process.env gelesen,
 // niemals geloggt, niemals ins Frontend serialisiert. Diese Datei läuft nur serverseitig.
@@ -17,10 +17,18 @@ export interface RetellErgebnis {
   fehler: string | null; // kurze, key-freie Fehlerbeschreibung
 }
 
-// Summiert die combined_cost (Cent) aller Calls einer Antwortseite.
-function summiereSeite(calls: unknown): number {
+// Rohes Ergebnis eines Zeitraum-Abrufs: alle Call-Objekte, unverarbeitet, für Aufrufer,
+// die mehr als nur die Gesamtsumme brauchen (z.B. Aufschlüsselung pro Kunde/Agent).
+export interface RetellCallsErgebnis {
+  ok: boolean;
+  calls: unknown[];
+  keinKey: boolean;
+  fehler: string | null;
+}
+
+// Summiert die combined_cost (Cent) einer Liste von Calls.
+function summiereCent(calls: unknown[]): number {
   let cent = 0;
-  if (!Array.isArray(calls)) return 0;
   for (const c of calls) {
     const wert = (c as { call_cost?: { combined_cost?: number } })?.call_cost?.combined_cost;
     if (typeof wert === "number" && Number.isFinite(wert)) cent += wert;
@@ -28,18 +36,18 @@ function summiereSeite(calls: unknown): number {
   return cent;
 }
 
-// Ruft die Gesamtkosten aller Calls ab, deren Startzeit ≥ `startEpochMs` liegt (bis jetzt).
-// Defensive Fehlerbehandlung: fehlender Key, Timeout, HTTP-Fehler und kaputtes JSON werden
-// abgefangen und gemeldet, nie wird der Key preisgegeben.
-export async function holeVerbrauchMonat(startEpochMs: number): Promise<RetellErgebnis> {
+// Holt ALLE Calls, deren Startzeit im Bereich [vonMs, bisMs) liegt, über alle Seiten hinweg.
+// Gemeinsame Grundlage für die Gesamtkosten-Summe (holeVerbrauchMonat) und die
+// Pro-Kunde-Aufschlüsselung (siehe lib/retell-kunden.ts) — Netzwerk-, Timeout- und
+// Paginierungslogik soll es nur an einer Stelle geben.
+export async function holeAlleCallsImZeitraum(vonMs: number, bisMs: number): Promise<RetellCallsErgebnis> {
   const key = process.env.RETELL_API_KEY;
   if (!key) {
-    return { ok: false, verbrauchUsd: null, keinKey: true, fehler: "Kein Retell-API-Key in .env.local." };
+    return { ok: false, calls: [], keinKey: true, fehler: "Kein Retell-API-Key in .env.local." };
   }
 
-  const jetzt = Date.now();
   let paginationKey: string | null = null;
-  let centSumme = 0;
+  const alleCalls: unknown[] = [];
 
   try {
     for (let i = 0; i < MAX_SEITEN; i++) {
@@ -47,7 +55,7 @@ export async function holeVerbrauchMonat(startEpochMs: number): Promise<RetellEr
         limit: SEITEN_LIMIT,
         sort_order: "descending",
         filter_criteria: {
-          start_timestamp: { type: "range", op: "bt", value: [startEpochMs, jetzt] },
+          start_timestamp: { type: "range", op: "bt", value: [vonMs, bisMs] },
         },
       };
       if (paginationKey) body.pagination_key = paginationKey;
@@ -70,15 +78,15 @@ export async function holeVerbrauchMonat(startEpochMs: number): Promise<RetellEr
         // Statuscode ist unkritisch, der Key steht nicht in der Meldung.
         return {
           ok: false,
-          verbrauchUsd: null,
+          calls: alleCalls,
           keinKey: false,
           fehler: `Retell-API antwortete mit HTTP ${res.status}.`,
         };
       }
 
       const json: unknown = await res.json();
-      const calls = (json as { items?: unknown })?.items;
-      centSumme += summiereSeite(calls);
+      const items = (json as { items?: unknown })?.items;
+      if (Array.isArray(items)) alleCalls.push(...items);
 
       const hasMore = (json as { has_more?: boolean })?.has_more === true;
       const next = (json as { pagination_key?: string })?.pagination_key;
@@ -86,9 +94,18 @@ export async function holeVerbrauchMonat(startEpochMs: number): Promise<RetellEr
       paginationKey = next;
     }
 
-    return { ok: true, verbrauchUsd: centSumme / 100, keinKey: false, fehler: null };
+    return { ok: true, calls: alleCalls, keinKey: false, fehler: null };
   } catch (err) {
     const grund = err instanceof Error && err.name === "AbortError" ? "Zeitüberschreitung" : "Netzwerkfehler";
-    return { ok: false, verbrauchUsd: null, keinKey: false, fehler: `Retell-API nicht erreichbar (${grund}).` };
+    return { ok: false, calls: alleCalls, keinKey: false, fehler: `Retell-API nicht erreichbar (${grund}).` };
   }
+}
+
+// Ruft die Gesamtkosten aller Calls ab, deren Startzeit ≥ `startEpochMs` liegt (bis jetzt).
+export async function holeVerbrauchMonat(startEpochMs: number): Promise<RetellErgebnis> {
+  const ergebnis = await holeAlleCallsImZeitraum(startEpochMs, Date.now());
+  if (!ergebnis.ok) {
+    return { ok: false, verbrauchUsd: null, keinKey: ergebnis.keinKey, fehler: ergebnis.fehler };
+  }
+  return { ok: true, verbrauchUsd: summiereCent(ergebnis.calls) / 100, keinKey: false, fehler: null };
 }

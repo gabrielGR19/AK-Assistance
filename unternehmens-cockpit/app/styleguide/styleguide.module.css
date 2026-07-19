@@ -1,0 +1,281 @@
+/* Helles Ziel-Design-System — isoliert in einer eigenen Scope-Klasse (.sg), damit es das
+   bestehende dunkle Cockpit nicht berührt. Bei Freigabe wandern diese Tokens 1:1 in
+   globals.css und ersetzen die dunklen Werte dort. */
+
+.sg {
+  --page: #ffffff;
+  --surface: #ffffff;
+  --surface-sunken: #f7f7f8;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #18181b;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+
+  --accent: #f47321;
+  --accent-weich: #f473211a;
+  --accent-text-auf-hell: #b5540f;
+
+  --ok-text: #15803d;
+  --ok-bg: #dcfce7;
+  --ok-dot: #22c55e;
+  --beobachten-text: #b45309;
+  --beobachten-bg: #fef3c7;
+  --beobachten-dot: #f59e0b;
+  --handlung-text: #b91c1c;
+  --handlung-bg: #fee2e2;
+  --handlung-dot: #ef4444;
+
+  --radius: 10px;
+  --radius-klein: 6px;
+  --schatten-popover: 0 4px 16px #00000014, 0 1px 2px #00000010;
+
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  padding: 32px;
+  min-height: 100vh;
+}
+
+.sg :is(h1, h2, h3) { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+.sg .mono { font-family: var(--font-mono, ui-monospace, monospace); font-variant-numeric: tabular-nums; }
+
+.intro {
+  max-width: 720px;
+  margin-bottom: 40px;
+}
+.intro h1 { font-size: 24px; margin-bottom: 8px; }
+.intro p { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin: 6px 0 0; }
+.intro .badge {
+  display: inline-block;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-text-auf-hell);
+  background: var(--accent-weich);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin-bottom: 12px;
+}
+
+.abschnitt { margin-bottom: 48px; }
+.abschnittTitel {
+  font-size: 13px;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Farbpalette */
+.swatchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.swatch {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-klein);
+  overflow: hidden;
+  background: var(--surface);
+}
+.swatchFarbe { height: 56px; }
+.swatchLabel { padding: 8px 10px; }
+.swatchName { font-size: 12px; font-weight: 600; }
+.swatchHex { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--text-faint); }
+
+/* Typografie */
+.typoZeile {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.typoLabel {
+  width: 160px;
+  flex: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.typoDisplay { font-size: 44px; font-weight: 600; letter-spacing: -0.02em; }
+.typoH1 { font-size: 22px; font-weight: 600; }
+.typoH2 { font-size: 15px; font-weight: 600; }
+.typoBody { font-size: 14px; }
+.typoMeta { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono, monospace); letter-spacing: 0.04em; }
+
+/* Ampel / Status-Badge */
+.ampel { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; }
+.ampelPunkt { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ampelPunkt--ok { background: var(--ok-dot); }
+.ampelPunkt--beobachten { background: var(--beobachten-dot); }
+.ampelPunkt--handlung { background: var(--handlung-dot); }
+.ampelText--ok { color: var(--ok-text); }
+.ampelText--beobachten { color: var(--beobachten-text); }
+.ampelText--handlung { color: var(--handlung-text); }
+
+.pillReihe { display: flex; gap: 10px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 11px 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pill--ok { background: var(--ok-bg); color: var(--ok-text); }
+.pill--beobachten { background: var(--beobachten-bg); color: var(--beobachten-text); }
+.pill--handlung { background: var(--handlung-bg); color: var(--handlung-text); }
+.pillPunkt { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Metric Cards */
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.metricCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.metricLabel {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+.metricWert {
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.metricFuss { margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+
+/* Listenzeilen */
+.karte {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.zeile {
+  display: grid;
+  grid-template-columns: 8px 1.4fr 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+}
+.zeile + .zeile { border-top: 1px solid var(--border); }
+.zeile:hover { background: var(--surface-sunken); }
+.zeilePunkt { width: 8px; height: 8px; border-radius: 50%; }
+.zeileName { font-size: 14px; font-weight: 600; }
+.zeileKontext { font-size: 12px; color: var(--text-muted); }
+.zeileWert { font-family: var(--font-mono, monospace); font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; }
+
+/* Filter-Chips */
+.chip {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.chip--aktiv { border-color: var(--accent); color: var(--accent-text-auf-hell); background: var(--accent-weich); }
+
+/* Buttons */
+.btnReihe { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn {
+  font-family: inherit;
+  border-radius: var(--radius-klein);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  background: var(--surface);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.btn--primaer { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn--gefahr { border-color: var(--handlung-text); color: var(--handlung-text); background: var(--surface); }
+.btn--klein { padding: 5px 10px; font-size: 12px; }
+
+/* Sidebar-Mock */
+.mockShell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+.mockSidebar {
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--border);
+  padding: 18px 14px;
+}
+.mockMarke { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; }
+.mockMarkePunkt { width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+.mockMarkeName { font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+.mockNavItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius-klein);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.mockNavItem--aktiv { background: var(--accent-weich); color: var(--accent-text-auf-hell); font-weight: 600; }
+.mockNavZaehler {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--handlung-bg);
+  color: var(--handlung-text);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.mockContent { padding: 20px; }
+.mockWarnband {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--beobachten-bg);
+  background: var(--beobachten-bg);
+  color: var(--beobachten-text);
+  border-radius: var(--radius-klein);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.mockZweiSpalten {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+.mockSpaltenTitel { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+@media (max-width: 860px) {
+  .metricGrid { grid-template-columns: repeat(2, 1fr); }
+  .mockShell, .mockZweiSpalten { grid-template-columns: 1fr; }
+}

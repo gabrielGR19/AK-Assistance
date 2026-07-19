@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { ladeDaten, speichereDaten } from "@/lib/db";
-import { berechneRest } from "@/lib/live/claude-provider";
+import { fuehreLiveAbrufAus } from "@/lib/live/runner";
+import { claudeProvider, berechneRest } from "@/lib/live/claude-provider";
 import type { CockpitData, Dienst } from "@/lib/types";
 
 // Findet den Claude-API-Dienst (der einzige mit gesetztem `claude`-Objekt).
@@ -57,5 +58,26 @@ export async function PUT(request: NextRequest) {
   } catch (err) {
     console.error("Fehler beim Speichern der Claude-Einstellungen:", err);
     return Response.json({ fehler: "Einstellungen konnten nicht gespeichert werden." }, { status: 500 });
+  }
+}
+
+// POST /api/claude — Live-Abruf des Verbrauchs seit Basis-Datum über die Cost-API.
+export async function POST() {
+  try {
+    const daten = await ladeDaten();
+    const d = findeClaude(daten);
+    if (!d || !d.claude) {
+      return Response.json({ fehler: "Claude-Dienst nicht gefunden." }, { status: 404 });
+    }
+
+    const ergebnis = await fuehreLiveAbrufAus(daten, d, claudeProvider);
+    if (ergebnis.typ === "voraussetzung_fehlt") {
+      return Response.json({ fehler: ergebnis.fehler }, { status: 400 });
+    }
+
+    return Response.json({ daten: ergebnis.daten, live: ergebnis.live });
+  } catch (err) {
+    console.error("Fehler beim Live-Abruf des Claude-Verbrauchs:", err);
+    return Response.json({ fehler: "Live-Abruf fehlgeschlagen." }, { status: 500 });
   }
 }
