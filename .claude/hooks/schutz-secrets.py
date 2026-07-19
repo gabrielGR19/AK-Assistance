@@ -30,8 +30,10 @@ MUSTER = [
 # das fängt der Git-Secrets-Check vor dem Commit.
 AUSNAHMEN = ["*.example", "*.sample", "*.template"]
 
-# Operatoren, die in Bash auf einen Schreib-/Löschzugriff hindeuten
-SCHREIB_OP = re.compile(r"(?:>{1,2}|\btee\b|\bcp\b|\bmv\b|\brm\b|\bsed\s+(-\S*\s+)*-i\b|\btruncate\b|\bln\b)")
+# Operatoren, die in Bash auf einen Schreib-/Löschzugriff hindeuten.
+# ">(?!&)" nimmt Stream-Duplikation wie 2>&1 aus (schreibt keine Datei);
+# "2> datei" bleibt erfasst.
+SCHREIB_OP = re.compile(r"(?:>{1,2}(?!&)|\btee\b|\bcp\b|\bmv\b|\brm\b|\bsed\s+(-\S*\s+)*-i\b|\btruncate\b|\bln\b)")
 
 # Quoted-Abschnitte ('…' oder "…") — Operatoren darin sind Daten (z.B.
 # grep-Muster wie "^[<>ch]"), keine Shell-Operatoren.
