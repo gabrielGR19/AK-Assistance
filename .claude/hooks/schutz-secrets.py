@@ -25,13 +25,42 @@ MUSTER = [
     "credentials", "credentials.json", "serviceaccount*.json",
 ]
 
+# Vorlagen-Dateien sind keine Secrets: sie dokumentieren nur Variablennamen
+# und liegen bewusst im Git. Echte Werte gehören trotzdem nie hinein —
+# das fängt der Git-Secrets-Check vor dem Commit.
+AUSNAHMEN = ["*.example", "*.sample", "*.template"]
+
 # Operatoren, die in Bash auf einen Schreib-/Löschzugriff hindeuten
 SCHREIB_OP = re.compile(r"(?:>{1,2}|\btee\b|\bcp\b|\bmv\b|\brm\b|\bsed\s+(-\S*\s+)*-i\b|\btruncate\b|\bln\b)")
+
+# Quoted-Abschnitte ('…' oder "…") — Operatoren darin sind Daten (z.B.
+# grep-Muster wie "^[<>ch]"), keine Shell-Operatoren.
+QUOTED = re.compile(r"'[^']*'|\"[^\"]*\"")
 
 
 def geschuetzt(pfad: str) -> bool:
     name = os.path.basename(pfad.rstrip("/")).casefold()
+    if any(fnmatch.fnmatch(name, a) for a in AUSNAHMEN):
+        return False
     return any(fnmatch.fnmatch(name, m) for m in MUSTER)
+
+
+def relevante_tokens(tokens: list) -> list:
+    # Argumente von --exclude/--exclude-from überspringen: ein Exclude
+    # schützt die Datei vor dem Zugriff, statt sie zu schreiben.
+    ergebnis = []
+    ueberspringen = False
+    for t in tokens:
+        if ueberspringen:
+            ueberspringen = False
+            continue
+        if t in ("--exclude", "--exclude-from"):
+            ueberspringen = True
+            continue
+        if t.startswith("--exclude=") or t.startswith("--exclude-from="):
+            continue
+        ergebnis.append(t)
+    return ergebnis
 
 
 def blockieren(grund: str):
@@ -55,12 +84,12 @@ tool_input = daten.get("tool_input", {})
 
 if tool == "Bash":
     kommando = tool_input.get("command", "")
-    if SCHREIB_OP.search(kommando):
+    if SCHREIB_OP.search(QUOTED.sub(" ", kommando)):
         try:
             tokens = shlex.split(kommando)
         except ValueError:
             tokens = kommando.split()
-        for t in tokens:
+        for t in relevante_tokens(tokens):
             if geschuetzt(t):
                 blockieren(f"Bash-Kommando schreibt/löscht mutmaßlich '{os.path.basename(t)}'.")
 else:
