@@ -64,7 +64,11 @@ brauchen ihre eigene Bestätigung — genau so ist der Incident passiert.
 
 Denselben rsync-Befehl wie im Dry-Run, nur ohne `-n` — keine spontanen
 Zusatz-Flags oder Extra-Befehle, die nicht im gezeigten Diff waren.
-Danach Build/Neustart (z.B. `/root/redeploy-cockpit.sh`). Schlägt der
+Danach Build/Neustart (z.B. `/root/redeploy-cockpit.sh`). Server-seitige
+Skripte (redeploy, sync, cron) vor der ersten Ausführung in der Session
+per `cat` lesen — sie können von anderen geändert worden sein und
+Nebenwirkungen enthalten (Beinahe-Fehler 2026-07-19: redeploy-Skript
+rief deaktivierte Git-Sync-Skripte wieder auf). Schlägt der
 Build fehl: NICHT improvisieren — Fehler analysieren, Gabriel informieren,
 ggf. Backup aus Schritt 2 zurückspielen.
 
