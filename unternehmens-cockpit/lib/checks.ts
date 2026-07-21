@@ -57,8 +57,21 @@ export function berechneWarnungen(daten: CockpitData, heute: Date = new Date()):
       }
     }
 
-    // 3) Claude-API: geschätztes Restguthaben unter Schwelle
+    // 3) Claude-API: Alarm strukturell inaktiv, weil kein Basis-Guthaben gepflegt ist
     const c = d.claude;
+    if (c && c.schwelleUsd != null && c.guthabenBasisUsd == null) {
+      warnungen.push({
+        dienstId: d.id,
+        dienstName: d.name,
+        schwere: "mittel",
+        titel: `${d.name}: Basis-Guthaben nicht gepflegt — Alarm inaktiv`,
+        detail:
+          `Schwelle ist auf ${c.schwelleUsd.toFixed(2)} USD gesetzt, aber ohne Basis-Guthaben kann kein ` +
+          `Restguthaben geschätzt werden. Bitte "Basis-Guthaben (USD)" im Cockpit eintragen.`,
+      });
+    }
+
+    // 4) Claude-API: geschätztes Restguthaben unter Schwelle
     if (c && c.schwelleUsd != null && c.restguthabenGeschaetztUsd != null) {
       if (c.restguthabenGeschaetztUsd < c.schwelleUsd) {
         warnungen.push({
