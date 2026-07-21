@@ -3,7 +3,7 @@ import { cronSecretGueltig } from "./lib/cron-auth";
 
 // Pfade, die ein Crontab-Skript (statt eines Browsers) mit korrektem Cron-Secret-Header
 // ohne Basic-Auth aufrufen darf — z.B. für periodischen Live-Refresh und Erinnerungs-Check.
-const CRON_PFADE = ["/api/live/refresh", "/api/reminders", "/api/retell/kunden/freeze", "/api/alerts/scan"];
+const CRON_PFADE = ["/api/live/refresh", "/api/reminders", "/api/retell/kunden/freeze", "/api/alerts/scan", "/api/checks"];
 
 // Basic-Auth-Schutz für das gesamte Cockpit. Aktiv nur, wenn COCKPIT_PASSWORT gesetzt ist —
 // so bleibt die lokale Entwicklung ohne Passwort offen, die Produktion (mit gesetztem
