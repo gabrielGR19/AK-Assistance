@@ -177,10 +177,14 @@ function befundeFuerCall(call: RetellCall): Befund[] {
   }
 
   // 🔴 Pflicht-log_call fehlte (nur bei Agenten, deren Flow das vorsieht)
+  // Auflegen des Anrufers wird seit dem Call-Ende-Sicherheitsnetz (n8n-Webhook
+  // retell-call-ended) automatisch protokolliert — nur reguläre Gesprächsenden
+  // ohne log_call sind noch ein echter Fehler.
   if (
     LOG_PFLICHT_AGENT_IDS.has(call.agent_id) &&
     dauer >= LOG_MIN_DAUER_MS &&
     analyse.in_voicemail !== true &&
+    call.disconnection_reason !== "user_hangup" &&
     !toolCalls.some((tc) => tc.name === "log_call")
   ) {
     befunde.push({
