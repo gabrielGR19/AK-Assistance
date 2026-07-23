@@ -11,8 +11,21 @@ mindestens die Team-Regeln unten.
 - **Git-Fluss:** Sessionstart = automatischer Pull (Hook), Sessionende =
   automatischer Push committeter Arbeit (Hook). Jede fertige
   Funktionseinheit sofort committen — nichts bleibt uncommitted liegen.
-  Vor größeren Änderungen eigenen Branch erstellen. Gemergte Branches
-  nie löschen.
+  Gemergte Branches nie löschen.
+- **main ist geschützt (GitHub-Ruleset "main-schutz", seit 23.07.2026):**
+  keine Direkt-Pushes, keine Force-Pushes, kein Löschen — für niemanden,
+  auch nicht für Admins. Änderungen erreichen main ausschließlich per
+  Pull Request (Hintergrund: Force-Push-Incident 23.07.2026, alter
+  Replit-Klon hätte fast 5 Wochen Arbeit überschrieben).
+- **Jede Arbeit startet auf einem Feature-Branch** (feature/…, fix/…,
+  chore/…), nie auf main. Der Sessionende-Hook pusht den Branch
+  automatisch zu GitHub — so ist jeder Arbeitsstand gesichert, auch
+  unfertiger. Gemergt wird erst, wenn die Arbeit verifiziert ist
+  (Nutzer-Flow geprüft, /abnahme): dann PR erstellen und mergen.
+- **Nie mit einem alten Klon oder Workspace arbeiten** (z.B. alte
+  Replit-Umgebung). Bei Zweifel am eigenen Stand: frisch klonen statt
+  Push erzwingen. Ein abgelehnter Push ist ein Stoppsignal, nie ein
+  Grund für --force.
 - **Niemals direkt auf dem Server entwickeln oder Dateien ändern.**
   Der Server (Hetzner) wird ausschließlich über den /deploy-Skill
   beliefert und ist kein Arbeitsort (Hintergrund: Incident 2026-07-18,

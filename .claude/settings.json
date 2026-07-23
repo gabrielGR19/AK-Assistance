@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && if [ -n \"$(git log @{u}..HEAD --oneline 2>/dev/null)\" ]; then git push 2>&1 | tail -1 | sed 's/^/[Auto-Push] /'; fi",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && b=$(git symbolic-ref --short HEAD 2>/dev/null); if [ -n \"$b\" ] && [ \"$b\" != \"main\" ]; then if git rev-parse --verify -q '@{u}' >/dev/null 2>&1; then if [ -n \"$(git log '@{u}..HEAD' --oneline 2>/dev/null)\" ]; then git push 2>&1 | tail -1 | sed 's/^/[Auto-Push] /'; fi; else git push -u origin \"$b\" 2>&1 | tail -1 | sed 's/^/[Auto-Push] /'; fi; fi",
             "timeout": 30
           }
         ]
