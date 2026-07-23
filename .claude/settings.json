@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git -C \"$CLAUDE_PROJECT_DIR\" pull --ff-only 2>&1 | tail -2 | sed 's/^/[Auto-Pull] /'",
+            "command": "br=$(git -C \"$CLAUDE_PROJECT_DIR\" symbolic-ref --short HEAD 2>/dev/null); if git -C \"$CLAUDE_PROJECT_DIR\" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then git -C \"$CLAUDE_PROJECT_DIR\" pull --ff-only 2>&1 | tail -2 | sed 's/^/[Auto-Pull] /'; elif [ -n \"$br\" ] && git -C \"$CLAUDE_PROJECT_DIR\" ls-remote --exit-code --heads origin \"$br\" >/dev/null 2>&1; then git -C \"$CLAUDE_PROJECT_DIR\" branch --set-upstream-to=\"origin/$br\" \"$br\" >/dev/null 2>&1; git -C \"$CLAUDE_PROJECT_DIR\" pull --ff-only 2>&1 | tail -2 | sed 's/^/[Auto-Pull] /'; else echo \"[Auto-Pull] Branch '$br' hat kein Tracking und kein Remote-Gegenstueck - Pull uebersprungen\"; fi",
             "timeout": 20
           }
         ]
