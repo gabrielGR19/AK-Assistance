@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
-import { RetellWebClient } from "retell-client-js-sdk";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import logoUrl from "/logo.png";
 import HeroAnimation from "./HeroAnimation";
 
-const BOOKING_URL = "https://calendar.app.google/RcAojPDZwf15KeAD9";
+const BOOKING_URL = "https://calendar.app.google/kdijYkWJyTSL5MA5A";
 
 // ── Social Proof ──────────────────────────────────────────────────────────────
 // Trage hier die aktuelle Anzahl der Betriebe ein, die AK-Assistance nutzen.
@@ -34,11 +33,20 @@ function useScrollAnimation() {
 }
 
 /* ── Side Panel ─────────────────────────────────────────── */
+const sidePanelContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055, delayChildren: 0.08 } },
+} as const;
+const sidePanelItem = {
+  hidden: { opacity: 0, x: 18 },
+  show: { opacity: 1, x: 0 },
+} as const;
+
 function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => void; darkMode: boolean }) {
   const links = [
     { label: "Das Problem", id: "problem" },
     { label: "Die Lösung", id: "loesung" },
-    { label: "Wie es funktioniert", id: "wie-es-funktioniert" },
+    { label: "Inbetriebnahme", id: "wie-es-funktioniert" },
     { label: "Kundenstimmen", id: "bewertungen" },
     { label: "Live Demo", id: "demo" },
     { label: "Pilot Programm", id: "pilot" },
@@ -51,7 +59,11 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
   const scrollTo = (id: string) => {
     onClose();
     setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
+      const el = document.getElementById(id);
+      if (!el) return;
+      const navbarHeight = 72;
+      const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
+      window.scrollTo({ top, behavior: "smooth" });
     }, 320);
   };
 
@@ -65,43 +77,58 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
           borderLeft: `1px solid ${darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
         }}
       >
-        <div className="flex justify-end mb-12">
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
-            style={{ background: "var(--muted)", color: "var(--foreground)" }}
-            aria-label="Close menu"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-        <nav className="flex flex-col gap-2">
+        <motion.nav
+          className="flex flex-col"
+          variants={sidePanelContainer}
+          initial="hidden"
+          animate={open ? "show" : "hidden"}
+        >
           {links.map((l) => (
-            <button
+            <motion.button
               key={l.id}
+              variants={sidePanelItem}
               onClick={() => scrollTo(l.id)}
-              className="text-left text-xl font-semibold py-4 border-b transition-colors"
-              style={{ color: "var(--foreground)", borderColor: "var(--border)", background: "none", border: "none", borderBottom: `1px solid var(--border)`, cursor: "pointer", padding: "16px 0" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#e8622a")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--foreground)")}
+              className="text-left text-xl font-semibold"
+              style={{
+                color: "var(--foreground)",
+                background: "none",
+                border: "none",
+                borderBottom: "1px solid var(--border)",
+                cursor: "pointer",
+                padding: "15px 0",
+                transition: "color 0.2s ease, padding-left 0.2s ease",
+              }}
+              onHoverStart={(e) => {
+                (e.target as HTMLElement).style.color = "#e8622a";
+                (e.target as HTMLElement).style.paddingLeft = "6px";
+              }}
+              onHoverEnd={(e) => {
+                (e.target as HTMLElement).style.color = "var(--foreground)";
+                (e.target as HTMLElement).style.paddingLeft = "0px";
+              }}
             >
               {l.label}
-            </button>
+            </motion.button>
           ))}
-        </nav>
-        <div className="mt-auto pt-8">
+        </motion.nav>
+
+        <motion.div
+          className="mt-auto pt-8"
+          variants={sidePanelItem}
+          initial="hidden"
+          animate={open ? "show" : "hidden"}
+          transition={{ delay: links.length * 0.055 + 0.1 }}
+        >
           <a
             href={BOOKING_URL}
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
-            className="w-full px-6 py-3 rounded-full text-sm btn-orange"
+            className="flex w-full items-center justify-center px-6 py-3 rounded-full text-sm btn-orange"
           >
             Termin buchen
           </a>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -111,11 +138,13 @@ function SidePanel({ open, onClose, darkMode }: { open: boolean; onClose: () => 
 function NavBar({
   darkMode,
   setDarkMode,
-  onMenuOpen,
+  menuOpen,
+  onMenuToggle,
 }: {
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
-  onMenuOpen: () => void;
+  menuOpen: boolean;
+  onMenuToggle: () => void;
 }) {
   const [scrolled, setScrolled] = useState(false);
 
@@ -146,13 +175,13 @@ function NavBar({
       >
         <div className="px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
-            <a href="#" className="flex items-center gap-3">
+            <a href="#" className="flex items-center gap-2 sm:gap-3">
               <img
                 src={logoUrl}
-                alt="AK-Assistance"
-                style={{ height: 55 }}
+                alt="AK-Assistance Logo"
+                style={{ height: 38, width: "auto", objectFit: "contain", flexShrink: 0 }}
               />
-              <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "1.15rem" }}>
+              <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--foreground)", fontSize: "clamp(0.9rem, 3.5vw, 1.1rem)", lineHeight: 1, whiteSpace: "nowrap" }}>
                 AK-assistance
               </span>
             </a>
@@ -183,19 +212,22 @@ function NavBar({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden sm:inline-flex px-5 py-2.5 rounded-full text-sm btn-orange"
+            style={{ flexShrink: 0 }}
               >
                 Termin buchen
               </a>
 
               <button
-                onClick={onMenuOpen}
+                onClick={onMenuToggle}
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
                 style={{ background: "var(--muted)", color: "var(--foreground)" }}
-                aria-label="Open menu"
+                aria-label={menuOpen ? "Menü schließen" : "Menü öffnen"}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
+                <span className={`hamburger-icon ${menuOpen ? "open" : ""}`}>
+                  <span className="hbar top" />
+                  <span className="hbar mid" />
+                  <span className="hbar bot" />
+                </span>
               </button>
             </div>
           </div>
@@ -205,130 +237,7 @@ function NavBar({
   );
 }
 
-/* ── Retell shared context ───────────────────────────────── */
-const retellClient = new RetellWebClient();
-type CallState = "idle" | "loading" | "active" | "error";
-
-interface RetellCtx {
-  callState: CallState;
-  errorMsg: string;
-  startCall: () => Promise<void>;
-  endCall: () => void;
-}
-
-const RetellContext = createContext<RetellCtx | null>(null);
-
-function RetellProvider({ children }: { children: React.ReactNode }) {
-  const [callState, setCallState] = useState<CallState>("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-  const clientReady = useRef(false);
-
-  useEffect(() => {
-    if (clientReady.current) return;
-    clientReady.current = true;
-    retellClient.on("call_ended", () => setCallState("idle"));
-    retellClient.on("error", () => {
-      setCallState("error");
-      setErrorMsg("Verbindungsfehler – bitte erneut versuchen.");
-    });
-  }, []);
-
-  const startCall = useCallback(async () => {
-    setCallState("loading");
-    setErrorMsg("");
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      setCallState("error");
-      setErrorMsg("Mikrofonzugriff verweigert – bitte in den Browser-Einstellungen erlauben.");
-      return;
-    }
-    try {
-      const res = await fetch("/api/create-call", { method: "POST" });
-      const data = (await res.json()) as { access_token?: string; error?: string };
-      if (!res.ok || !data.access_token) throw new Error(data.error ?? "Kein Token");
-      await retellClient.startCall({ accessToken: data.access_token });
-      setCallState("active");
-    } catch (err) {
-      setCallState("error");
-      setErrorMsg(err instanceof Error ? err.message : "Verbindungsfehler – bitte erneut versuchen.");
-    }
-  }, []);
-
-  const endCall = useCallback(() => {
-    retellClient.stopCall();
-    setCallState("idle");
-  }, []);
-
-  return (
-    <RetellContext.Provider value={{ callState, errorMsg, startCall, endCall }}>
-      {children}
-    </RetellContext.Provider>
-  );
-}
-
-function useRetell() {
-  const ctx = useContext(RetellContext);
-  if (!ctx) throw new Error("useRetell must be used inside RetellProvider");
-  return ctx;
-}
-
-/* ── Shared soundwave visualiser ─────────────────────────── */
-function SoundwaveBars() {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4, height: 28 }}>
-      {[0, 0.15, 0.3, 0.45, 0.3, 0.15, 0].map((delay, i) => (
-        <div key={i} style={{ width: 3, borderRadius: 2, background: "#e8622a", animation: `soundwave 1.2s ease-in-out ${delay}s infinite` }} />
-      ))}
-    </div>
-  );
-}
-
 /* ── Landing Hero ───────────────────────────────────────── */
-function AudioDemo() {
-  const { callState, errorMsg, startCall, endCall } = useRetell();
-  const isActive = callState === "active";
-  const isLoading = callState === "loading";
-
-  const label = isLoading ? "Verbindung wird aufgebaut…" : isActive ? "Gespräch beenden" : "Demo anhören";
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-      <button
-        onClick={() => { if (callState === "loading") return; isActive ? endCall() : startCall(); }}
-        disabled={isLoading}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 12,
-          padding: "14px 28px", borderRadius: 100,
-          border: `2px solid ${isActive ? "#e8622a" : "var(--foreground)"}`,
-          background: isActive ? "#e8622a" : "transparent",
-          cursor: isLoading ? "not-allowed" : "pointer",
-          color: isActive ? "#ffffff" : "var(--foreground)",
-          fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-          fontSize: "0.95rem", fontWeight: 600, opacity: isLoading ? 0.7 : 1, transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => { if (!isLoading && !isActive) { e.currentTarget.style.background = "var(--foreground)"; e.currentTarget.style.color = "var(--background)"; } }}
-        onMouseLeave={(e) => { if (!isLoading && !isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--foreground)"; } }}
-      >
-        {isLoading ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          </svg>
-        ) : isActive ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-        )}
-        {label}
-      </button>
-      {isActive && <SoundwaveBars />}
-      {callState === "error" && (
-        <span style={{ fontSize: "0.75rem", color: "#e8622a", fontFamily: "'Segoe UI', sans-serif" }}>{errorMsg}</span>
-      )}
-    </div>
-  );
-}
-
 function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
   return (
     <section
@@ -339,7 +248,7 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "120px 24px 80px",
+        padding: "clamp(80px, 18vw, 140px) 20px 60px",
         textAlign: "center",
       }}
     >
@@ -354,14 +263,14 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
           style={{
             margin: 0,
             fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontSize: "clamp(2.4rem, 6vw, 4.2rem)",
+            fontSize: "clamp(1.85rem, 7vw, 4.2rem)",
             fontWeight: 900,
             letterSpacing: "-0.04em",
             lineHeight: 1.08,
             color: "var(--foreground)",
           }}
         >
-          Dein KI-Mitarbeiter fürs Büro
+          Ihr KI-Assistent für professionelle Kundenkommunikation
         </h1>
 
         {/* Subheadline */}
@@ -379,28 +288,28 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
             maxWidth: 600,
           }}
         >
-          Der Assistent beantwortet Kundenanrufe, bucht Termine und entlastet dich bei der Büroarbeit&nbsp;— automatisch, 24/7.
+          Der Assistent beantwortet Kundenanrufe, bucht Termine und entlastet Sie bei der Büroarbeit&nbsp;— automatisch, 24/7.
         </motion.p>
-
-        {/* Audio Demo */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <AudioDemo />
-        </motion.div>
 
         {/* Trust badges */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "center" }}
+          style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "center" }}
         >
-          {["🔒 DSGVO-konform", "🇩🇪 Made in Germany"].map((badge) => (
+          {[
+            {
+              label: "DSGVO-konform",
+              path: "M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4",
+            },
+            {
+              label: "Made in Germany",
+              path: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+            },
+          ].map(({ label, path }) => (
             <span
-              key={badge}
+              key={label}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -415,7 +324,10 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
                 color: "var(--muted-foreground)",
               }}
             >
-              {badge}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <path d={path} />
+              </svg>
+              {label}
             </span>
           ))}
         </motion.div>
@@ -443,8 +355,8 @@ function LandingHero({ darkMode: _darkMode }: { darkMode: boolean }) {
             ))}
           </span>
           {SOCIAL_PROOF_COUNT
-            ? `Bereits über ${SOCIAL_PROOF_COUNT} Betriebe vertrauen AK‑Assistance`
-            : "Demnächst verfügbar — seien Sie einer der Ersten"}
+            ? `Bereits über ${SOCIAL_PROOF_COUNT} Betriebe vertrauen AK\u2011Assistance`
+            : "Aktuell in der Pilotphase — seien Sie einer der Ersten"}
         </motion.p>
       </motion.div>
     </section>
@@ -472,11 +384,10 @@ function HeroSection({ darkMode }: { darkMode: boolean }) {
             href={BOOKING_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto px-8 py-4 rounded-full text-base btn-orange"
+            className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 rounded-full text-base btn-orange"
           >
             Kostenloses Gespräch buchen
           </a>
-          <AudioDemo />
         </div>
       </motion.section>
     </>
@@ -576,6 +487,26 @@ function LösungSection() {
       headline: "Beantwortet Fragen sofort",
       text: "Zu Verfügbarkeit, Services und mehr — genau so, wie Sie es eingestellt haben.",
     },
+    {
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8">
+          <polyline points="16 2 16 8 22 8" /><line x1="23" y1="1" x2="16" y2="8" />
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.39 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.06 6.06l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      ),
+      headline: "Erfasst Rückrufwünsche",
+      text: "Rückrufwünsche werden sauber erfasst und vorqualifiziert — Sie erhalten nur die Anfragen, die wirklich relevant sind.",
+    },
+    {
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
+      headline: "Entlastet Ihr Team",
+      text: "Weniger Anrufe, weniger Unterbrechungen — Ihr Team kann sich wieder voll aufs Handwerk konzentrieren.",
+    },
   ];
 
   return (
@@ -667,45 +598,10 @@ function WieEsFunktioniertSection() {
 /* ── Kundenbewertungen ──────────────────────────────────── */
 const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=DEINE_PLACE_ID";
 
-const TESTIMONIALS = [
-  {
-    name: "Thomas B.",
-    firma: "Heizung & Sanitär Braun",
-    sterne: 5,
-    text: "Seit wir AK-Assistance nutzen, verpassen wir keine Anfrage mehr. Der Assistent antwortet sofort — auch abends und am Wochenende.",
-  },
-  {
-    name: "Sandra K.",
-    firma: "Elektriker Kovac GmbH",
-    sterne: 5,
-    text: "Die Einrichtung war in wenigen Tagen erledigt. Kein technisches Wissen nötig. Unsere Kunden sind begeistert.",
-  },
-  {
-    name: "Markus R.",
-    firma: "Malerbetrieb Richter",
-    sterne: 5,
-    text: "Ich kann mich endlich auf die Arbeit konzentrieren, statt ständig ans Telefon zu müssen. Absolut empfehlenswert.",
-  },
-];
-
-function StarRow({ count }: { count: number }) {
-  return (
-    <div style={{ display: "flex", gap: 3 }}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill={i < count ? "#e8622a" : "none"} stroke="#e8622a" strokeWidth="1.8">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ))}
-    </div>
-  );
-}
-
 function BewertungenSection() {
   return (
     <section id="bewertungen" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-6xl mx-auto">
-
-        {/* Headline */}
         <div className="text-center mb-16">
           <span className="section-label animate-in">Was unsere Kunden sagen</span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mt-3 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
@@ -713,166 +609,158 @@ function BewertungenSection() {
           </h2>
         </div>
 
-        {/* Review cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {TESTIMONIALS.map((t, i) => (
-            <div
-              key={i}
-              className={`animate-in delay-${i + 1}`}
-              style={{
-                background: "var(--background)",
-                borderRadius: 20,
-                padding: "28px 28px 24px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-                boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              {/* Stars + Google badge */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <StarRow count={t.sterne} />
-                <svg width="22" height="22" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
-                  <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.1 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.5-4z"/>
-                  <path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 16.1 19.3 13 24 13c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/>
-                  <path fill="#FBBC05" d="M24 44c5.9 0 11-2 14.7-5.4l-6.8-5.6C29.8 34.9 27 36 24 36c-6.1 0-10.7-2.9-11.8-7.5l-7 5.4C8 40.1 15.3 44 24 44z"/>
-                  <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.2-2.3 4-4.3 5.3l6.8 5.6C42.5 35.7 45 30.2 45 24c0-1.3-.2-2.7-.5-4z"/>
-                </svg>
-              </div>
-
-              {/* Quote */}
-              <p style={{ margin: 0, color: "var(--muted-foreground)", lineHeight: 1.65, fontSize: "0.95rem" }}>
-                „{t.text}"
-              </p>
-
-              {/* Author */}
-              <div style={{ marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--border)" }}>
-                <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--foreground)" }}>{t.name}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: 2 }}>{t.firma}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Google review CTA */}
+        {/* Placeholder */}
         <div
-          className="animate-in"
-          style={{
-            background: "var(--background)",
-            borderRadius: 24,
-            padding: "40px 32px",
-            textAlign: "center",
-            border: "1px solid var(--border)",
-            boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
-          }}
+          className="animate-in delay-1 rounded-2xl p-10 sm:p-14 text-center mb-12"
+          style={{ background: "var(--card)", border: "1.5px dashed var(--border)" }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
-            {/* Google G logo */}
-            <svg width="28" height="28" viewBox="0 0 48 48">
-              <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.1 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.5-4z"/>
-              <path fill="#34A853" d="M6.3 14.7l7 5.1C15.2 16.1 19.3 13 24 13c3.1 0 5.8 1.1 8 2.9l6.1-6.1C34.6 6.1 29.6 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/>
-              <path fill="#FBBC05" d="M24 44c5.9 0 11-2 14.7-5.4l-6.8-5.6C29.8 34.9 27 36 24 36c-6.1 0-10.7-2.9-11.8-7.5l-7 5.4C8 40.1 15.3 44 24 44z"/>
-              <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.2-2.3 4-4.3 5.3l6.8 5.6C42.5 35.7 45 30.2 45 24c0-1.3-.2-2.7-.5-4z"/>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: "rgba(232,98,42,0.1)" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--foreground)" }}>
-              Zufrieden mit AK-Assistance?
-            </h3>
           </div>
-          <p style={{ margin: "0 0 24px", color: "var(--muted-foreground)", fontSize: "0.98rem", maxWidth: 480, marginInline: "auto" }}>
-            Helfen Sie anderen Handwerksbetrieben mit Ihrer Erfahrung — hinterlassen Sie uns eine Bewertung direkt auf Google.
+          <p className="text-lg font-semibold mb-3" style={{ color: "var(--foreground)" }}>
+            Kundenstimmen folgen in Kürze
           </p>
-          <a
-            href={GOOGLE_REVIEW_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange"
-          >
-            Jetzt bei Google bewerten
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
+          <p className="text-sm sm:text-base leading-relaxed" style={{ color: "var(--muted-foreground)", maxWidth: 520, margin: "0 auto" }}>
+            Wir befinden uns aktuell in der Pilotphase. Als einer unserer ersten Partner tragen Sie dazu bei, diese Seite mit echten Erfahrungen zu füllen.
+          </p>
         </div>
 
+        {/* ProvenExpert Widget + Bewertungs-CTA */}
+        <div
+          className="animate-in delay-2 rounded-2xl"
+          style={{ background: "var(--card)", border: "1px solid var(--border)", padding: "40px 32px", textAlign: "center" }}
+        >
+          <div
+            className="pe-richsnippets"
+            data-page-url="https://www.provenexpert.com/de-de/ak-assistance/"
+            data-size="large"
+          />
+          <div style={{ marginTop: 28 }}>
+            <p style={{ margin: "0 0 20px", color: "var(--muted-foreground)", fontSize: "0.98rem" }}>
+              Zufrieden mit AK-Assistance? Helfen Sie anderen Betrieben mit Ihrer Erfahrung.
+            </p>
+            <a
+              href="https://www.provenexpert.com/de-de/ak-assistance/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base btn-orange"
+            >
+              Uns auf Proven Expert bewerten
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ── Demo ───────────────────────────────────────────────── */
-function DemoMicButton() {
-  const { callState, startCall, endCall } = useRetell();
-  const isActive = callState === "active";
-  const isLoading = callState === "loading";
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
-      {isActive ? (
-        <>
-          <div className="wave-ring" />
-          <div className="wave-ring" />
-          <div className="wave-ring" />
-        </>
-      ) : null}
-      <button
-        className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center btn-orange"
-        style={{ fontSize: 0, opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}
-        onClick={() => { if (isLoading) return; isActive ? endCall() : startCall(); }}
-        aria-label={isActive ? "Gespräch beenden" : "Demo starten"}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}>
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          </svg>
-        ) : isActive ? (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-        ) : (
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" />
-          </svg>
-        )}
-      </button>
-    </div>
-  );
-}
-
 function DemoSection() {
-  const { callState, errorMsg, startCall, endCall } = useRetell();
-  const isActive = callState === "active";
-  const isLoading = callState === "loading";
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("sending");
+    try {
+      const res = await fetch(
+        "https://n8n.ak-assistance.de/webhook/api/demo-request",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim() }),
+        }
+      );
+      if (!res.ok) throw new Error();
+      setStatus("success");
+      setEmail("");
+    } catch {
+      setStatus("error");
+    }
+  }
+
   return (
     <section id="demo" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
-      <div className="max-w-3xl mx-auto text-center">
-        <span className="section-label animate-in">Live testen</span>
+      <div className="max-w-2xl mx-auto text-center">
+        <span className="section-label animate-in">Demo</span>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mt-3 mb-6 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
           Testen Sie unseren<br />KI-Assistenten
         </h2>
-        <p className="text-lg mb-12 max-w-xl mx-auto leading-relaxed animate-in delay-2" style={{ color: "var(--muted-foreground)" }}>
-          Sprechen Sie direkt mit unserem KI-Assistenten und testen Sie die Fähigkeiten
+        <p className="text-lg mb-10 max-w-lg mx-auto leading-relaxed animate-in delay-2" style={{ color: "var(--muted-foreground)" }}>
+          Geben Sie Ihre E-Mail-Adresse ein und wir schicken Ihnen die Demo direkt zu.
         </p>
 
-        <div className="animate-in delay-2 w-full max-w-md mx-auto rounded-2xl img-placeholder mb-12" style={{ height: "200px" }}>
-          <span>[ Bild: Demo Screenshot ]</span>
-        </div>
-
-        <div className="animate-in delay-3 flex flex-col items-center gap-6">
-          <DemoMicButton />
-          <button
-            className="px-10 py-4 rounded-full text-base btn-orange"
-            style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}
-            disabled={isLoading}
-            onClick={() => { if (isLoading) return; isActive ? endCall() : startCall(); }}
+        {status === "success" ? (
+          <div
+            className="animate-in rounded-2xl p-10 flex flex-col items-center gap-4"
+            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
           >
-            {isLoading ? "Verbindung wird aufgebaut…" : isActive ? "Gespräch beenden" : "Demo starten"}
-          </button>
-          {isActive && <SoundwaveBars />}
-          {callState === "error" && (
-            <span style={{ fontSize: "0.8rem", color: "#e8622a" }}>{errorMsg}</span>
-          )}
-        </div>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "rgba(232,98,42,0.12)" }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <p className="text-xl font-black tracking-tight" style={{ color: "var(--foreground)" }}>
+              Ihre Anfrage ist eingegangen!
+            </p>
+            <p className="text-base leading-relaxed max-w-xs" style={{ color: "var(--muted-foreground)" }}>
+              Vielen Dank — wir schicken Ihnen die Demo in Kürze per E-Mail zu. Schauen Sie auch in Ihren Spam-Ordner.
+            </p>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="animate-in delay-3"
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, maxWidth: 440, margin: "0 auto" }}
+          >
+            <input
+              type="email"
+              placeholder="Ihre E-Mail-Adresse"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: status === "error" ? "1px solid #e53e3e" : "1px solid var(--border)",
+                background: "var(--background)",
+                color: "var(--foreground)",
+                fontSize: "0.95rem",
+                outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={status === "sending"}
+              className="inline-flex items-center justify-center w-full btn-orange rounded-xl py-3.5 text-base font-semibold"
+              style={{ opacity: status === "sending" ? 0.7 : 1, cursor: status === "sending" ? "wait" : "pointer" }}
+            >
+              {status === "sending" ? "Wird gesendet…" : "Demo anfordern"}
+            </button>
+            {status === "error" && (
+              <p className="text-sm" style={{ color: "#e53e3e" }}>
+                Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.
+              </p>
+            )}
+          </form>
+        )}
+
+        {/*
+          N8N WORKFLOW PLATZHALTER — DEMO E-MAIL
+          Wenn jemand seine E-Mail eingibt:
+          1. POST /api/demo-request empfängt die E-Mail
+          2. n8n Workflow wird getriggert
+          3. n8n verschickt HTML-E-Mail mit Link zu:
+             https://ak-assistance-feedback.netlify.app
+          TODO: n8n Webhook URL hier eintragen wenn bereit
+        */}
       </div>
     </section>
   );
@@ -881,24 +769,43 @@ function DemoSection() {
 /* ── Pilot Programm ──────────────────────────────────────── */
 function PilotSection() {
   const formRef = useRef<HTMLFormElement>(null);
-  const [fields, setFields] = useState({
-    company: "",
-    name: "",
-    email: "",
-    phone: "",
-  });
+  const [fields, setFields] = useState({ company: "", name: "", email: "", phone: "" });
+  const [fieldErrors, setFieldErrors] = useState({ company: "", name: "", email: "", phone: "" });
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [privacyError, setPrivacyError] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFields((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFields((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  }
+
+  function validate() {
+    const errors = { company: "", name: "", email: "", phone: "" };
+    let valid = true;
+    if (!fields.company.trim()) { errors.company = "Bitte geben Sie Ihren Unternehmensnamen ein."; valid = false; }
+    if (!fields.name.trim()) { errors.name = "Bitte geben Sie Ihren Namen ein."; valid = false; }
+    if (!fields.email.trim()) {
+      errors.email = "Bitte geben Sie Ihre E-Mail-Adresse ein."; valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) {
+      errors.email = "Bitte geben Sie eine gültige E-Mail-Adresse ein."; valid = false;
+    }
+    if (!fields.phone.trim()) { errors.phone = "Bitte geben Sie Ihre Telefonnummer ein."; valid = false; }
+    setFieldErrors(errors);
+    if (!privacyAccepted) { setPrivacyError("Bitte stimmen Sie der Datenschutzerklärung zu."); valid = false; }
+    else setPrivacyError("");
+    return valid;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validate()) return;
     setStatus("sending");
     setErrorMsg("");
-
     try {
       const res = await fetch("/api/pilot", {
         method: "POST",
@@ -909,7 +816,8 @@ function PilotSection() {
       if (!res.ok) throw new Error(data.error ?? "Fehler beim Speichern");
       setStatus("success");
       setFields({ company: "", name: "", email: "", phone: "" });
-    } catch (err) {
+      setPrivacyAccepted(false);
+    } catch (_err) {
       setStatus("error");
       setErrorMsg("Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt.");
     }
@@ -976,133 +884,86 @@ function PilotSection() {
               </h3>
               <form ref={formRef} onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  {/* Unternehmensname */}
                   <div>
-                    <label
-                      htmlFor="company"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
+                    <label htmlFor="company" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
                       Unternehmensname *
                     </label>
                     <input
-                      id="company"
-                      name="company"
-                      type="text"
-                      required
-                      value={fields.company}
-                      onChange={handleChange}
-                      placeholder="Muster GmbH"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="company" name="company" type="text" value={fields.company} onChange={handleChange}
+                      placeholder="Muster GmbH" aria-describedby={fieldErrors.company ? "err-company" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.company ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.company && <p id="err-company" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.company}</p>}
                   </div>
+                  {/* Name */}
                   <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
-                      Vor- & Nachname *
+                    <label htmlFor="name" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+                      Vor- &amp; Nachname *
                     </label>
                     <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      value={fields.name}
-                      onChange={handleChange}
-                      placeholder="Max Mustermann"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="name" name="name" type="text" value={fields.name} onChange={handleChange}
+                      placeholder="Max Mustermann" aria-describedby={fieldErrors.name ? "err-name" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.name ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.name && <p id="err-name" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.name}</p>}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                  {/* E-Mail */}
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
+                    <label htmlFor="email" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
                       E-Mail-Adresse *
                     </label>
                     <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      value={fields.email}
-                      onChange={handleChange}
-                      placeholder="max@musterfirma.de"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="email" name="email" type="email" value={fields.email} onChange={handleChange}
+                      placeholder="max@musterfirma.de" aria-describedby={fieldErrors.email ? "err-email" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.email ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.email && <p id="err-email" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.email}</p>}
                   </div>
+                  {/* Telefon */}
                   <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm font-medium mb-1.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                    >
+                    <label htmlFor="phone" className="block text-sm font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
                       Telefonnummer *
                     </label>
                     <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      value={fields.phone}
-                      onChange={handleChange}
-                      placeholder="+49 123 456789"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border)",
-                        background: "var(--background)",
-                        color: "var(--foreground)",
-                        fontSize: "0.95rem",
-                        outline: "none",
-                      }}
+                      id="phone" name="phone" type="tel" value={fields.phone} onChange={handleChange}
+                      placeholder="+49 123 456789" aria-describedby={fieldErrors.phone ? "err-phone" : undefined}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${fieldErrors.phone ? "#e53e3e" : "var(--border)"}`, background: "var(--background)", color: "var(--foreground)", fontSize: "0.95rem", outline: "none" }}
                     />
+                    {fieldErrors.phone && <p id="err-phone" role="alert" className="text-xs mt-1" style={{ color: "#e53e3e" }}>{fieldErrors.phone}</p>}
                   </div>
                 </div>
 
+                {/* DSGVO Checkbox */}
+                <div className="mb-5">
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={privacyAccepted}
+                      onChange={(e) => { setPrivacyAccepted(e.target.checked); if (e.target.checked) setPrivacyError(""); }}
+                      aria-describedby={privacyError ? "err-privacy" : undefined}
+                      style={{ marginTop: 3, accentColor: "#e8622a", width: 16, height: 16, flexShrink: 0 }}
+                    />
+                    <span className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+                      Ich stimme der Verarbeitung meiner Daten gemäß der{" "}
+                      <a href="#datenschutz" style={{ color: "#e8622a", textDecoration: "underline" }}>Datenschutzerklärung</a>{" "}
+                      zu. *
+                    </span>
+                  </label>
+                  {privacyError && <p id="err-privacy" role="alert" className="text-xs mt-1.5" style={{ color: "#e53e3e" }}>{privacyError}</p>}
+                </div>
+
                 {status === "error" && (
-                  <p className="text-sm mb-4" style={{ color: "#e53e3e" }}>
-                    {errorMsg}
-                  </p>
+                  <p className="text-sm mb-4" style={{ color: "#e53e3e" }}>{errorMsg}</p>
                 )}
 
                 <button
                   type="submit"
                   disabled={status === "sending"}
-                  className="w-full btn-orange rounded-xl py-3.5 text-base font-semibold"
+                  className="flex w-full items-center justify-center btn-orange rounded-xl py-3.5 text-base font-semibold"
                   style={{ opacity: status === "sending" ? 0.7 : 1, cursor: status === "sending" ? "wait" : "pointer" }}
                 >
                   {status === "sending" ? "Wird gesendet…" : "Bewerbung einreichen"}
@@ -1124,19 +985,93 @@ function TeamSection() {
     { icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", label: "Vertrauen", text: "DSGVO-konform, Made in Germany — Ihre Daten bleiben sicher und in guten Händen." },
   ];
 
+  const team = [
+    { name: "Moritz Koch", title: "Co-Founder & KI-Strategie" },
+    { name: "Gabriel Adam", title: "Co-Founder & Technologie" },
+  ];
+
   return (
     <section id="team" className="py-24 sm:py-32 px-4 sm:px-6" style={{ background: "var(--muted)" }}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <span className="section-label animate-in">Das Team</span>
           <h2 className="text-3xl sm:text-4xl font-black mt-3 tracking-tight animate-in delay-1" style={{ color: "var(--foreground)" }}>
-            Unser Team
+            Hinter AK-Assistance
           </h2>
-          <p className="mt-5 text-lg max-w-2xl mx-auto animate-in delay-2" style={{ color: "var(--muted-foreground)" }}>
-            Hier steht das Motivationsschreiben des Teams — warum wir AK-Assistance gegründet haben, was uns antreibt und welche Vision wir gemeinsam verfolgen. Ein ehrlicher Einblick in unsere Geschichte und unsere Leidenschaft für das Handwerk.
-          </p>
         </div>
 
+        {/* Team Member Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+          {team.map((member, i) => (
+            <div
+              key={i}
+              className={`animate-in delay-${i + 1} rounded-2xl p-8 flex flex-col items-center text-center gap-5`}
+              style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+            >
+              {/* FOTO MORITZ PLATZHALTER / FOTO GABRIEL PLATZHALTER */}
+              <div
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: "50%",
+                  background: "var(--muted)",
+                  border: "2px solid var(--border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-1" style={{ color: "var(--foreground)" }}>{member.name}</h3>
+                <p className="text-sm font-semibold" style={{ color: "#e8622a" }}>{member.title}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Unsere Geschichte */}
+        <div
+          className="animate-in delay-3 rounded-2xl p-8 mb-8"
+          style={{
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            borderLeft: "4px solid #e8622a",
+          }}
+        >
+          <h3 className="text-xl font-bold mb-5" style={{ color: "var(--foreground)" }}>Unsere Geschichte</h3>
+          <div className="text-sm leading-relaxed flex flex-col gap-4" style={{ color: "var(--muted-foreground)" }}>
+            <p>
+              AK-Assistance entstand aus einer persönlichen Erfahrung — und einer gemeinsamen Überzeugung.
+            </p>
+            <p>
+              Wir haben aus nächster Nähe erlebt, was es bedeutet, einen Betrieb zu führen. Moritz' Mutter leitet ein Unternehmen und ist jeden Tag eine außergewöhnliche Unternehmerin. Aber statt sich auf das zu konzentrieren, was sie wirklich kann, verliert sie täglich wertvolle Zeit an Telefonate, Terminkoordination und bürokratische Abläufe, die längst automatisiert sein könnten.
+            </p>
+            <p>Dieses Bild hat uns nicht losgelassen.</p>
+            <p>
+              Wir kennen uns seit Jahren — verbunden durch eine echte Freundschaft und eine gemeinsame Leidenschaft für das, was Künstliche Intelligenz heute schon möglich macht. Als wir anfingen, uns ernsthaft damit zu beschäftigen, war uns schnell klar: Die Technologie existiert bereits. Was fehlt, ist jemand der sie dorthin bringt, wo sie wirklich gebraucht wird.
+            </p>
+            <p>
+              Dienstleister aller Art sind das Rückgrat unserer Gesellschaft. Und trotzdem verbringen viele Unternehmer einen Großteil ihrer Zeit nicht mit dem, was sie großartig macht — sondern mit Aufgaben, die moderne Technologie heute längst übernehmen kann.
+            </p>
+            <p>
+              Wir verkaufen kein simples Produkt. Wir gehen gemeinsam mit unseren Kunden einen Weg — persönlich, verlässlich und auf Augenhöhe. Jeder Betrieb ist anders, jeder Inhaber hat andere Bedürfnisse. Das nehmen wir ernst.
+            </p>
+            <p>
+              Unsere Vision: In fünf Jahren haben wir Hunderten von Unternehmen in ganz Deutschland geholfen, effizienter zu arbeiten — damit sie sich wieder auf das konzentrieren können, was sie wirklich können.
+            </p>
+            <p className="pt-2 font-semibold" style={{ color: "var(--foreground)" }}>
+              Moritz Koch &amp; Gabriel Adam — Gründer, AK-Assistance
+            </p>
+          </div>
+        </div>
+
+        {/* Values */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {values.map((v, i) => (
             <div
@@ -1166,11 +1101,22 @@ function TeamSection() {
 
 /* ── News ────────────────────────────────────────────────── */
 
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  AUTOMATISIERUNG: Blog-Posts hier eintragen                 ║
-// ║  Jeder Eintrag hat: id, date, category, title,              ║
-// ║  excerpt, readTime, imageUrl (optional), link (optional)    ║
-// ╚══════════════════════════════════════════════════════════════╝
+/*
+  N8N WORKFLOW PLATZHALTER — BLOG POSTS
+  n8n schickt wöchentlich neue Blogposts per POST an /api/blog
+  Format (wenn bekannt):
+  {
+    id: number,
+    date: string,
+    category: string,
+    title: string,
+    excerpt: string,
+    readTime: string,
+    imageUrl?: string,
+    link?: string
+  }
+  TODO: n8n Webhook hier anschließen wenn Format bekannt ist
+*/
 const BLOG_POSTS: {
   id: number;
   date: string;
@@ -1247,12 +1193,23 @@ function BlogCard({ post }: { post: (typeof BLOG_POSTS)[number] }) {
 }
 
 function NewsSection() {
-  const hasPosts = BLOG_POSTS.length > 0;
+  const [apiPosts, setApiPosts] = useState<typeof BLOG_POSTS>([]);
+
+  useEffect(() => {
+    fetch("/api/blog")
+      .then((r) => r.json())
+      .then((data: { posts?: typeof BLOG_POSTS }) => {
+        if (Array.isArray(data.posts)) setApiPosts(data.posts);
+      })
+      .catch(() => {/* silent — Fallback auf BLOG_POSTS */});
+  }, []);
+
+  const allPosts = [...apiPosts, ...BLOG_POSTS];
+  const hasPosts = allPosts.length > 0;
 
   return (
     <section id="news" className="py-20 px-4 sm:px-6" style={{ background: "var(--background)" }}>
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <div className="mb-12">
           <span
             className="inline-block text-xs font-semibold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
@@ -1263,22 +1220,20 @@ function NewsSection() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: "var(--foreground)" }}>
             News in der KI-Welt
           </h2>
-          <p className="text-base" style={{ color: "var(--foreground-muted)", maxWidth: 520 }}>
+          <p className="text-base" style={{ color: "var(--muted-foreground)", maxWidth: 520 }}>
             Aktuelle Entwicklungen, Praxistipps und Branchentrends rund um Künstliche Intelligenz — speziell für Unternehmen und Dienstleister.
           </p>
         </div>
 
         {hasPosts ? (
-          /* Blog-Post Grid — wird befüllt sobald BLOG_POSTS Einträge enthält */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {BLOG_POSTS.map((post) => (
+            {allPosts.map((post) => (
               <BlogCard key={post.id} post={post} />
             ))}
           </div>
         ) : (
-          /* Platzhalter — wird ersetzt sobald erste Beiträge vorhanden sind */
           <div
-            className="rounded-2xl flex flex-col items-center justify-center text-center py-16 px-8 gap-4"
+            className="rounded-2xl flex flex-col items-center justify-center text-center py-14 px-8 gap-5"
             style={{ border: "1.5px dashed var(--border)", background: "var(--muted)" }}
           >
             <div
@@ -1286,15 +1241,16 @@ function NewsSection() {
               style={{ background: "rgba(232,98,42,0.1)" }}
             >
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-base mb-1" style={{ color: "var(--foreground)" }}>
+              <p className="font-semibold text-base mb-2" style={{ color: "var(--foreground)" }}>
                 Beiträge folgen in Kürze
               </p>
-              <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
-                Hier werden regelmäßig neue Artikel rund um KI, Automatisierung und den digitalen Wandel im Handwerk veröffentlicht.
+              <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)", maxWidth: 440 }}>
+                Wir veröffentlichen regelmäßig neue Artikel rund um KI und Digitalisierung.
               </p>
             </div>
           </div>
@@ -1312,7 +1268,7 @@ function FAQSection() {
     { q: "Für welche Betriebe ist AK-Assistance geeignet?", a: "Für alle Unternehmen und Dienstleister, die regelmäßig Anrufe erhalten und Termine vereinbaren." },
     { q: "Muss ich technisches Wissen mitbringen?", a: "Nein. Wir übernehmen die gesamte Einrichtung. Sie brauchen nichts zu installieren oder zu konfigurieren." },
     { q: "Was passiert, wenn der Assistent eine Frage nicht beantworten kann?", a: "Der Assistent leitet den Anruf weiter oder hinterlässt eine Nachricht. Kein Anruf geht verloren." },
-    { q: "Wie lange dauert die Einrichtung?", a: "In der Regel ist Ihr KI-Assistent innerhalb weniger Tage nach dem ersten Gespräch einsatzbereit." },
+    { q: "Wie lange dauert die Einrichtung?", a: "Wir kümmern uns um den gesamten Einrichtungsprozess. Nach dem ersten Gespräch stimmen wir alles gemeinsam ab und gehen erst live, wenn Sie vollständig zufrieden sind." },
     { q: "Kann ich den Assistenten jederzeit anpassen?", a: "Ja. Wenn sich Ihre Leistungen oder Öffnungszeiten ändern, passen wir den Assistenten entsprechend an." },
     { q: "Kostet das erste Gespräch etwas?", a: "Nein. Das erste Gespräch ist völlig kostenlos und unverbindlich." },
   ];
@@ -1376,7 +1332,7 @@ function CTASection() {
           Bereit für Ihren<br />KI-Assistenten?
         </h2>
         <p className="text-lg mb-12 max-w-xl mx-auto leading-relaxed animate-in delay-2" style={{ color: "#a0b4c0" }}>
-          Buchen Sie ein kostenloses Gespräch. Kein Risiko, keine Verpflichtung.
+          Kein langer Onboarding-Prozess, kein technisches Vorwissen nötig. Buchen Sie ein kostenloses Gespräch und sehen Sie, wie Ihr KI-Assistent Ihren Betrieb entlasten kann.
         </p>
         <div className="animate-in delay-3">
           <a
@@ -1393,23 +1349,195 @@ function CTASection() {
   );
 }
 
+/* ── Cookie Banner ───────────────────────────────────────── */
+function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!localStorage.getItem("ak_cookie_choice")) setVisible(true);
+  }, []);
+  if (!visible) return null;
+  const choose = (choice: "accepted" | "rejected") => {
+    localStorage.setItem("ak_cookie_choice", choice);
+    setVisible(false);
+  };
+  return (
+    <div
+      role="dialog"
+      aria-modal="false"
+      aria-label="Cookie-Einstellungen"
+      style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
+        padding: "20px 24px", background: "#0d2d3e", color: "#fff",
+        display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+        boxShadow: "0 -4px 32px rgba(0,0,0,0.3)",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <p style={{ margin: 0, flex: 1, fontSize: "0.88rem", lineHeight: 1.65, minWidth: 240 }}>
+        Wir verwenden technisch notwendige Cookies. Weitere Informationen finden Sie in unserer{" "}
+        <a href="#datenschutz" style={{ color: "#e8622a", textDecoration: "underline" }} onClick={() => setVisible(false)}>
+          Datenschutzerklärung
+        </a>.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <button
+          onClick={() => choose("rejected")}
+          style={{ padding: "9px 20px", borderRadius: 100, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}
+        >
+          Ablehnen
+        </button>
+        <button
+          onClick={() => choose("accepted")}
+          className="inline-flex items-center justify-center btn-orange"
+          style={{ padding: "9px 20px", borderRadius: 100, fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", border: "none" }}
+        >
+          Akzeptieren
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Impressum ───────────────────────────────────────────── */
+function ImpressumSection() {
+  const h3: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#e8622a", marginBottom: 8, marginTop: 28 };
+  const p: React.CSSProperties = { color: "var(--muted-foreground)", lineHeight: 1.75, fontSize: "0.95rem" };
+  return (
+    <section id="impressum" style={{ background: "var(--background)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 24 }}>Impressum</h2>
+
+        <p style={h3}>Angaben gemäß § 5 DDG</p>
+        <p style={p}>
+          Gabriel Adam &amp; Moritz Koch<br />
+          Gervinusstraße 14<br />
+          90491 Nürnberg
+        </p>
+
+        <p style={h3}>Kontakt</p>
+        <p style={p}>
+          Telefon: 0163 6905809 (Gabriel Adam)<br />
+          Telefon: 0173 7983151 (Moritz Koch)<br />
+          E-Mail:{" "}
+          <a href="mailto:kontakt@ak-assistance.de" style={{ color: "#e8622a", textDecoration: "underline" }}>
+            kontakt@ak-assistance.de
+          </a>
+        </p>
+
+        <p style={h3}>Inhaltlich Verantwortliche gemäß § 18 Abs. 2 MStV</p>
+        <p style={p}>
+          Gabriel Adam &amp; Moritz Koch, Gervinusstraße 14, 90491 Nürnberg
+        </p>
+
+        <p style={h3}>Hinweis zur Umsatzsteuer</p>
+        <p style={p}>
+          Die Umsatzsteuer-Identifikationsnummer wird nach Gewerbeanmeldung ergänzt.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ── Datenschutz ─────────────────────────────────────────── */
+function DatenschutzSection() {
+  const h2s: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, color: "var(--foreground)", marginTop: 36, marginBottom: 8 };
+  const h3s: React.CSSProperties = { fontSize: "0.95rem", fontWeight: 700, color: "var(--foreground)", marginTop: 20, marginBottom: 6 };
+  const ps: React.CSSProperties = { color: "var(--muted-foreground)", lineHeight: 1.75, fontSize: "0.93rem", marginBottom: 10 };
+  const ul: React.CSSProperties = { color: "var(--muted-foreground)", lineHeight: 1.75, fontSize: "0.93rem", paddingLeft: 20, marginBottom: 10 };
+  return (
+    <section id="datenschutz" style={{ background: "var(--muted)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h2 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", color: "var(--foreground)", marginBottom: 24 }}>Datenschutzerklärung</h2>
+
+        <h3 style={h2s}>1. Datenschutz auf einen Blick</h3>
+        <h4 style={h3s}>Allgemeine Hinweise</h4>
+        <p style={ps}>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können. Ausführliche Informationen zum Thema Datenschutz entnehmen Sie unserer unter diesem Text aufgeführten Datenschutzerklärung.</p>
+
+        <h4 style={h3s}>Datenerfassung auf dieser Website</h4>
+        <p style={ps}><strong>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</strong><br />Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Abschnitt „Hinweis zur verantwortlichen Stelle" in dieser Datenschutzerklärung entnehmen.</p>
+        <p style={ps}><strong>Wie erfassen wir Ihre Daten?</strong><br />Ihre Daten werden zum einen dadurch erhoben, dass Sie uns diese mitteilen. Hierbei kann es sich z. B. um Daten handeln, die Sie in ein Kontaktformular eingeben. Andere Daten werden automatisch oder nach Ihrer Einwilligung beim Besuch der Website durch unsere IT-Systeme erfasst. Das sind vor allem technische Daten (z. B. Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs).</p>
+        <p style={ps}><strong>Wofür nutzen wir Ihre Daten?</strong><br />Ein Teil der Daten wird erhoben, um eine fehlerfreie Bereitstellung der Website zu gewährleisten. Andere Daten können zur Analyse Ihres Nutzerverhaltens verwendet werden.</p>
+        <p style={ps}><strong>Welche Rechte haben Sie bezüglich Ihrer Daten?</strong><br />Sie haben jederzeit das Recht, unentgeltlich Auskunft über Herkunft, Empfänger und Zweck Ihrer gespeicherten personenbezogenen Daten zu erhalten. Sie haben außerdem ein Recht, die Berichtigung oder Löschung dieser Daten zu verlangen. Wenn Sie eine Einwilligung zur Datenverarbeitung erteilt haben, können Sie diese Einwilligung jederzeit für die Zukunft widerrufen. Außerdem haben Sie das Recht, unter bestimmten Umständen die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen. Des Weiteren steht Ihnen ein Beschwerderecht bei der zuständigen Aufsichtsbehörde zu.</p>
+
+        <h3 style={h2s}>2. Hosting</h3>
+        <h4 style={h3s}>Hetzner</h4>
+        <p style={ps}>Anbieter ist die Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen. Details entnehmen Sie der Datenschutzerklärung von Hetzner: <a href="https://www.hetzner.com/de/legal/privacy-policy/" target="_blank" rel="noopener noreferrer" style={{ color: "#e8622a" }}>https://www.hetzner.com/de/legal/privacy-policy/</a>.</p>
+        <p style={ps}>Die Verwendung von Hetzner erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO. Wir haben ein berechtigtes Interesse an einer möglichst zuverlässigen Darstellung unserer Website.</p>
+
+        <h3 style={h2s}>3. Allgemeine Hinweise und Pflichtinformationen</h3>
+        <h4 style={h3s}>Datenschutz</h4>
+        <p style={ps}>Die Betreiber dieser Seiten nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Wir behandeln Ihre personenbezogenen Daten vertraulich und entsprechend den gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.</p>
+
+        <h4 style={h3s}>Hinweis zur verantwortlichen Stelle</h4>
+        <p style={ps}>Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:<br /><br />
+          Gabriel Adam &amp; Moritz Koch<br />
+          Gervinusstraße 14, 90491 Nürnberg<br />
+          Telefon: 0163 6905809 / 0173 7983151<br />
+          E-Mail: <a href="mailto:gabrieladam@ak-assistance.de" style={{ color: "#e8622a" }}>gabrieladam@ak-assistance.de</a>
+        </p>
+
+        <h4 style={h3s}>Speicherdauer</h4>
+        <p style={ps}>Soweit innerhalb dieser Datenschutzerklärung keine speziellere Speicherdauer genannt wurde, verbleiben Ihre personenbezogenen Daten bei uns, bis der Zweck für die Datenverarbeitung entfällt. Wenn Sie ein berechtigtes Löschersuchen geltend machen oder eine Einwilligung zur Datenverarbeitung widerrufen, werden Ihre Daten gelöscht, sofern wir keine anderen rechtlich zulässigen Gründe für die Speicherung Ihrer personenbezogenen Daten haben.</p>
+
+        <h4 style={h3s}>Widerruf Ihrer Einwilligung zur Datenverarbeitung</h4>
+        <p style={ps}>Viele Datenverarbeitungsvorgänge sind nur mit Ihrer ausdrücklichen Einwilligung möglich. Sie können eine bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit der bis zum Widerruf erfolgten Datenverarbeitung bleibt vom Widerruf unberührt.</p>
+
+        <h4 style={h3s}>Beschwerderecht bei der zuständigen Aufsichtsbehörde</h4>
+        <p style={ps}>Im Falle von Verstößen gegen die DSGVO steht den Betroffenen ein Beschwerderecht bei einer Aufsichtsbehörde, insbesondere in dem Mitgliedstaat ihres gewöhnlichen Aufenthalts, ihres Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes zu.</p>
+
+        <h4 style={h3s}>Recht auf Datenübertragbarkeit</h4>
+        <p style={ps}>Sie haben das Recht, Daten, die wir auf Grundlage Ihrer Einwilligung oder in Erfüllung eines Vertrags automatisiert verarbeiten, an sich oder an einen Dritten in einem gängigen, maschinenlesbaren Format aushändigen zu lassen.</p>
+
+        <h4 style={h3s}>Auskunft, Berichtigung und Löschung</h4>
+        <p style={ps}>Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft über Ihre gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten.</p>
+
+        <h4 style={h3s}>Recht auf Einschränkung der Verarbeitung</h4>
+        <p style={ps}>Sie haben das Recht, die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen. Das Recht besteht in folgenden Fällen:</p>
+        <ul style={ul}>
+          <li>Wenn Sie die Richtigkeit Ihrer bei uns gespeicherten Daten bestreiten.</li>
+          <li>Wenn die Verarbeitung Ihrer personenbezogenen Daten unrechtmäßig geschah/geschieht.</li>
+          <li>Wenn wir Ihre Daten nicht mehr benötigen, Sie sie jedoch zur Geltendmachung von Rechtsansprüchen benötigen.</li>
+          <li>Wenn Sie einen Widerspruch nach Art. 21 Abs. 1 DSGVO eingelegt haben.</li>
+        </ul>
+
+        <h3 style={h2s}>4. Datenerfassung auf dieser Website</h3>
+        <h4 style={h3s}>Cookies</h4>
+        <p style={ps}>Unsere Internetseiten verwenden so genannte „Cookies". Cookies sind kleine Datenpakete und richten auf Ihrem Endgerät keinen Schaden an. Sie werden entweder vorübergehend für die Dauer einer Sitzung (Session-Cookies) oder dauerhaft (permanente Cookies) auf Ihrem Endgerät gespeichert. Session-Cookies werden nach Ende Ihres Besuchs automatisch gelöscht.</p>
+        <p style={ps}>Notwendige Cookies werden auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO gespeichert. Der Websitebetreiber hat ein berechtigtes Interesse an der Speicherung von notwendigen Cookies zur technisch fehlerfreien und optimierten Bereitstellung seiner Dienste.</p>
+
+        <h4 style={h3s}>Kontaktformular</h4>
+        <p style={ps}>Wenn Sie uns per Kontaktformular Anfragen zukommen lassen, werden Ihre Angaben aus dem Anfrageformular inklusive der von Ihnen dort angegebenen Kontaktdaten zwecks Bearbeitung der Anfrage bei uns gespeichert. Diese Daten geben wir nicht ohne Ihre Einwilligung weiter. Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO.</p>
+
+        <h4 style={h3s}>Anfrage per E-Mail oder Telefon</h4>
+        <p style={ps}>Wenn Sie uns per E-Mail oder Telefon kontaktieren, wird Ihre Anfrage inklusive aller daraus hervorgehenden personenbezogenen Daten zum Zwecke der Bearbeitung Ihres Anliegens bei uns gespeichert und verarbeitet. Diese Daten geben wir nicht ohne Ihre Einwilligung weiter.</p>
+
+        <p style={{ ...ps, marginTop: 32, fontSize: "0.82rem" }}>Quelle: <a href="https://www.e-recht24.de" target="_blank" rel="noopener noreferrer" style={{ color: "#e8622a" }}>e-recht24.de</a></p>
+      </div>
+    </section>
+  );
+}
+
 /* ── Footer ──────────────────────────────────────────────── */
 function Footer() {
   return (
     <footer className="py-10 px-4 sm:px-6" style={{ background: "#0d2d3e", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <img src={logoUrl} alt="AK-Assistance" style={{ height: 44 }} />
+          <img src={logoUrl} alt="AK-Assistance Logo" style={{ height: 44 }} loading="lazy" />
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm" style={{ color: "#a0b4c0" }}>
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
             <a href="#pilot" className="hover:text-white transition-colors">Pilot Programm</a>
             <a href="#kontakt" className="hover:text-white transition-colors">Kontakt</a>
+            <a href="#impressum" className="hover:text-white transition-colors">Impressum</a>
+            <a href="#datenschutz" className="hover:text-white transition-colors">Datenschutz</a>
+            <a href="https://www.instagram.com/ak.assistance/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Instagram</a>
+            <a href="https://www.provenexpert.com/de-de/ak-assistance/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Proven Expert</a>
           </div>
           <a
             href={BOOKING_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-6 py-2.5 rounded-full text-sm btn-orange"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm btn-orange"
           >
             Termin buchen
           </a>
@@ -1422,24 +1550,6 @@ function Footer() {
   );
 }
 
-/* ── Chatbot Widget ──────────────────────────────────────── */
-function ChatbotWidget() {
-  return (
-    <button
-      className="chatbot-btn"
-      aria-label="KI-Assistent starten"
-      onClick={() => {
-        /* RETELL AI CHATBOT WIDGET - insert agent ID: YOUR_AGENT_ID_HERE */
-        /* retellWebClient.startCall({ agentId: "YOUR_AGENT_ID_HERE" }) */
-        alert("Retell AI — Agent ID noch nicht konfiguriert.");
-      }}
-    >
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.39 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.06 6.06l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-      </svg>
-    </button>
-  );
-}
 
 /* ── App ─────────────────────────────────────────────────── */
 export default function App() {
@@ -1454,9 +1564,9 @@ export default function App() {
   useScrollAnimation();
 
   return (
-    <RetellProvider>
+    <>
       <SidePanel open={menuOpen} onClose={() => setMenuOpen(false)} darkMode={darkMode} />
-      <NavBar darkMode={darkMode} setDarkMode={setDarkMode} onMenuOpen={() => setMenuOpen(true)} />
+      <NavBar darkMode={darkMode} setDarkMode={setDarkMode} menuOpen={menuOpen} onMenuToggle={() => setMenuOpen((v) => !v)} />
       <LandingHero darkMode={darkMode} />
       <HeroSection darkMode={darkMode} />
       <ProblemSection />
@@ -1469,8 +1579,41 @@ export default function App() {
       <NewsSection />
       <FAQSection />
       <CTASection />
+      <ImpressumSection />
+      <DatenschutzSection />
       <Footer />
-      <ChatbotWidget />
-    </RetellProvider>
+
+      {/* Floating "Bewerten Sie uns" tab — desktop only */}
+      <div
+        className="hidden md:block"
+        style={{ position: "fixed", left: 0, top: "50%", transform: "translateY(-50%)", zIndex: 300 }}
+      >
+        <a
+          href="https://www.provenexpert.com/de-de/ak-assistance/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="AK-Assistance auf Proven Expert bewerten"
+          style={{
+            display: "block",
+            background: "#e8622a",
+            color: "white",
+            textDecoration: "none",
+            padding: "14px 10px",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            borderRadius: "0 8px 8px 0",
+            boxShadow: "2px 0 16px rgba(232,98,42,0.35)",
+            writingMode: "vertical-rl",
+            transform: "rotate(180deg)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          ★ Bewerten Sie uns
+        </a>
+      </div>
+
+      <CookieBanner />
+    </>
   );
 }
