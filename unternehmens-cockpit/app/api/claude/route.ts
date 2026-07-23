@@ -49,6 +49,8 @@ export async function PUT(request: NextRequest) {
       d.herkunft = "manuell";
       d.abrufStatus = null;
       d.letzterAbruf = null;
+      d.betrag = verbrauch;
+      d.waehrung = "USD";
     }
     d.letzteAenderung = new Date().toISOString();
     berechneRest(d);

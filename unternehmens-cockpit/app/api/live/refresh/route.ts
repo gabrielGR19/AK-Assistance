@@ -1,6 +1,7 @@
-import { ladeDaten } from "@/lib/db";
+import { ladeDaten, speichereDaten } from "@/lib/db";
 import { fuehreLiveAbrufAus } from "@/lib/live/runner";
 import { LIVE_PROVIDER } from "@/lib/live/registry";
+import { holeEurUsdKurs } from "@/lib/live/kurs";
 import { cronSecretGueltig } from "@/lib/cron-auth";
 
 // POST /api/live/refresh — läuft über alle registrierten Live-Provider und aktualisiert
@@ -20,6 +21,15 @@ export async function POST(request: Request) {
       if (!d) continue;
       const ergebnis = await fuehreLiveAbrufAus(daten, d, provider);
       ergebnisse[provider.dienstId] = ergebnis.typ === "voraussetzung_fehlt" ? { fehler: ergebnis.fehler } : ergebnis.live;
+    }
+
+    // EUR/USD-Kurs unabhängig von den Provider-Ergebnissen aktualisieren. Bei Fehler
+    // (null) bleibt der bestehende Kurs unangetastet — kein Datenverlust, kein Crash.
+    const kurs = await holeEurUsdKurs();
+    if (kurs != null) {
+      daten.meta.eurUsdKurs = kurs;
+      daten.meta.kursStand = new Date().toISOString();
+      await speichereDaten(daten);
     }
 
     return Response.json({ ergebnisse });

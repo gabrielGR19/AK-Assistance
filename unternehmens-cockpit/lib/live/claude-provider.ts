@@ -29,5 +29,7 @@ export const claudeProvider: LiveProvider = {
     if (!d.claude) return;
     d.claude.verbrauchSeitBasisUsd = ergebnis.verbrauchUsd;
     berechneRest(d);
+    d.betrag = ergebnis.verbrauchUsd;
+    d.waehrung = "USD";
   },
 };
