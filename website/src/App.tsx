@@ -576,6 +576,26 @@ function LösungSection() {
       headline: "Beantwortet Fragen sofort",
       text: "Zu Verfügbarkeit, Services und mehr — genau so, wie Sie es eingestellt haben.",
     },
+    {
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8">
+          <polyline points="16 2 16 8 22 8" /><line x1="23" y1="1" x2="16" y2="8" />
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.39 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.06 6.06l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      ),
+      headline: "Erfasst Rückrufwünsche",
+      text: "Rückrufwünsche werden sauber erfasst und vorqualifiziert — Sie erhalten nur die Anfragen, die wirklich relevant sind.",
+    },
+    {
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8622a" strokeWidth="1.8">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
+      headline: "Entlastet Ihr Team",
+      text: "Weniger Anrufe, weniger Unterbrechungen — Ihr Team kann sich wieder voll aufs Handwerk konzentrieren.",
+    },
   ];
 
   return (
