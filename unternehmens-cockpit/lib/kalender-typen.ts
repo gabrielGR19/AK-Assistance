@@ -25,14 +25,18 @@ export type LabelSchluessel =
 
 // Gemeinsame Label-Definition für beide Personen. `arbeit` steuert, ob ein Termin
 // aufs Tagespensum einzahlt.
-export const LABELS: Record<LabelSchluessel, { name: string; farbe: string; arbeit: boolean }> = {
-  vertrieb: { name: "Vertrieb (Cold Calls)", farbe: "#0ea5e9", arbeit: true },
-  programmieren: { name: "Programmieren", farbe: "#2563eb", arbeit: true },
-  gruendung: { name: "Gründung & To-Dos", farbe: "#0891b2", arbeit: true },
-  claude: { name: "Claude lernen (Setup)", farbe: "#9333ea", arbeit: true },
-  lesen: { name: "Lesen & Lernen", farbe: "#d97706", arbeit: false },
-  sport: { name: "Sport", farbe: "#16a34a", arbeit: false },
-  arzt: { name: "Arzttermin", farbe: "#dc2626", arbeit: false },
+//
+// Farbwerte unverändert aus dem Kalender-Prototyp (planung/arbeitskalender.html): `farbe`
+// für Randlinie und Fläche, `text` für die Beschriftung — auf dunklem Grund braucht etwa
+// das kräftige Blau von "Programmieren" eine hellere Schriftfarbe als seine Randlinie.
+export const LABELS: Record<LabelSchluessel, { name: string; farbe: string; text: string; arbeit: boolean }> = {
+  vertrieb: { name: "Vertrieb (Cold Calls)", farbe: "#5AC8FA", text: "#5AC8FA", arbeit: true },
+  programmieren: { name: "Programmieren", farbe: "#0A63D6", text: "#6FA8FF", arbeit: true },
+  gruendung: { name: "Gründung & To-Dos", farbe: "#30B0C7", text: "#40C8DF", arbeit: true },
+  claude: { name: "Claude lernen (Setup)", farbe: "#AF52DE", text: "#C77DEB", arbeit: true },
+  lesen: { name: "Lesen & Lernen", farbe: "#E8A33D", text: "#E8A33D", arbeit: false },
+  sport: { name: "Sport", farbe: "#34C759", text: "#34C759", arbeit: false },
+  arzt: { name: "Arzttermin", farbe: "#FF453A", text: "#FF6961", arbeit: false },
 };
 
 export function istLabel(wert: unknown): wert is LabelSchluessel {

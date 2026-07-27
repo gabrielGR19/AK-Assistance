@@ -1,0 +1,676 @@
+/* Arbeitskalender — Erscheinungsbild aus planung/arbeitskalender.html übernommen
+   (dunkler Apple-Kalender). Bewusst NICHT auf die hellen Cockpit-Tokens umgestellt:
+   Gabriel arbeitet täglich mit diesem Kalender und kennt ihn genau so.
+   Die Farbwerte stehen deshalb hier lokal statt aus globals.css. */
+
+.kalender {
+  --bg: #1c1c1e;
+  --linie: #2c2c2e;
+  --linie-stark: #3a3a3c;
+  --text: #ebebf0;
+  --text-2: #8e8e93;
+  --text-3: #636366;
+  --akzent: #ff453a;
+  --radius: 5px;
+
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 10px;
+  border: 1px solid var(--linie);
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+}
+
+.kalender button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.kalender :focus-visible {
+  outline: 2px solid #0a84ff;
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+/* ---------- Kopfleiste ---------- */
+
+.werkzeugleiste {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--linie);
+}
+
+.segment {
+  display: flex;
+  background: #ffffff0f;
+  border-radius: 7px;
+  padding: 2px;
+  margin: 0 auto;
+}
+
+.segmentBtn {
+  padding: 3px 13px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+.segmentBtn[aria-pressed="true"] {
+  background: #48484a;
+  color: var(--text);
+  box-shadow: 0 1px 2px #0006;
+}
+
+.titelzeile {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 12px 14px 8px;
+}
+
+.titel {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav button {
+  padding: 3px 10px;
+  border-radius: 5px;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.nav button:hover {
+  background: #ffffff12;
+  color: var(--text);
+}
+
+/* ---------- Kalenderkopf ---------- */
+
+.kopfzeile {
+  display: grid;
+  border-bottom: 1px solid var(--linie);
+}
+
+.kopfTag {
+  padding: 2px 8px 5px;
+  border-left: 1px solid var(--linie);
+  min-width: 0;
+}
+
+.kopfTag:first-of-type {
+  border-left: 0;
+}
+
+.kopfName {
+  font-size: 12.5px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.kopfTagHeute .kopfName {
+  color: var(--akzent);
+  font-weight: 600;
+}
+
+/* ---------- Ganztägig ---------- */
+
+.ganztags {
+  display: grid;
+  border-bottom: 1px solid var(--linie);
+  min-height: 22px;
+  position: relative;
+}
+
+.gtLabel {
+  font-size: 9.5px;
+  color: var(--text-3);
+  padding: 5px 6px 0;
+  text-align: right;
+}
+
+.gtFlaeche {
+  position: relative;
+  grid-column: 2 / -1;
+  padding: 3px 0 4px;
+}
+
+.gtBlock {
+  position: absolute;
+  height: 16px;
+  border-radius: 3px;
+  font-size: 11px;
+  line-height: 16px;
+  padding: 0 7px;
+  background: #48484a;
+  color: #d1d1d6;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.gtBlock:hover {
+  filter: brightness(1.15);
+}
+
+/* ---------- Raster ---------- */
+
+.raster {
+  display: grid;
+  position: relative;
+}
+
+.zeitspalte {
+  position: relative;
+  border-right: 1px solid var(--linie);
+}
+
+.zeitmarke {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.tagspalte {
+  position: relative;
+  border-left: 1px solid var(--linie);
+}
+
+.tagspalte:first-of-type {
+  border-left: 0;
+}
+
+.stunde {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--linie);
+}
+
+.halbe {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #26262880;
+}
+
+.jetztlinie {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1.5px solid var(--akzent);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.jetztlinie::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--akzent);
+}
+
+/* ---------- Terminblock ---------- */
+
+.block {
+  position: absolute;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 3px 6px 2px 7px;
+  border-left: 3px solid transparent;
+  min-height: 18px;
+  z-index: 2;
+  touch-action: none; /* sonst scrollt das Ziehen auf dem Trackpad die Seite */
+}
+
+.block:hover {
+  filter: brightness(1.22);
+}
+
+.blockTitel {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.blockZeit {
+  font-size: 11.5px;
+  opacity: 0.72;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.blockKurz {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding-top: 1px;
+}
+
+.blockKurz .blockTitel {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.blockKurz .blockZeit {
+  margin-left: auto;
+  margin-top: 0;
+}
+
+/* ---------- Ziehen, Größe ändern, Aufziehen ---------- */
+
+.zieht {
+  opacity: 0.85;
+  z-index: 20;
+  cursor: grabbing;
+  box-shadow: 0 6px 18px #0009;
+}
+
+.griff {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 9px;
+  cursor: ns-resize;
+}
+
+.geist {
+  position: absolute;
+  left: 1px;
+  right: 2px;
+  border-radius: var(--radius);
+  background: #0a84ff33;
+  border: 1px solid #0a84ff88;
+  z-index: 19;
+  pointer-events: none;
+}
+
+/* ---------- Zwei Personen nebeneinander ---------- */
+
+.haelfte {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  touch-action: none;
+}
+
+.haelfteFremd {
+  border-left: 1px dashed var(--linie-stark);
+  background: #ffffff05;
+}
+
+/* Termine der anderen Person: sichtbar, aber erkennbar nicht die eigenen. */
+.fremd {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tagspalteOffen {
+  background: linear-gradient(to right, transparent 50%, #ffffff05 50%);
+}
+
+.aufklappen {
+  display: block;
+  margin-top: 2px;
+  padding: 1px 7px;
+  font-size: 10.5px;
+  color: var(--text-3);
+  background: #ffffff0d;
+  border-radius: 999px;
+}
+
+.aufklappen:hover {
+  color: var(--text);
+  background: #ffffff1a;
+}
+
+.haelftenKopf {
+  display: flex;
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.haelftenKopf > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Monatsansicht ---------- */
+
+.monat {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.mWochentage {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--linie);
+}
+
+.mWochentage > div {
+  font-size: 11.5px;
+  color: var(--text-2);
+  padding: 4px 8px;
+  text-align: right;
+}
+
+.mGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.mZelle {
+  border-left: 1px solid var(--linie);
+  border-bottom: 1px solid var(--linie);
+  padding: 3px 5px;
+  min-height: 88px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.mZelle:nth-child(7n + 1) {
+  border-left: 0;
+}
+
+.mZelleFremd {
+  background: #ffffff04;
+}
+
+.mKopf {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  margin-bottom: 2px;
+}
+
+.mNr {
+  font-size: 11.5px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.mZelleFremd .mNr {
+  color: #48484a;
+}
+
+.mZelleHeute .mNr {
+  background: var(--akzent);
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+}
+
+.mTermin {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 0.5px 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mPunkt {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.mTermin span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-2);
+}
+
+.mMehr {
+  font-size: 10.5px;
+  color: var(--text-3);
+  padding-left: 10px;
+}
+
+.mGanztags {
+  font-size: 10.5px;
+  background: #48484a;
+  color: #d1d1d6;
+  border-radius: 3px;
+  padding: 0 5px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Editor ---------- */
+
+.pop {
+  position: fixed;
+  width: 290px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  background: #2c2c2e;
+  border: 1px solid #3a3a3c;
+  border-radius: 11px;
+  box-shadow: 0 14px 40px #000b;
+  padding: 12px;
+  z-index: 60;
+  color: #ebebf0;
+  font-size: 13px;
+}
+
+.popTitel {
+  font-size: 12px;
+  color: #636366;
+  font-weight: 600;
+  margin: 0 0 9px;
+}
+
+.popLabel {
+  display: block;
+  font-size: 10.5px;
+  color: #636366;
+  margin: 8px 0 3px;
+}
+
+.popFeld {
+  width: 100%;
+  background: #1c1c1e;
+  border: 1px solid #48484a;
+  border-radius: 6px;
+  padding: 5px 7px;
+  font: inherit;
+  font-size: 12.5px;
+  color: #ebebf0;
+}
+
+.popFeld:focus {
+  outline: 2px solid #0a84ff;
+  outline-offset: -1px;
+}
+
+.popNotiz {
+  resize: vertical;
+  min-height: 46px;
+}
+
+.popZeile {
+  display: flex;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.popZeile > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.popFuss {
+  display: flex;
+  gap: 7px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.popLoeschen {
+  color: #ff453a;
+  font-size: 12.5px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.popLoeschen:hover {
+  background: #ff453a22;
+}
+
+.popFertig {
+  margin-left: auto;
+  background: #0a84ff;
+  color: #fff;
+  padding: 5px 15px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.popFertig:hover {
+  background: #3d9bff;
+}
+
+.popFehler {
+  margin: 9px 0 0;
+  font-size: 11.5px;
+  color: #ff6961;
+  background: #ff453a1f;
+  border-radius: 6px;
+  padding: 5px 7px;
+}
+
+.popFrage {
+  padding: 2px;
+}
+
+.popHinweis {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #8e8e93;
+}
+
+.popFrageKnoepfe {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.popFrageKnoepfe > button:not(.popAbbruch) {
+  background: #3a3a3c;
+  color: #ebebf0;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.popFrageKnoepfe > button:not(.popAbbruch):hover {
+  background: #48484a;
+}
+
+.popAbbruch {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #8e8e93;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.tageWahl {
+  display: flex;
+  gap: 3px;
+  margin-top: 5px;
+}
+
+.tagKnopf {
+  flex: 1;
+  padding: 4px 0;
+  font-size: 11px;
+  color: #8e8e93;
+  background: #1c1c1e;
+  border: 1px solid #48484a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tagKnopfAn {
+  background: #0a84ff;
+  border-color: #0a84ff;
+  color: #fff;
+}
+
+.hinweis {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2c2c2e;
+  border: 1px solid #3a3a3c;
+  color: #ff6961;
+  border-radius: 8px;
+  padding: 8px 15px;
+  font-size: 12px;
+  box-shadow: 0 8px 24px #0009;
+  z-index: 80;
+}
+
+.laedt {
+  padding: 24px 14px;
+  color: #8e8e93;
+  font-size: 12.5px;
+}

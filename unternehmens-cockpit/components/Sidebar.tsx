@@ -7,6 +7,7 @@ import type { Alert } from "@/lib/types";
 
 const NAV = [
   { href: "/", label: "Übersicht" },
+  { href: "/kalender", label: "Kalender" },
   { href: "/kosten", label: "Kosten" },
   { href: "/kunden", label: "Kunden-Verbrauch" },
   { href: "/alerts", label: "Alerts" },
