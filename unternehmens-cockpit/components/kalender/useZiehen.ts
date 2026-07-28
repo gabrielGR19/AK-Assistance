@@ -6,6 +6,7 @@ import {
   neueEndMinute,
   neueStartMinute,
   neuerZeitraum,
+  pageYMitScroll,
   spalteAusPosition,
   RASTER_MIN,
   type RasterMass,
@@ -36,6 +37,9 @@ export interface ZugStart {
 interface Optionen {
   // Element, das die Tagesspalten enthält. Wird beim Drücken EINMAL vermessen.
   rasterEl: () => HTMLElement | null;
+  // Der Bereich, in dem das Raster scrollt. Von ihm wird während des Zugs nur `scrollTop`
+  // gelesen — ein Zahlenwert eines stabilen Elements, keine Geometrie.
+  scrollEl: () => HTMLElement | null;
   // Wird beim Loslassen aufgerufen, wenn wirklich gezogen wurde.
   beiFertig: (zug: Zug) => void;
   // Wird beim Loslassen aufgerufen, wenn sich nichts bewegt hat (reiner Klick).
@@ -55,11 +59,17 @@ interface Optionen {
  * geht die Erfassung verloren und das Loslassen kommt nie an. Listener auf `window` bekommen
  * jede Bewegung, auch außerhalb des Fensters.
  */
-export function useZiehen({ rasterEl, beiFertig, beiKlick }: Optionen) {
+export function useZiehen({ rasterEl, scrollEl, beiFertig, beiKlick }: Optionen) {
   const [zug, setZug] = useState<Zug | null>(null);
 
   // Alles, was während eines Zugs unveränderlich bleibt.
-  const mass = useRef<{ raster: RasterMass; spalten: SpaltenMass[]; griffMin: number; ur: ZugStart } | null>(null);
+  const mass = useRef<{
+    raster: RasterMass;
+    spalten: SpaltenMass[];
+    griffMin: number;
+    ur: ZugStart;
+    scrollBeimStart: number;
+  } | null>(null);
   // Der Zug auch als Ref, damit die window-Handler ihn ohne Neuregistrierung lesen können.
   const zugRef = useRef<Zug | null>(null);
   const setzeZug = useCallback((z: Zug | null) => {
@@ -90,12 +100,12 @@ export function useZiehen({ rasterEl, beiFertig, beiKlick }: Optionen) {
       });
 
       const griffMin = minuteAusPosition(e.pageY, raster);
-      mass.current = { raster, spalten, griffMin, ur: start };
+      mass.current = { raster, spalten, griffMin, ur: start, scrollBeimStart: scrollEl()?.scrollTop ?? 0 };
 
       setzeZug({ ...start, bewegt: false });
       e.preventDefault();
     },
-    [rasterEl, setzeZug],
+    [rasterEl, scrollEl, setzeZug],
   );
 
   useEffect(() => {
@@ -106,7 +116,10 @@ export function useZiehen({ rasterEl, beiFertig, beiKlick }: Optionen) {
       const aktuell = zugRef.current;
       if (!m || !aktuell) return;
 
-      const zeigerMin = minuteAusPosition(e.pageY, m.raster);
+      const zeigerMin = minuteAusPosition(
+        pageYMitScroll(e.pageY, m.scrollBeimStart, scrollEl()?.scrollTop ?? m.scrollBeimStart),
+        m.raster,
+      );
 
       if (m.ur.art === "neu") {
         const { von, bis } = neuerZeitraum(m.griffMin, zeigerMin);
@@ -166,7 +179,7 @@ export function useZiehen({ rasterEl, beiFertig, beiKlick }: Optionen) {
     // Absichtlich nur an "läuft ein Zug?" gebunden: die Handler lesen den aktuellen Stand
     // über zugRef, damit sie nicht bei jeder Mausbewegung neu registriert werden.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zug !== null, beiFertig, beiKlick, setzeZug]);
+  }, [zug !== null, beiFertig, beiKlick, setzeZug, scrollEl]);
 
   return { zug, beginne };
 }

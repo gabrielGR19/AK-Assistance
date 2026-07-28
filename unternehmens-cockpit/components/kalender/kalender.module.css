@@ -44,11 +44,18 @@
 .kalender {
   display: flex;
   align-items: stretch;
+  /* Auf Bildschirmhöhe begrenzt wie im Prototyp: gescrollt wird nur das Stundenraster,
+     Kopfzeile, Zielleiste, Tagesabschluss und Mini-Monat bleiben stehen. */
+  height: calc(100vh - 132px);
+  min-height: 520px;
 }
 
 .hauptbereich {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .sidebar {
@@ -437,6 +444,19 @@
 }
 
 /* ---------- Raster ---------- */
+
+.zeitansicht {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.rasterWrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
 
 .raster {
   display: grid;

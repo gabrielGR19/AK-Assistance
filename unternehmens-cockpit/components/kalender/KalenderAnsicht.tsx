@@ -364,7 +364,10 @@ export function KalenderAnsicht() {
     setEditor({
       istNeu,
       terminId: t.id.startsWith("serie:") ? null : t.id,
-      serieId: t.ausSerie?.serieId ?? null,
+      // Nur wenn es die Serie noch gibt: ein herausgelöster Termin überlebt das Löschen
+      // seiner Serie und ist danach ein ganz normaler Einzeltermin — die Auswahl
+      // "nur dieser / ganze Serie" wäre dann eine Falle.
+      serieId: serie ? serie.id : null,
       vorkommenDatum: t.ausSerie?.datum ?? null,
       position: {
         links: Math.max(12, Math.min(punkt.x + 12, innerWidth - 310)),

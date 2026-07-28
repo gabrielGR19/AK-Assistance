@@ -62,6 +62,7 @@ export function Zeitraster({
   // global: eine Woche mit einem offenen Tag hat 8 Spalten und bleibt lesbar.
   const [offeneTage, setOffeneTage] = useState<Set<string>>(() => new Set());
   const rasterRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   // Eigene, leichte Uhr für die Jetzt-Linie — unabhängig vom Daten-Polling.
   useEffect(() => {
@@ -92,6 +93,7 @@ export function Zeitraster({
 
   const { zug, beginne } = useZiehen({
     rasterEl: () => rasterRef.current,
+    scrollEl: () => wrapRef.current,
     beiFertig,
     beiKlick: klick,
   });
@@ -128,7 +130,7 @@ export function Zeitraster({
   }
 
   return (
-    <div>
+    <div className={s.zeitansicht}>
       {/* Kopfzeile */}
       <div className={s.kopfzeile} style={{ gridTemplateColumns: vorlage }}>
         <div />
@@ -209,7 +211,8 @@ export function Zeitraster({
         </div>
       </div>
 
-      {/* Raster */}
+      {/* Raster — der einzige Teil, der scrollt. */}
+      <div ref={wrapRef} className={s.rasterWrap}>
       <div className={s.raster} ref={rasterRef} style={{ gridTemplateColumns: vorlage, height: RASTER_HOEHE }}>
         <div className={s.zeitspalte}>
           {Array.from({ length: STUNDE_BIS - STUNDE_VON + 1 }, (_, i) => STUNDE_VON + i).map((h) => (
@@ -237,6 +240,7 @@ export function Zeitraster({
             />
           );
         })}
+      </div>
       </div>
 
       {/* Tagesabschluss unter dem Raster — der eigene Rückblick, wie im Prototyp. */}

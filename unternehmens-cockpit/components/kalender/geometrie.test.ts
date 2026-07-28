@@ -11,7 +11,19 @@ import {
   RASTER_MIN,
   type RasterMass,
 } from "./geometrie.ts";
+import { pageYMitScroll } from "./geometrie.ts";
 import { STUNDE_VON, SPUR } from "./datum.ts";
+
+test("ohne Scrollen während des Zugs bleibt die Zeigerposition unverändert", () => {
+  assert.equal(pageYMitScroll(500, 120, 120), 500);
+});
+
+test("Scrollen mitten im Ziehen verschiebt die Zeigerposition mit dem Raster", () => {
+  // 84px nach unten gescrollt = eine Stunde: der Zeiger steht jetzt eine Stunde später.
+  assert.equal(pageYMitScroll(500, 0, SPUR), 500 + SPUR);
+  // Zurückgescrollt: entsprechend nach oben.
+  assert.equal(pageYMitScroll(500, SPUR, 0), 500 - SPUR);
+});
 
 // Rasterfläche wie im Browser: beginnt 500px unter dem Dokumentanfang, 06:00–24:00.
 const MASS: RasterMass = { obenAbsolut: 500, hoehe: 18 * SPUR };

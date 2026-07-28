@@ -34,6 +34,14 @@ export function minuteAusPosition(pageY: number, mass: RasterMass): number {
   return runde(STUNDE_VON * 60 + (y / SPUR) * 60);
 }
 
+// Das Stundenraster steht in einem eigenen Scrollbereich. Scrollt der Nutzer MITTEN im
+// Ziehen, wandert die Rasterfläche unter dem Zeiger weg, ohne dass sich pageY ändert — die
+// beim Drücken gemessene Oberkante stimmt dann nicht mehr. Statt neu zu messen (das war der
+// Fehler des Vorgängers) wird nur der Scroll-Versatz seit dem Anfassen aufgerechnet.
+export function pageYMitScroll(pageY: number, scrollBeimStart: number, scrollJetzt: number): number {
+  return pageY + (scrollJetzt - scrollBeimStart);
+}
+
 // Waagrechte Grenzen der Tagesspalten, ebenfalls einmalig gemessen (Dokumentkoordinaten).
 export interface SpaltenMass {
   datum: string; // "YYYY-MM-DD"
