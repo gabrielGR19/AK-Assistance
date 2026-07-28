@@ -454,7 +454,9 @@
 
 .rasterWrap {
   flex: 1;
-  min-height: 0;
+  /* Nicht 0: sonst quetscht die aufgeklappte Zielleiste das Raster auf eine Zeile
+     zusammen. Lieber wächst der Kasten und die Seite scrollt. */
+  min-height: 220px;
   overflow-y: auto;
 }
 
