@@ -31,6 +31,8 @@ interface Props {
   beiZiehtWechsel: (zieht: boolean) => void;
   // Ein Tagesabschluss wurde gesetzt oder geändert.
   beiReflexion: (datum: string, ab: boolean, notiz: string) => void;
+  // Eine Schnellvorlage wurde im Raster abgelegt.
+  beiVorlageAbgelegt: (tagIso: string, vonMin: number, nutzlast: string) => void;
 }
 
 // Der gezogene Termin wird während der Bewegung mit den Vorschauwerten dargestellt und
@@ -46,7 +48,15 @@ function mitVorschau(termine: Termin[], zug: Zug | null): Termin[] {
 
 // Tag-/Wochenansicht: Kopfzeile mit Aufklapp-Schalter, Ganztags-Zeile, Stundenraster mit
 // Terminblöcken und nachgeführter Jetzt-Linie. 06:00–24:00, 84px pro Stunde.
-export function Zeitraster({ tage, daten, beiZugFertig, beiKlick, beiZiehtWechsel, beiReflexion }: Props) {
+export function Zeitraster({
+  tage,
+  daten,
+  beiZugFertig,
+  beiKlick,
+  beiZiehtWechsel,
+  beiReflexion,
+  beiVorlageAbgelegt,
+}: Props) {
   const [jetzt, setJetzt] = useState(() => new Date());
   // Tage, für die die Spalte der anderen Person aufgeklappt ist — bewusst pro Tag und nicht
   // global: eine Woche mit einem offenen Tag hat 8 Spalten und bleibt lesbar.
@@ -223,6 +233,7 @@ export function Zeitraster({ tage, daten, beiZugFertig, beiKlick, beiZiehtWechse
               jetztMinute={jetztMinute}
               zug={zug}
               beginne={beginneMitPunkt}
+              beiVorlageAbgelegt={beiVorlageAbgelegt}
             />
           );
         })}

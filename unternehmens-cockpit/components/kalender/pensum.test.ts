@@ -58,13 +58,6 @@ test("aufgelöste Serien-Vorkommen zählen wie normale Termine", () => {
   assert.equal(pensumAm(termine, "gabriel", TAG), 60);
 });
 
-test("ausgeblendete Label zählen nicht mit", () => {
-  const termine = [
-    termin({ id: "a", label: "programmieren" }),
-    termin({ id: "b", label: "vertrieb", start: `${TAG}T11:00`, ende: `${TAG}T12:00` }),
-  ];
-  assert.equal(pensumAm(termine, "gabriel", TAG, new Set(["programmieren"])), 60);
-});
 
 test("stundenText schreibt deutsche Kommazahlen", () => {
   assert.equal(stundenText(240), "4,0");

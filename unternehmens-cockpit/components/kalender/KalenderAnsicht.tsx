@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Ganztags, PersonId, Reflexion, Serie, Termin, Vorlage } from "@/lib/kalender-typen";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Ganztags, LabelSchluessel, PersonId, Reflexion, Serie, Termin, Vorlage } from "@/lib/kalender-typen";
+import { LABELS, istLabel } from "@/lib/kalender-typen";
 import { MONATE, WOCHENTAG, iso, montagVon, plusTage } from "./datum";
 import { Zeitraster, type ZugErgebnis } from "./Zeitraster";
+import { alsUhrzeit } from "./geometrie.ts";
+import { KalenderSeitenleiste } from "./KalenderSeitenleiste";
 import { MonatsAnsicht } from "./MonatsAnsicht";
 import { TerminEditor, type EditorWerte } from "./TerminEditor";
 import { stundenText } from "./pensum.ts";
@@ -27,6 +30,9 @@ export interface KalenderDaten {
 }
 
 const POLL_MS = 8000;
+
+// Nur Ansichtszustand dieses Browsers, keine geteilten Daten.
+const SPEICHER_LABEL = "kalender-ausgeblendet";
 
 export function tageDerAnsicht(ansicht: Ansicht, anker: Date): Date[] {
   if (ansicht === "tag") return [new Date(anker.getFullYear(), anker.getMonth(), anker.getDate())];
@@ -72,11 +78,40 @@ export function KalenderAnsicht() {
   const [daten, setDaten] = useState<KalenderDaten | null>(null);
   const [editor, setEditor] = useState<EditorZustand | null>(null);
   const [meldung, setMeldung] = useState<string | null>(null);
+  // Ausgeblendete Label sind reiner Ansichtszustand dieses Browsers — sie gehören nicht in
+  // die geteilte Datei, sonst blendet Gabriel Moritz etwas aus.
+  const [ausgeblendet, setAusgeblendet] = useState<Set<LabelSchluessel>>(() => new Set());
   const zaehlerRef = useRef<number | null>(null);
   const ziehtRef = useRef(false);
   const ladenRef = useRef<(() => void) | null>(null);
+  const dateiRef = useRef<HTMLInputElement>(null);
 
   const { von, bis } = zeitraum(ansicht, anker);
+
+  // Erst nach dem ersten Rendern lesen: auf dem Server gibt es kein localStorage, und ein
+  // abweichender erster Aufbau würde die Hydration zerschießen.
+  useEffect(() => {
+    try {
+      const roh = localStorage.getItem(SPEICHER_LABEL);
+      if (roh) setAusgeblendet(new Set((JSON.parse(roh) as string[]).filter(istLabel)));
+    } catch {
+      // Unlesbarer Eintrag: dann eben alles sichtbar.
+    }
+  }, []);
+
+  function labelUmschalten(k: LabelSchluessel) {
+    setAusgeblendet((alt) => {
+      const neu = new Set(alt);
+      if (neu.has(k)) neu.delete(k);
+      else neu.add(k);
+      try {
+        localStorage.setItem(SPEICHER_LABEL, JSON.stringify([...neu]));
+      } catch {
+        // Kein Speicher (privater Modus): die Auswahl gilt dann nur für diese Sitzung.
+      }
+      return neu;
+    });
+  }
 
   useEffect(() => {
     let aktiv = true;
@@ -108,6 +143,18 @@ export function KalenderAnsicht() {
   }, [von, bis]);
 
   const neuLaden = useCallback(() => ladenRef.current?.(), []);
+
+  // Ausgeblendete Label werden einmal zentral herausgefiltert — danach rechnen Raster,
+  // Monatsansicht und Pensum alle mit derselben Menge.
+  const sichtbar = useMemo(
+    () => (daten ? { ...daten, termine: daten.termine.filter((t) => !ausgeblendet.has(t.label)) } : null),
+    [daten, ausgeblendet],
+  );
+
+  const eigeneVorlagen = useMemo(
+    () => (daten ? daten.vorlagen.filter((v) => v.besitzer === daten.ich) : []),
+    [daten],
+  );
 
   function melde(text: string) {
     setMeldung(text);
@@ -141,6 +188,115 @@ export function KalenderAnsicht() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [neuLaden],
   );
+
+  // Eine Schnellvorlage wurde im Raster abgelegt: Termin mit der hinterlegten Dauer anlegen.
+  const beiVorlageAbgelegt = useCallback(
+    async (tagIso: string, vonMin: number, nutzlast: string) => {
+      let v: { titel?: unknown; label?: unknown; min?: unknown };
+      try {
+        v = JSON.parse(nutzlast);
+      } catch {
+        return; // Etwas anderes als eine Vorlage — ignorieren.
+      }
+      if (typeof v.titel !== "string" || !istLabel(v.label)) return;
+      const dauer = typeof v.min === "number" && v.min > 0 ? Math.round(v.min) : 60;
+      // So weit nach oben schieben, dass der Termin am selben Tag endet.
+      const start = Math.max(0, Math.min(vonMin, 24 * 60 - dauer));
+
+      try {
+        await api.legeTerminAn({
+          titel: v.titel,
+          label: v.label,
+          notiz: "",
+          start: `${tagIso}T${alsUhrzeit(start)}`,
+          ende: `${tagIso}T${alsUhrzeit(start + dauer)}`,
+        });
+        neuLaden();
+      } catch (err) {
+        zeigeFehler(err);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [neuLaden],
+  );
+
+  async function vorlageAnlegen() {
+    const titel = window.prompt("Titel der Vorlage:");
+    if (!titel?.trim()) return;
+    const dauer = Number(window.prompt("Dauer in Minuten:", "60")?.trim());
+    const label = window.prompt(`Label — ${Object.keys(LABELS).join(", ")}`, "gruendung")?.trim();
+    if (!istLabel(label)) {
+      melde("Unbekanntes Label.");
+      return;
+    }
+    try {
+      await api.legeVorlageAn({
+        titel: titel.trim(),
+        label,
+        min: Number.isFinite(dauer) && dauer > 0 ? Math.round(dauer) : 60,
+      });
+      neuLaden();
+    } catch (err) {
+      zeigeFehler(err);
+    }
+  }
+
+  async function vorlageLoeschen(id: string) {
+    try {
+      await api.loescheVorlage(id);
+      neuLaden();
+    } catch (err) {
+      zeigeFehler(err);
+    }
+  }
+
+  // "+" in der Seitenleiste: neuer Termin um 10:00 am ersten sichtbaren Tag, Editor auf.
+  async function neuerTermin() {
+    if (!daten) return;
+    const tag = iso(tageDerAnsicht(ansicht === "monat" ? "tag" : ansicht, anker)[0]);
+    try {
+      const { termin } = await api.legeTerminAn({
+        titel: "Neuer Termin",
+        label: "gruendung",
+        notiz: "",
+        start: `${tag}T10:00`,
+        ende: `${tag}T11:00`,
+      });
+      neuLaden();
+      oeffneEditorFuer(termin, daten, { x: innerWidth / 2, y: innerHeight / 3 }, true);
+    } catch (err) {
+      zeigeFehler(err);
+    }
+  }
+
+  // Sicherung herunterladen.
+  function exportieren() {
+    // Der Browser holt die Datei über die Route — Content-Disposition setzt den Dateinamen.
+    window.location.href = "/api/kalender/export";
+  }
+
+  // Sicherung einspielen. Ersetzt nur die eigenen Einträge, siehe app/api/kalender/import.
+  async function importieren(datei: File) {
+    if (
+      !window.confirm(
+        `"${datei.name}" einspielen?\n\nDeine bisherigen Termine, Serien, ganztägigen Einträge und Vorlagen ` +
+          `werden dabei ersetzt. Die Einträge der anderen Person bleiben unberührt.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      const inhalt = JSON.parse(await datei.text());
+      const bericht = await api.importiere(inhalt);
+      neuLaden();
+      melde(
+        `Eingespielt: ${bericht.termine} Termine, ${bericht.ganztags} ganztägig, ${bericht.vorlagen} Vorlagen` +
+          (bericht.uebersprungen ? ` — ${bericht.uebersprungen} Einträge übersprungen.` : "."),
+      );
+    } catch (err) {
+      melde(err instanceof Error ? err.message : "Die Datei konnte nicht gelesen werden.");
+    }
+  }
 
   // Tagespensum ändern — Eingabe in Stunden, gespeichert wird in Minuten.
   async function pensumAendern() {
@@ -342,7 +498,46 @@ export function KalenderAnsicht() {
       {/* Der Kalender bringt sein eigenes, dunkles Erscheinungsbild mit (wie der Prototyp)
           und steht deshalb in einem eigenen Kasten innerhalb der hellen Cockpit-Seite. */}
       <div className={s.kalender}>
+        <KalenderSeitenleiste
+          ausgeblendet={ausgeblendet}
+          beiLabelWechsel={labelUmschalten}
+          vorlagen={eigeneVorlagen}
+          beiVorlageNeu={vorlageAnlegen}
+          beiVorlageWeg={vorlageLoeschen}
+          sichtbareTage={tageDerAnsicht(ansicht === "monat" ? "woche" : ansicht, anker)}
+          beiTagWaehlen={(d) => {
+            setAnker(d);
+            setAnsicht("tag");
+          }}
+          beiNeuerTermin={neuerTermin}
+        />
+
+        <div className={s.hauptbereich}>
         <div className={s.werkzeugleiste}>
+          <div className={s.werkzeug}>
+            <button className={s.werkzeugBtn} title="Kalender als JSON sichern" onClick={exportieren}>
+              Export
+            </button>
+            <button
+              className={s.werkzeugBtn}
+              title="Sicherung einspielen"
+              onClick={() => dateiRef.current?.click()}
+            >
+              Import
+            </button>
+            <input
+              ref={dateiRef}
+              type="file"
+              accept="application/json"
+              hidden
+              aria-label="Sicherung einspielen"
+              onChange={(e) => {
+                const datei = e.target.files?.[0];
+                e.target.value = ""; // dieselbe Datei soll erneut wählbar sein
+                if (datei) importieren(datei);
+              }}
+            />
+          </div>
           <div className={s.segment} role="group" aria-label="Ansicht">
             {(["tag", "woche", "monat"] as const).map((a) => (
               <button key={a} className={s.segmentBtn} aria-pressed={ansicht === a} onClick={() => setAnsicht(a)}>
@@ -373,29 +568,31 @@ export function KalenderAnsicht() {
           </div>
         </div>
 
-        {!daten && <p className={s.laedt}>Lade Kalender …</p>}
+        {!sichtbar && <p className={s.laedt}>Lade Kalender …</p>}
 
-        {daten && ansicht !== "monat" && (
+        {sichtbar && ansicht !== "monat" && (
           <Zeitraster
             tage={tageDerAnsicht(ansicht, anker)}
-            daten={daten}
+            daten={sichtbar}
             beiZugFertig={beiZugFertig}
             beiKlick={beiKlick}
             beiZiehtWechsel={beiZiehtWechsel}
             beiReflexion={beiReflexion}
+            beiVorlageAbgelegt={beiVorlageAbgelegt}
           />
         )}
 
-        {daten && ansicht === "monat" && (
+        {sichtbar && ansicht === "monat" && (
           <MonatsAnsicht
             anker={anker}
-            daten={daten}
+            daten={sichtbar}
             onTagWaehlen={(d) => {
               setAnker(d);
               setAnsicht("tag");
             }}
           />
         )}
+        </div>
       </div>
 
       {editor && (

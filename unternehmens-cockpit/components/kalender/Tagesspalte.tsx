@@ -3,7 +3,7 @@
 import { LABELS, type Termin } from "@/lib/kalender-typen";
 import { ordneBloecke, type BlockPosition } from "./bloecke";
 import { STUNDE_BIS, STUNDE_VON, SPUR, ausIso, minutenAmTag, uhr } from "./datum";
-import { obenAus, hoeheAus } from "./geometrie.ts";
+import { obenAus, hoeheAus, minuteAusPosition } from "./geometrie.ts";
 import type { Zug, ZugStart } from "./useZiehen.ts";
 import s from "./kalender.module.css";
 
@@ -16,6 +16,8 @@ interface Props {
   jetztMinute: number;
   zug: Zug | null;
   beginne: (e: React.PointerEvent, start: ZugStart) => void;
+  // Eine Schnellvorlage wurde auf diesem Tag abgelegt (Minute ab Mitternacht).
+  beiVorlageAbgelegt: (tagIso: string, vonMin: number, nutzlast: string) => void;
 }
 
 // Eine Tagesspalte. Zugeklappt zeigt sie nur die eigenen Termine über die volle Breite;
@@ -24,7 +26,17 @@ interface Props {
 // Nur die eigene Hälfte trägt `data-datum` — sie ist das Ziel beim Verschieben. Fremde
 // Termine lassen sich gar nicht erst anfassen: der Server würde sie ohnehin ablehnen, und ein
 // Block, der sich nicht bewegt, ist ehrlicher als eine Fehlermeldung nach dem Loslassen.
-export function Tagesspalte({ tagIso, eigene, fremde, offen, istHeute, jetztMinute, zug, beginne }: Props) {
+export function Tagesspalte({
+  tagIso,
+  eigene,
+  fremde,
+  offen,
+  istHeute,
+  jetztMinute,
+  zug,
+  beginne,
+  beiVorlageAbgelegt,
+}: Props) {
   const jetztSichtbar = istHeute && jetztMinute >= STUNDE_VON * 60 && jetztMinute <= STUNDE_BIS * 60;
 
   return (
@@ -46,6 +58,23 @@ export function Tagesspalte({ tagIso, eigene, fremde, offen, istHeute, jetztMinu
           // Nur auf freier Fläche — ein Klick auf einen Block hat seinen eigenen Handler.
           if ((e.target as HTMLElement).closest(`.${s.block}`)) return;
           beginne(e, { art: "neu", terminId: null, datum: tagIso, vonMin: 0, bisMin: 0 });
+        }}
+        // Schnellvorlagen lassen sich hierher ziehen. Gemessen wird beim Ablegen an genau
+        // dem Element, auf dem abgelegt wurde — nicht an einem gemerkten Rechteck.
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          const nutzlast = e.dataTransfer.getData("text/plain");
+          if (!nutzlast) return;
+          const rechteck = e.currentTarget.getBoundingClientRect();
+          const vonMin = minuteAusPosition(e.clientY + window.scrollY, {
+            obenAbsolut: rechteck.top + window.scrollY,
+            hoehe: rechteck.height,
+          });
+          beiVorlageAbgelegt(tagIso, vonMin, nutzlast);
         }}
       >
         {ordneBloecke(eigene).map((p) => (
