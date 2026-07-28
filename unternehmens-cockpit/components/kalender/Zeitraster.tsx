@@ -6,6 +6,8 @@ import type { KalenderDaten } from "./KalenderAnsicht";
 import { WOCHENTAG, ausIso, iso, minutenAmTag } from "./datum";
 import { RASTER_HOEHE, alsUhrzeit } from "./geometrie.ts";
 import { Tagesspalte } from "./Tagesspalte";
+import { Reflexionszeile } from "./Reflexionszeile";
+import { pensumAm, stundenText } from "./pensum.ts";
 import { useZiehen, type Zug, type ZugStart } from "./useZiehen.ts";
 import { STUNDE_BIS, STUNDE_VON, SPUR } from "./datum";
 import s from "./kalender.module.css";
@@ -27,6 +29,8 @@ interface Props {
   beiKlick: (terminId: string | null, punkt: { x: number; y: number }) => void;
   // Meldet, ob gerade gezogen wird — währenddessen pausiert das Daten-Polling.
   beiZiehtWechsel: (zieht: boolean) => void;
+  // Ein Tagesabschluss wurde gesetzt oder geändert.
+  beiReflexion: (datum: string, ab: boolean, notiz: string) => void;
 }
 
 // Der gezogene Termin wird während der Bewegung mit den Vorschauwerten dargestellt und
@@ -42,7 +46,7 @@ function mitVorschau(termine: Termin[], zug: Zug | null): Termin[] {
 
 // Tag-/Wochenansicht: Kopfzeile mit Aufklapp-Schalter, Ganztags-Zeile, Stundenraster mit
 // Terminblöcken und nachgeführter Jetzt-Linie. 06:00–24:00, 84px pro Stunde.
-export function Zeitraster({ tage, daten, beiZugFertig, beiKlick, beiZiehtWechsel }: Props) {
+export function Zeitraster({ tage, daten, beiZugFertig, beiKlick, beiZiehtWechsel, beiReflexion }: Props) {
   const [jetzt, setJetzt] = useState(() => new Date());
   // Tage, für die die Spalte der anderen Person aufgeklappt ist — bewusst pro Tag und nicht
   // global: eine Woche mit einem offenen Tag hat 8 Spalten und bleibt lesbar.
@@ -121,10 +125,31 @@ export function Zeitraster({ tage, daten, beiZugFertig, beiKlick, beiZiehtWechse
         {tage.map((d) => {
           const tagIso = iso(d);
           const offen = offeneTage.has(tagIso);
+          const ist = pensumAm(daten.termine, daten.ich, tagIso);
+          const soll = daten.pensumSoll[daten.ich];
+          const voll = soll > 0 && ist >= soll;
+          const abgeschlossen = daten.reflexionen[daten.ich][tagIso]?.ab ?? false;
           return (
             <div key={tagIso} className={`${s.kopfTag}${tagIso === heuteIso ? " " + s.kopfTagHeute : ""}`}>
               <span className={s.kopfName}>
                 {WOCHENTAG[(d.getDay() + 6) % 7]}. {d.getDate()}.
+                {abgeschlossen && (
+                  <span className={s.haken} title="Tag durchgezogen">
+                    ✓
+                  </span>
+                )}
+              </span>
+              {/* Tagespensum: wie viel Arbeitszeit steht schon im Tag? */}
+              <span className={s.pensum}>
+                <span className={s.pensumBar}>
+                  <i
+                    className={voll ? s.pensumVoll : undefined}
+                    style={{ width: `${Math.min(100, soll ? (ist / soll) * 100 : 0)}%` }}
+                  />
+                </span>
+                <span className={`${s.pensumZahl}${voll ? " " + s.pensumZahlVoll : ""}`}>
+                  {stundenText(ist)} / {stundenText(soll)} h
+                </span>
               </span>
               <button
                 className={s.aufklappen}
@@ -202,6 +227,14 @@ export function Zeitraster({ tage, daten, beiZugFertig, beiKlick, beiZiehtWechse
           );
         })}
       </div>
+
+      {/* Tagesabschluss unter dem Raster — der eigene Rückblick, wie im Prototyp. */}
+      <Reflexionszeile
+        tage={tage}
+        reflexionen={daten.reflexionen[daten.ich]}
+        spalten={vorlage}
+        beiAenderung={beiReflexion}
+      />
     </div>
   );
 }

@@ -61,6 +61,21 @@ export function loescheSerie(id: string) {
   return schicke<unknown>(`/api/kalender/serien/${encodeURIComponent(id)}`, "DELETE");
 }
 
+// Tagesabschluss eines Tages setzen. Immer der eigene — wer schreibt, entscheidet der
+// Server aus der Anmeldung.
+export function setzeReflexion(datum: string, ab: boolean, notiz: string) {
+  return schicke<{ datum: string; ab: boolean; notiz: string }>("/api/kalender/reflexion", "PUT", {
+    datum,
+    ab,
+    notiz,
+  });
+}
+
+// Eigenes Tagespensum-Soll in Minuten.
+export function setzePensum(minuten: number) {
+  return schicke<{ minuten: number }>("/api/kalender/pensum", "PUT", { minuten });
+}
+
 // Ein einzelnes Serien-Vorkommen: ohne `ersatz` wird es gelöscht, mit `ersatz` durch einen
 // eigenständigen Termin ersetzt. Beides in einem Schreibvorgang, damit nichts verlorengeht.
 export function aendereVorkommen(serieId: string, datum: string, ersatz?: TerminEingabe) {

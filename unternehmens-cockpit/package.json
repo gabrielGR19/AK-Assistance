@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "test": "node --test lib/*.test.ts"
+    "test": "node --test lib/*.test.ts components/kalender/*.test.ts"
   },
   "dependencies": {
     "next": "16.2.10",

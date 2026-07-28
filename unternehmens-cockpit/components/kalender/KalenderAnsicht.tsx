@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Ganztags, PersonId, Serie, Termin } from "@/lib/kalender-typen";
+import type { Ganztags, PersonId, Reflexion, Serie, Termin, Vorlage } from "@/lib/kalender-typen";
 import { MONATE, WOCHENTAG, iso, montagVon, plusTage } from "./datum";
 import { Zeitraster, type ZugErgebnis } from "./Zeitraster";
 import { MonatsAnsicht } from "./MonatsAnsicht";
 import { TerminEditor, type EditorWerte } from "./TerminEditor";
+import { stundenText } from "./pensum.ts";
+import { Zielleiste } from "./Zielleiste";
+import { Miniziel } from "./Miniziel";
 import * as api from "./kalenderApi.ts";
 import s from "./kalender.module.css";
 
@@ -17,6 +20,10 @@ export interface KalenderDaten {
   termine: Termin[];
   ganztags: Ganztags[];
   serien: Serie[];
+  // Tagesabschlüsse und Pensum-Soll beider Personen; angezeigt wird jeweils das eigene.
+  reflexionen: Record<PersonId, Record<string, Reflexion>>;
+  pensumSoll: Record<PersonId, number>;
+  vorlagen: Vorlage[];
 }
 
 const POLL_MS = 8000;
@@ -102,10 +109,57 @@ export function KalenderAnsicht() {
 
   const neuLaden = useCallback(() => ladenRef.current?.(), []);
 
-  function zeigeFehler(err: unknown) {
-    setMeldung(err instanceof Error ? err.message : "Die Änderung hat nicht geklappt.");
+  function melde(text: string) {
+    setMeldung(text);
     setTimeout(() => setMeldung(null), 4000);
+  }
+
+  function zeigeFehler(err: unknown) {
+    melde(err instanceof Error ? err.message : "Die Änderung hat nicht geklappt.");
     neuLaden();
+  }
+
+  // Tagesabschluss: erst lokal setzen, dann schreiben. Ohne das lokale Vorziehen springt
+  // der Haken kurz zurück, bis die Antwort da ist.
+  const beiReflexion = useCallback(
+    async (datum: string, ab: boolean, notiz: string) => {
+      setDaten((d) =>
+        d
+          ? {
+              ...d,
+              reflexionen: { ...d.reflexionen, [d.ich]: { ...d.reflexionen[d.ich], [datum]: { ab, notiz } } },
+            }
+          : d,
+      );
+      try {
+        await api.setzeReflexion(datum, ab, notiz);
+        neuLaden();
+      } catch (err) {
+        zeigeFehler(err);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [neuLaden],
+  );
+
+  // Tagespensum ändern — Eingabe in Stunden, gespeichert wird in Minuten.
+  async function pensumAendern() {
+    if (!daten) return;
+    const eingabe = window.prompt("Tagespensum in Stunden:", stundenText(daten.pensumSoll[daten.ich]));
+    if (eingabe === null) return;
+    const stunden = Number(eingabe.trim().replace(",", "."));
+    if (!Number.isFinite(stunden) || stunden < 0 || stunden > 24) {
+      melde("Bitte eine Stundenzahl zwischen 0 und 24 eingeben.");
+      return;
+    }
+    const minuten = Math.round(stunden * 60);
+    setDaten((d) => (d ? { ...d, pensumSoll: { ...d.pensumSoll, [d.ich]: minuten } } : d));
+    try {
+      await api.setzePensum(minuten);
+      neuLaden();
+    } catch (err) {
+      zeigeFehler(err);
+    }
   }
 
   // Ein Zug ist zu Ende: genau einen Eintrag schreiben.
@@ -296,7 +350,15 @@ export function KalenderAnsicht() {
               </button>
             ))}
           </div>
+          {daten && (
+            <button className={s.werkzeugBtn} title="Tagespensum ändern" onClick={pensumAendern}>
+              Pensum: {stundenText(daten.pensumSoll[daten.ich])} h
+            </button>
+          )}
         </div>
+
+        <Zielleiste />
+        {daten && <Miniziel reflexionen={daten.reflexionen[daten.ich]} />}
 
         <div className={s.titelzeile}>
           <h2 className={s.titel}>{titelText(ansicht, anker)}</h2>
@@ -320,6 +382,7 @@ export function KalenderAnsicht() {
             beiZugFertig={beiZugFertig}
             beiKlick={beiKlick}
             beiZiehtWechsel={beiZiehtWechsel}
+            beiReflexion={beiReflexion}
           />
         )}
 
