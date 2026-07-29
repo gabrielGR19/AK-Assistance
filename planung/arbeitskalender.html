@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arbeitskalender — AK Assistance</title>
+<style>
+/* ---------- Grundlagen: Apple-Kalender, dunkel ---------- */
+:root{
+  --bg:#1C1C1E;
+  --bg-sidebar:#161618;
+  --bg-kopf:#1C1C1E;
+  --linie:#2C2C2E;
+  --linie-stark:#3A3A3C;
+  --text:#EBEBF0;
+  --text-2:#8E8E93;
+  --text-3:#636366;
+  --akzent:#FF453A;
+  --gruen:#34C759;
+  --spur:84px;          /* Höhe einer Stunde */
+  --zeitspalte:56px;
+  --radius:5px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font:13px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #0A84FF;outline-offset:1px;border-radius:3px}
+
+/* ---------- Gerüst ---------- */
+.app{display:grid;grid-template-columns:224px 1fr;height:100vh}
+
+/* ---------- Seitenleiste ---------- */
+.sidebar{
+  background:var(--bg-sidebar);
+  border-right:1px solid var(--linie);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sb-top{padding:10px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--linie)}
+.sb-scroll{flex:1;overflow-y:auto;padding:12px 12px 4px}
+.sb-titel{font-size:11px;font-weight:600;color:var(--text-3);text-transform:none;letter-spacing:.02em;margin:14px 0 6px}
+.sb-titel:first-child{margin-top:0}
+
+.kal-eintrag{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;cursor:pointer;user-select:none}
+.kal-eintrag:hover{background:#ffffff0d}
+.kal-eintrag input{appearance:none;width:13px;height:13px;border-radius:3px;border:1.5px solid var(--punkt);flex:0 0 auto;position:relative;cursor:pointer}
+.kal-eintrag input:checked{background:var(--punkt);border-color:var(--punkt)}
+.kal-eintrag input:checked::after{content:"";position:absolute;left:3.5px;top:.5px;width:3.5px;height:7px;border:solid #fff;border-width:0 1.6px 1.6px 0;transform:rotate(45deg)}
+.kal-eintrag span{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kal-eintrag.aus span{color:var(--text-3)}
+
+/* Schnellvorlagen */
+.vorlage{
+  display:flex;align-items:center;gap:7px;padding:5px 7px;margin-bottom:3px;
+  border-radius:5px;background:#ffffff08;cursor:grab;user-select:none;font-size:12px;
+}
+.vorlage:hover{background:#ffffff12}
+.vorlage:active{cursor:grabbing}
+.vorlage .punkt{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.vorlage .dauer{margin-left:auto;color:var(--text-3);font-size:11px;font-variant-numeric:tabular-nums}
+.vorlage .weg{opacity:0;color:var(--text-3);padding:0 2px;line-height:1}
+.vorlage:hover .weg{opacity:1}
+.vorlage-neu{width:100%;text-align:left;color:var(--text-3);font-size:12px;padding:5px 7px;border-radius:5px}
+.vorlage-neu:hover{background:#ffffff0d;color:var(--text-2)}
+
+/* Mini-Monat */
+.minimonat{border-top:1px solid var(--linie);padding:10px 12px 12px}
+.mm-kopf{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.mm-kopf b{font-size:12px;font-weight:600}
+.mm-kopf button{color:var(--text-2);padding:2px 5px;border-radius:4px;line-height:1}
+.mm-kopf button:hover{background:#ffffff12;color:var(--text)}
+.mm-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center}
+.mm-grid div{font-size:10px;color:var(--text-3);padding:2px 0}
+.mm-grid button{font-size:10.5px;padding:2.5px 0;border-radius:50%;color:var(--text-2);font-variant-numeric:tabular-nums}
+.mm-grid button:hover{background:#ffffff14}
+.mm-grid button.fremd{color:#48484A}
+.mm-grid button.heute{background:var(--akzent);color:#fff;font-weight:600}
+.mm-grid button.gewaehlt:not(.heute){background:#ffffff1f;color:var(--text)}
+
+/* ---------- Hauptbereich ---------- */
+.main{display:flex;flex-direction:column;overflow:hidden}
+
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--linie)}
+.segment{display:flex;background:#ffffff0f;border-radius:7px;padding:2px;margin:0 auto}
+.segment button{padding:3px 13px;border-radius:5px;font-size:12.5px;color:var(--text-2)}
+.segment button[aria-pressed="true"]{background:#48484A;color:var(--text);box-shadow:0 1px 2px #0006}
+.werkzeug{display:flex;gap:2px}
+.werkzeug button{padding:4px 9px;border-radius:5px;color:var(--text-2);font-size:12px}
+.werkzeug button:hover{background:#ffffff12;color:var(--text)}
+
+/* Zielleiste */
+.ziel{border-bottom:1px solid var(--linie);background:#ffffff05}
+.ziel-kopf{display:flex;align-items:center;gap:12px;padding:9px 14px;width:100%;text-align:left}
+.ziel-kopf:hover{background:#ffffff05}
+.ziel-marke{font-size:10px;font-weight:700;letter-spacing:.06em;color:#40C8DF;flex:0 0 auto}
+.ziel-satz{font-size:12.5px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ziel-pfeil{color:var(--text-3);font-size:10px;transition:transform .15s}
+.ziel[open-panel] .ziel-pfeil{transform:rotate(90deg)}
+.ziel-panel{display:none;padding:2px 14px 14px;gap:26px}
+.ziel[open-panel] .ziel-panel{display:flex;flex-wrap:wrap}
+.ziel-spalte{flex:1 1 340px;min-width:280px}
+.ziel-spalte h4{font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:6px}
+.ziel-liste{list-style:none;font-size:12px;color:var(--text-2);columns:1}
+.ziel-liste li{padding:1.5px 0 1.5px 16px;position:relative}
+.ziel-liste li::before{content:"○";position:absolute;left:0;color:var(--text-3);font-size:9px;top:4px}
+.ms-zeile{display:flex;gap:8px;font-size:12px;padding:2.5px 0;color:var(--text-2);border-left:2px solid transparent;padding-left:8px}
+.ms-zeile.jetzt{border-left-color:#40C8DF;color:var(--text)}
+.ms-kw{flex:0 0 74px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.ms-zeile.jetzt .ms-kw{color:#40C8DF;font-weight:600}
+
+/* Miniziel-Leiste */
+.miniziel{display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--linie)}
+.mz-label{font-size:11.5px;color:var(--text-2)}
+.mz-punkte{display:flex;gap:4px}
+.mz-punkte i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--text-3);display:block}
+.mz-punkte i.voll{background:var(--gruen);border-color:var(--gruen)}
+.mz-punkte i.heute{box-shadow:0 0 0 2px #ffffff26}
+.mz-zahl{font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.mz-fertig{color:var(--gruen);font-size:11.5px;font-weight:600}
+
+/* Titelzeile */
+.titelzeile{display:flex;align-items:baseline;gap:14px;padding:12px 14px 8px}
+.titelzeile h1{font-size:23px;font-weight:700;letter-spacing:-.01em}
+.nav{margin-left:auto;display:flex;align-items:center;gap:2px}
+.nav button{padding:3px 10px;border-radius:5px;color:var(--text-2);font-size:12px}
+.nav button:hover{background:#ffffff12;color:var(--text)}
+
+/* Kalenderkopf */
+.kopfzeile{display:grid;border-bottom:1px solid var(--linie)}
+.kopf-tag{padding:2px 8px 5px;border-left:1px solid var(--linie);min-width:0}
+.kopf-tag:first-child{border-left:0}
+.kopf-name{font-size:12.5px;color:var(--text-2);display:flex;align-items:center;gap:5px}
+.kopf-tag.ist-heute .kopf-name{color:var(--akzent);font-weight:600}
+.kopf-name .haken{color:var(--gruen);font-size:11px}
+.pensum{display:flex;align-items:center;gap:6px;margin-top:3px}
+.pensum-bar{flex:1;height:3px;border-radius:2px;background:#ffffff14;overflow:hidden;min-width:20px}
+.pensum-bar i{display:block;height:100%;background:#5AC8FA;border-radius:2px;transition:width .15s}
+.pensum-bar i.voll{background:var(--gruen)}
+.pensum-zahl{font-size:10px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pensum-zahl.voll{color:var(--gruen)}
+
+/* Ganztags-Zeile */
+.ganztags{display:grid;border-bottom:1px solid var(--linie);min-height:22px;position:relative}
+.gt-label{font-size:9.5px;color:var(--text-3);padding:5px 6px 0;text-align:right}
+.gt-flaeche{position:relative;grid-column:2/-1;padding:3px 0 4px}
+.gt-block{
+  position:absolute;height:16px;border-radius:3px;font-size:11px;line-height:16px;
+  padding:0 7px;background:#48484A;color:#D1D1D6;white-space:nowrap;overflow:hidden;cursor:pointer;
+}
+.gt-block:hover{filter:brightness(1.15)}
+
+/* Raster */
+.raster-wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;padding-top:9px}
+.raster{display:grid;position:relative}
+.zeitspalte{position:relative;border-right:1px solid var(--linie)}
+.zeitmarke{position:absolute;right:8px;transform:translateY(-50%);font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.tagspalte{position:relative;border-left:1px solid var(--linie)}
+.tagspalte:first-of-type{border-left:0}
+.stunde{position:absolute;left:0;right:0;border-top:1px solid var(--linie)}
+.halbe{position:absolute;left:0;right:0;border-top:1px solid #26262880}
+.jetztlinie{position:absolute;left:0;right:0;height:0;border-top:1.5px solid var(--akzent);z-index:6;pointer-events:none}
+.jetztlinie::before{content:"";position:absolute;left:-4px;top:-4px;width:7px;height:7px;border-radius:50%;background:var(--akzent)}
+
+/* Termin-Block */
+.block{
+  position:absolute;border-radius:var(--radius);overflow:hidden;cursor:pointer;
+  padding:3px 6px 2px 7px;border-left:3px solid var(--f);background:var(--fill);
+  min-height:18px;z-index:2;
+}
+.block:hover{filter:brightness(1.22)}
+.block.zieht{opacity:.85;z-index:20;cursor:grabbing;box-shadow:0 6px 18px #0009}
+.block .t{font-size:12.5px;font-weight:600;color:var(--ft);line-height:1.3;overflow:hidden;overflow-wrap:anywhere;hyphens:auto}
+.block .z{font-size:11.5px;color:var(--ft);opacity:.72;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:1px}
+.block.kurz{display:flex;gap:6px;align-items:baseline;padding-top:1px}
+.block.kurz .t{white-space:nowrap;text-overflow:ellipsis}
+.block.kurz .z{margin-left:auto;margin-top:0}
+.griff{position:absolute;left:0;right:0;bottom:0;height:9px;cursor:ns-resize}
+.geist{position:absolute;border-radius:var(--radius);background:#0A84FF33;border:1px solid #0A84FF88;z-index:19;pointer-events:none}
+
+/* Reflexionszeile */
+.reflexion{display:grid;border-top:1px solid var(--linie-stark);background:var(--bg-sidebar)}
+.rf-label{font-size:9.5px;color:var(--text-3);padding:9px 6px 0;text-align:right;line-height:1.2}
+.rf-zelle{border-left:1px solid var(--linie);padding:6px 7px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.rf-zelle:nth-of-type(2){border-left:0}
+.rf-check{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);cursor:pointer;user-select:none}
+.rf-check input{appearance:none;width:14px;height:14px;border-radius:4px;border:1.5px solid var(--text-3);position:relative;flex:0 0 auto;cursor:pointer}
+.rf-check input:checked{background:var(--gruen);border-color:var(--gruen)}
+.rf-check input:checked::after{content:"";position:absolute;left:4px;top:1px;width:3.5px;height:7.5px;border:solid #fff;border-width:0 1.7px 1.7px 0;transform:rotate(45deg)}
+.rf-check.ab{color:var(--gruen)}
+.rf-notiz{background:#ffffff0a;border:1px solid transparent;border-radius:4px;padding:3px 6px;font-size:11px;color:var(--text-2);width:100%}
+.rf-notiz::placeholder{color:#48484A}
+.rf-notiz:focus{background:#ffffff14;border-color:#0A84FF80;color:var(--text);outline:none}
+
+/* Monatsansicht */
+.monat{flex:1;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+.m-wochentage{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--linie)}
+.m-wochentage div{font-size:11.5px;color:var(--text-2);padding:4px 8px;text-align:right}
+.m-grid{display:grid;grid-template-columns:repeat(7,1fr);overflow-y:auto}
+.m-zelle{border-left:1px solid var(--linie);border-bottom:1px solid var(--linie);padding:3px 5px;min-height:88px;overflow:hidden;cursor:pointer}
+.m-zelle:nth-child(7n+1){border-left:0}
+.m-zelle.fremd{background:#ffffff04}
+.m-kopf{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-bottom:2px}
+.m-nr{font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.m-zelle.fremd .m-nr{color:#48484A}
+.m-zelle.heute .m-nr{background:var(--akzent);color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-weight:600}
+.m-haken{color:var(--gruen);font-size:10px;margin-right:auto}
+.m-termin{display:flex;align-items:center;gap:4px;font-size:11px;padding:.5px 0;white-space:nowrap;overflow:hidden}
+.m-termin i{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
+.m-termin span{overflow:hidden;text-overflow:ellipsis;color:var(--text-2)}
+.m-mehr{font-size:10.5px;color:var(--text-3);padding-left:10px}
+.m-ganztags{
+  font-size:10.5px;background:#48484A;color:#D1D1D6;border-radius:3px;
+  padding:0 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* Editor-Popover */
+.pop{
+  position:fixed;width:286px;background:#2C2C2E;border:1px solid #3A3A3C;border-radius:11px;
+  box-shadow:0 14px 40px #000b;padding:12px;z-index:60;display:none;
+}
+.pop.auf{display:block}
+.pop h3{font-size:12px;color:var(--text-3);font-weight:600;margin-bottom:9px}
+.pop label{display:block;font-size:10.5px;color:var(--text-3);margin:8px 0 3px}
+.pop input[type=text],.pop textarea,.pop select,.pop input[type=time],.pop input[type=date]{
+  width:100%;background:#1C1C1E;border:1px solid #48484A;border-radius:6px;padding:5px 7px;font-size:12.5px;
+}
+.pop textarea{resize:vertical;min-height:46px}
+.pop .zeile{display:flex;gap:7px}
+.pop .zeile>*{flex:1;min-width:0}
+.pop-fuss{display:flex;gap:7px;margin-top:12px;align-items:center}
+.pop-fuss .loeschen{color:var(--akzent);font-size:12.5px;padding:5px 8px;border-radius:6px}
+.pop-fuss .loeschen:hover{background:#FF453A22}
+.pop-fuss .fertig{margin-left:auto;background:#0A84FF;color:#fff;padding:5px 15px;border-radius:6px;font-size:12.5px;font-weight:500}
+.pop-fuss .fertig:hover{background:#3D9BFF}
+
+.hinweis{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  background:#2C2C2E;border:1px solid #3A3A3C;border-radius:8px;padding:8px 15px;
+  font-size:12px;box-shadow:0 8px 24px #0009;z-index:80;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.hinweis.auf{opacity:1}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= Seitenleiste ================= -->
+  <aside class="sidebar">
+    <div class="sb-top">
+      <button id="btn-neu" title="Neuer Termin (N)" style="font-size:17px;line-height:1;padding:0 4px;color:var(--text-2)">+</button>
+      <strong style="font-size:12.5px">Arbeitskalender</strong>
+    </div>
+    <div class="sb-scroll">
+      <div class="sb-titel">AK Assistance</div>
+      <div id="labels-firma"></div>
+      <div class="sb-titel">Übrige</div>
+      <div id="labels-rest"></div>
+
+      <div class="sb-titel">Schnellvorlagen</div>
+      <div id="vorlagen"></div>
+      <button class="vorlage-neu" id="btn-vorlage-neu">+ Vorlage anlegen</button>
+    </div>
+    <div class="minimonat">
+      <div class="mm-kopf">
+        <button id="mm-zurueck" aria-label="Vorheriger Monat">‹</button>
+        <b id="mm-titel"></b>
+        <button id="mm-vor" aria-label="Nächster Monat">›</button>
+      </div>
+      <div class="mm-grid" id="mm-grid"></div>
+    </div>
+  </aside>
+
+  <!-- ================= Hauptbereich ================= -->
+  <main class="main">
+    <div class="topbar">
+      <div class="werkzeug">
+        <button id="btn-export" title="Als JSON sichern">Export</button>
+        <button id="btn-import" title="JSON laden">Import</button>
+        <input type="file" id="datei-import" accept="application/json" hidden aria-label="JSON-Datei importieren">
+      </div>
+      <div class="segment" role="group" aria-label="Ansicht">
+        <button data-ansicht="tag">Tag</button>
+        <button data-ansicht="woche">Woche</button>
+        <button data-ansicht="monat">Monat</button>
+      </div>
+      <div class="werkzeug">
+        <button id="btn-pensum" title="Tagespensum ändern">Pensum: <span id="pensum-soll">4,0</span> h</button>
+      </div>
+    </div>
+
+    <!-- Zielleiste -->
+    <section class="ziel" id="ziel">
+      <button class="ziel-kopf" id="ziel-schalter" aria-expanded="false">
+        <span class="ziel-marke">ZIEL 30.09.</span>
+        <span class="ziel-satz">Am 30. September 2026 haben wir AK Assistance vollständig angemeldet und rechtlich sauber aufgestellt.</span>
+        <span class="ziel-pfeil">▶</span>
+      </button>
+      <div class="ziel-panel">
+        <div class="ziel-spalte">
+          <h4>Woran wir es messen — zehn Zustände</h4>
+          <ul class="ziel-liste">
+            <li>Gewerbeschein der Stadt Nürnberg liegt vor</li>
+            <li>Gesellschaftsvertrag der eGbR unterschrieben — Gewinnverteilung und Ausstieg geregelt</li>
+            <li>Eintragung der eGbR vollzogen oder beantragt, Notarfrage geklärt</li>
+            <li>Fragebogen zur steuerlichen Erfassung eingereicht, Kleinunternehmer- und Besteuerungsart bewusst entschieden</li>
+            <li>Kammerzugehörigkeit (IHK oder HWK) gemeldet</li>
+            <li>Geschäftskonto auf die Gesellschaft eröffnet</li>
+            <li>Kundenvertrag mit Haftungsbeschränkung anwaltlich geprüft</li>
+            <li>Datenschutzpaket steht: AVV, Datenschutzerklärung, Kundenerfassungsbogen</li>
+            <li>Alle sieben To-Dos aus dem Pöll-Gespräch abgehakt</li>
+            <li>Zweites Pöll-Gespräch geführt, Aufbau bestätigt</li>
+          </ul>
+          <p style="font-size:12px;color:var(--text-3);margin-top:9px;font-style:italic">
+            Danach müssen wir nur noch verkaufen — und erst dann bauen wir den Jahresplan.
+          </p>
+        </div>
+        <div class="ziel-spalte">
+          <h4>Meilensteine rückwärts</h4>
+          <div id="meilensteine"></div>
+          <p style="font-size:11.5px;color:var(--text-3);margin-top:9px">
+            Notar- und Anwaltstermine haben im September 2–3 Wochen Vorlauf. Deshalb steht das
+            <em>Buchen</em> in KW 35, nicht erst wenn sie fällig sind.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Miniziel -->
+    <div class="miniziel" id="miniziel"></div>
+
+    <!-- Titel + Navigation -->
+    <div class="titelzeile">
+      <h1 id="titel"></h1>
+      <div class="nav">
+        <button id="nav-zurueck" aria-label="Zurück">‹</button>
+        <button id="nav-heute">Heute</button>
+        <button id="nav-vor" aria-label="Vor">›</button>
+      </div>
+    </div>
+
+    <!-- Wochen-/Tagesansicht -->
+    <div id="zeit-ansicht" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div class="kopfzeile" id="kopfzeile"></div>
+      <div class="ganztags" id="ganztags"></div>
+      <div class="raster-wrap" id="raster-wrap">
+        <div class="raster" id="raster"></div>
+      </div>
+      <div class="reflexion" id="reflexion"></div>
+    </div>
+
+    <!-- Monatsansicht -->
+    <div class="monat" id="monat-ansicht" style="display:none">
+      <div class="m-wochentage" id="m-wochentage"></div>
+      <div class="m-grid" id="m-grid"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Editor -->
+<div class="pop" id="pop" role="dialog" aria-label="Termin bearbeiten">
+  <h3 id="pop-titel">Termin</h3>
+  <input type="text" id="f-titel" placeholder="Titel" autocomplete="off">
+  <label for="f-label">Kalender</label>
+  <select id="f-label"></select>
+  <label>Zeit</label>
+  <input type="date" id="f-datum">
+  <div class="zeile" style="margin-top:6px">
+    <input type="time" id="f-start" step="300">
+    <input type="time" id="f-ende" step="300">
+  </div>
+  <label for="f-notiz">Notiz</label>
+  <textarea id="f-notiz" placeholder="Worauf zahlt das ein?"></textarea>
+  <div class="pop-fuss">
+    <button class="loeschen" id="f-loeschen">Löschen</button>
+    <button class="fertig" id="f-fertig">Fertig</button>
+  </div>
+</div>
+
+<div class="hinweis" id="hinweis"></div>
+
+<script>
+"use strict";
+/* ===========================================================
+   Arbeitskalender AK Assistance
+   Ziel bis 30.09.2026, Tage trägt Gabriel selbst ein.
+   Zustand liegt in localStorage, Export/Import als JSON.
+   =========================================================== */
+
+/* ---------- Labels ---------- */
+const LABELS = {
+  vertrieb:     {name:"Vertrieb (Cold Calls)",  farbe:"#5AC8FA", text:"#5AC8FA", arbeit:true},
+  programmieren:{name:"Programmieren",          farbe:"#0A63D6", text:"#6FA8FF", arbeit:true},
+  gruendung:    {name:"Gründung & To-Dos",      farbe:"#30B0C7", text:"#40C8DF", arbeit:true},
+  claude:       {name:"Claude lernen (Setup)",  farbe:"#AF52DE", text:"#C77DEB", arbeit:true},
+  lesen:        {name:"Lesen & Lernen",         farbe:"#E8A33D", text:"#E8A33D", arbeit:false},
+  sport:        {name:"Sport",                  farbe:"#34C759", text:"#34C759", arbeit:false},
+  arzt:         {name:"Arzttermin",             farbe:"#FF453A", text:"#FF6961", arbeit:false},
+};
+const FIRMEN_LABELS = ["vertrieb","programmieren","gruendung"];
+const REST_LABELS   = ["claude","lesen","sport","arzt"];
+
+/* ---------- Meilensteine (Stufe B) ---------- */
+const MEILENSTEINE = [
+  {kw:"KW 31", von:"2026-07-27", bis:"2026-08-02", text:"Arbeitsteilung mit Moritz · To-Do 3 (WZ-Code) · To-Do 1 (Haftungsszenarien) · To-Do 2 begonnen · erster Retell-Klon"},
+  {kw:"KW 32", von:"2026-08-03", bis:"2026-08-06", text:"To-Do 5 (Fragebogen) · To-Do 6 (Lexoffice) · Fragenliste To-Do 4 · Übergabe an Moritz · Klon-Workflow beherrscht"},
+  {kw:"KW 33–34", von:"2026-08-07", bis:"2026-08-21", text:"Urlaub. Bewusst kein Meilenstein."},
+  {kw:"KW 35", von:"2026-08-24", bis:"2026-08-30", text:"Notarpflicht geklärt · Anwalt + Steuerberater ausgewählt, Termine gebucht · Pöll-Termin 2 terminiert"},
+  {kw:"KW 36", von:"2026-08-31", bis:"2026-09-06", text:"Gewerbeanmeldung Stadt Nürnberg · Gesellschaftsvertrag unterschriftsreif"},
+  {kw:"KW 37", von:"2026-09-07", bis:"2026-09-13", text:"Notartermin, Registeranmeldung eGbR · Gewerbeschein da"},
+  {kw:"KW 38", von:"2026-09-14", bis:"2026-09-20", text:"Fragebogen eingereicht · Anwaltstermin Kundenvertrag + Haftungsbeschränkung"},
+  {kw:"KW 39", von:"2026-09-21", bis:"2026-09-27", text:"Geschäftskonto eröffnet · Kammermeldung · Datenschutzpaket final"},
+  {kw:"KW 40", von:"2026-09-28", bis:"2026-09-30", text:"Ziel erreicht. Zweiter Pöll-Termin: Bestätigung."},
+];
+
+/* ---------- Vorbefüllung: nur Fixtermine ---------- */
+const FIXTERMINE = [
+  {titel:"Handwerker anrufen", label:"vertrieb", start:"2026-07-27T10:00", ende:"2026-07-27T10:15",
+   notiz:"Kurzes Telefonat, ca. 5 min — ich rufe an."},
+  {titel:"Digitalisierungsbeauftragter HWK", label:"gruendung", start:"2026-07-28T13:20", ende:"2026-07-28T15:40",
+   notiz:"Gespräch 13:30–15:30, dazu je 10 min Weg. Zahlt ein auf KW 31."},
+  {titel:"Arzttermin", label:"arzt", start:"2026-07-31T09:00", ende:"2026-07-31T09:45", notiz:"inkl. Weg"},
+  {titel:"Arzttermin", label:"arzt", start:"2026-08-06T12:00", ende:"2026-08-06T12:45", notiz:"inkl. Weg"},
+];
+const FIX_GANZTAGS = [
+  {titel:"Urlaub — nicht verplanen", von:"2026-08-07", bis:"2026-08-21",
+   notiz:"07.08. Abreisetag, ganztägig unterwegs, keine verlässliche Internetverbindung."},
+];
+const STANDARD_VORLAGEN = [
+  {titel:"Cold Calls (10 Anrufe)",   label:"vertrieb",      min:75},
+  {titel:"Akquise vorbereiten",      label:"vertrieb",      min:30},
+  {titel:"Nachbereitung Leadliste",  label:"vertrieb",      min:15},
+  {titel:"Programmieren",            label:"programmieren", min:90},
+  {titel:"Gründung & To-Dos",        label:"gruendung",     min:90},
+  {titel:"Claude lernen",            label:"claude",        min:45},
+  {titel:"Lesen & Lernen",           label:"lesen",         min:20},
+  {titel:"Gym",                      label:"sport",         min:120},
+  {titel:"Beweglichkeit",            label:"sport",         min:10},
+  {titel:"Tagesabschluss",           label:"claude",        min:10},
+];
+
+const MINIZIEL_VON = "2026-07-27", MINIZIEL_BIS = "2026-08-06";
+const STUNDE_VON = 6, STUNDE_BIS = 24;      // Raster 06:00–24:00
+const SPUR = 84;                            // px pro Stunde (muss zu --spur im CSS passen)
+const SPEICHER = "ak-arbeitskalender-v1";
+
+/* ---------- Datums-Helfer (alles lokale Zeit, keine UTC-Fallen) ---------- */
+const zwei = n => String(n).padStart(2,"0");
+const iso  = d => `${d.getFullYear()}-${zwei(d.getMonth()+1)}-${zwei(d.getDate())}`;
+const isoZeit = d => `${iso(d)}T${zwei(d.getHours())}:${zwei(d.getMinutes())}`;
+const ausIso = s => { const [t,z] = s.split("T"); const [j,m,g] = t.split("-").map(Number);
+  const [h,i] = (z||"00:00").split(":").map(Number); return new Date(j,m-1,g,h,i,0,0); };
+const plusTage = (d,n) => { const k = new Date(d); k.setDate(k.getDate()+n); return k; };
+const montagVon = d => { const k = new Date(d); const w = (k.getDay()+6)%7; k.setDate(k.getDate()-w); k.setHours(0,0,0,0); return k; };
+const minutenAmTag = d => d.getHours()*60 + d.getMinutes();
+const uhr = d => `${zwei(d.getHours())}:${zwei(d.getMinutes())}`;
+const WOCHENTAG = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+const MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+
+/* ---------- Zustand ---------- */
+let S = null;
+const neueId = () => "t" + Math.random().toString(36).slice(2,10);
+
+function grundzustand(){
+  return {
+    termine: FIXTERMINE.map(t => ({id:neueId(), ...t})),
+    ganztags: FIX_GANZTAGS.map(t => ({id:neueId(), ...t})),
+    reflexionen: {},                       // "2026-07-27": {ab:true, notiz:"..."}
+    vorlagen: STANDARD_VORLAGEN.map(v => ({id:neueId(), ...v})),
+    ausgeblendet: [],                      // Label-Schlüssel
+    pensumSoll: 240,                       // Minuten pro Tag
+  };
+}
+function laden(){
+  try{
+    const roh = localStorage.getItem(SPEICHER);
+    if(!roh) return grundzustand();
+    const d = JSON.parse(roh);
+    const g = grundzustand();
+    return {
+      termine: Array.isArray(d.termine) ? d.termine : g.termine,
+      ganztags: Array.isArray(d.ganztags) ? d.ganztags : g.ganztags,
+      reflexionen: d.reflexionen && typeof d.reflexionen === "object" ? d.reflexionen : {},
+      vorlagen: Array.isArray(d.vorlagen) && d.vorlagen.length ? d.vorlagen : g.vorlagen,
+      ausgeblendet: Array.isArray(d.ausgeblendet) ? d.ausgeblendet : [],
+      pensumSoll: Number.isFinite(d.pensumSoll) ? d.pensumSoll : 240,
+    };
+  }catch(e){
+    console.warn("Gespeicherter Stand unlesbar, starte mit Fixterminen.", e);
+    return grundzustand();
+  }
+}
+function sichern(){
+  try{ localStorage.setItem(SPEICHER, JSON.stringify(S)); }
+  catch(e){ melde("Speichern fehlgeschlagen: " + e.message); }
+}
+
+/* ---------- Ansichtszustand ---------- */
+let ansicht = "woche";
+let anker = new Date();          // Datum, um das herum gerendert wird
+let mmMonat = new Date();        // Mini-Monat in der Seitenleiste
+
+/* ---------- Kurzhelfer ---------- */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+let hinweisTimer = null;
+function melde(text){
+  const h = $("#hinweis"); h.textContent = text; h.classList.add("auf");
+  clearTimeout(hinweisTimer); hinweisTimer = setTimeout(()=>h.classList.remove("auf"), 2600);
+}
+const sichtbar = t => !S.ausgeblendet.includes(t.label);
+
+/* Tage der aktuellen Ansicht */
+function tageDerAnsicht(){
+  if(ansicht === "tag") return [new Date(anker.getFullYear(), anker.getMonth(), anker.getDate())];
+  const mo = montagVon(anker);
+  return Array.from({length:7}, (_,i) => plusTage(mo,i));
+}
+
+/* Termine eines Tages, sortiert */
+function termineAm(datum){
+  const tag = iso(datum);
+  return S.termine
+    .filter(t => t.start.slice(0,10) === tag && sichtbar(t))
+    .sort((a,b) => a.start.localeCompare(b.start) || b.ende.localeCompare(a.ende));
+}
+
+/* Ist-Pensum in Minuten: nur Arbeitslabels */
+function pensumAm(datum){
+  const tag = iso(datum);
+  return S.termine.reduce((sum,t) => {
+    if(t.start.slice(0,10) !== tag) return sum;
+    if(!LABELS[t.label] || !LABELS[t.label].arbeit) return sum;
+    return sum + Math.max(0, (ausIso(t.ende) - ausIso(t.start)) / 60000);
+  }, 0);
+}
+const stundenText = min => (min/60).toFixed(1).replace(".", ",");
+
+/* ===========================================================
+   Seitenleiste
+   =========================================================== */
+function renderLabels(){
+  const bau = (ziel, schluessel) => {
+    ziel.innerHTML = "";
+    schluessel.forEach(k => {
+      const L = LABELS[k], aus = S.ausgeblendet.includes(k);
+      const el = document.createElement("label");
+      el.className = "kal-eintrag" + (aus ? " aus" : "");
+      el.style.setProperty("--punkt", L.farbe);
+      el.innerHTML = `<input type="checkbox" ${aus?"":"checked"}><span>${L.name}</span>`;
+      el.querySelector("input").addEventListener("change", e => {
+        S.ausgeblendet = e.target.checked
+          ? S.ausgeblendet.filter(x => x !== k)
+          : [...S.ausgeblendet, k];
+        sichern(); renderLabels(); render();
+      });
+      ziel.appendChild(el);
+    });
+  };
+  bau($("#labels-firma"), FIRMEN_LABELS);
+  bau($("#labels-rest"),  REST_LABELS);
+}
+
+function renderVorlagen(){
+  const box = $("#vorlagen"); box.innerHTML = "";
+  S.vorlagen.forEach(v => {
+    const L = LABELS[v.label] || LABELS.gruendung;
+    const el = document.createElement("div");
+    el.className = "vorlage"; el.draggable = true; el.title = "In den Kalender ziehen";
+    el.innerHTML = `<i class="punkt" style="background:${L.farbe}"></i>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.titel}</span>
+      <span class="dauer">${v.min}′</span>
+      <button class="weg" title="Vorlage löschen" aria-label="Vorlage löschen">×</button>`;
+    el.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", JSON.stringify(v));
+      e.dataTransfer.effectAllowed = "copy";
+    });
+    el.querySelector(".weg").addEventListener("click", e => {
+      e.stopPropagation();
+      S.vorlagen = S.vorlagen.filter(x => x.id !== v.id);
+      sichern(); renderVorlagen();
+    });
+    box.appendChild(el);
+  });
+}
+
+function renderMiniMonat(){
+  $("#mm-titel").textContent = `${MONATE[mmMonat.getMonth()]} ${mmMonat.getFullYear()}`;
+  const g = $("#mm-grid"); g.innerHTML = "";
+  WOCHENTAG.forEach(w => { const d = document.createElement("div"); d.textContent = w[0]; g.appendChild(d); });
+  const erster = new Date(mmMonat.getFullYear(), mmMonat.getMonth(), 1);
+  const start = montagVon(erster);
+  const heute = iso(new Date());
+  const gewaehlt = tageDerAnsicht().map(iso);
+  for(let i=0;i<42;i++){
+    const d = plusTage(start,i);
+    const b = document.createElement("button");
+    b.textContent = d.getDate();
+    if(d.getMonth() !== mmMonat.getMonth()) b.classList.add("fremd");
+    if(iso(d) === heute) b.classList.add("heute");
+    if(gewaehlt.includes(iso(d))) b.classList.add("gewaehlt");
+    b.addEventListener("click", () => { anker = d; render(); });
+    g.appendChild(b);
+  }
+}
+
+/* ===========================================================
+   Zielleiste + Miniziel
+   =========================================================== */
+function renderMeilensteine(){
+  const heute = iso(new Date());
+  $("#meilensteine").innerHTML = MEILENSTEINE.map(m => {
+    const jetzt = heute >= m.von && heute <= m.bis;
+    return `<div class="ms-zeile${jetzt?" jetzt":""}"><span class="ms-kw">${m.kw}</span><span>${m.text}</span></div>`;
+  }).join("");
+}
+
+function renderMiniziel(){
+  const box = $("#miniziel");
+  const von = ausIso(MINIZIEL_VON), bis = ausIso(MINIZIEL_BIS);
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  if(heute > bis){ box.style.display = "none"; return; }
+  box.style.display = "flex";
+
+  const tage = [];
+  for(let d = new Date(von); d <= bis; d = plusTage(d,1)) tage.push(iso(d));
+  const fertig = tage.filter(t => S.reflexionen[t] && S.reflexionen[t].ab).length;
+  const heuteIso = iso(heute);
+
+  box.innerHTML =
+    `<span class="mz-label">Bis zur Abreise</span>
+     <span class="mz-punkte">${tage.map(t =>
+        `<i class="${S.reflexionen[t]&&S.reflexionen[t].ab?"voll":""}${t===heuteIso?" heute":""}" title="${t}"></i>`).join("")}</span>
+     <span class="mz-zahl">${fertig} / ${tage.length} durchgezogen</span>` +
+    (fertig === tage.length
+      ? `<span class="mz-fertig">Alle elf Tage durchgezogen. Miniziel erreicht.</span>`
+      : `<span style="font-size:11.5px;color:var(--text-3)">Was ich mir für einen Tag vornehme, mache ich an dem Tag.</span>`);
+}
+
+/* ===========================================================
+   Wochen- und Tagesansicht
+   =========================================================== */
+function spaltenVorlage(n){ return `var(--zeitspalte) repeat(${n}, 1fr)`; }
+
+function renderZeitAnsicht(){
+  const tage = tageDerAnsicht();
+  const heute = iso(new Date());
+  const vorlage = spaltenVorlage(tage.length);
+
+  /* --- Kopfzeile mit Pensum --- */
+  const kopf = $("#kopfzeile");
+  kopf.style.gridTemplateColumns = vorlage;
+  kopf.innerHTML = `<div></div>` + tage.map(d => {
+    const ist = pensumAm(d), soll = S.pensumSoll;
+    const anteil = Math.min(100, soll ? ist/soll*100 : 0);
+    const voll = soll > 0 && ist >= soll;
+    const ab = S.reflexionen[iso(d)] && S.reflexionen[iso(d)].ab;
+    return `<div class="kopf-tag${iso(d)===heute?" ist-heute":""}">
+      <div class="kopf-name">${WOCHENTAG[(d.getDay()+6)%7]}. ${d.getDate()}.${ab?'<span class="haken">✓</span>':""}</div>
+      <div class="pensum">
+        <span class="pensum-bar"><i class="${voll?"voll":""}" style="width:${anteil}%"></i></span>
+        <span class="pensum-zahl${voll?" voll":""}">${stundenText(ist)} / ${stundenText(soll)} h</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  /* --- Ganztägige Einträge --- */
+  const gt = $("#ganztags");
+  gt.style.gridTemplateColumns = vorlage;
+  gt.innerHTML = `<div class="gt-label">ganztägig</div><div class="gt-flaeche" id="gt-flaeche"></div>`;
+  const flaeche = $("#gt-flaeche");
+  const breite = 100 / tage.length;
+  S.ganztags.forEach(e => {
+    const von = ausIso(e.von), bis = ausIso(e.bis);
+    const a = tage.findIndex(d => iso(d) >= iso(von));
+    const b = [...tage].reverse().findIndex(d => iso(d) <= iso(bis));
+    if(a === -1 || b === -1) return;
+    const bisIdx = tage.length - 1 - b;
+    if(bisIdx < a) return;
+    if(iso(tage[bisIdx]) < iso(von) || iso(tage[a]) > iso(bis)) return;
+    const el = document.createElement("div");
+    el.className = "gt-block";
+    el.style.left = (a*breite) + "%";
+    el.style.width = ((bisIdx-a+1)*breite) + "%";
+    el.textContent = e.titel;
+    el.title = e.notiz || e.titel;
+    flaeche.appendChild(el);
+  });
+
+  /* --- Raster --- */
+  const raster = $("#raster");
+  raster.style.gridTemplateColumns = vorlage;
+  raster.style.height = ((STUNDE_BIS - STUNDE_VON) * SPUR) + "px";
+  raster.innerHTML = "";
+
+  const zeit = document.createElement("div");
+  zeit.className = "zeitspalte";
+  for(let h = STUNDE_VON; h <= STUNDE_BIS; h++){
+    const m = document.createElement("span");
+    m.className = "zeitmarke";
+    m.style.top = ((h - STUNDE_VON) * SPUR) + "px";
+    m.textContent = zwei(h) + ":00";
+    zeit.appendChild(m);
+  }
+  raster.appendChild(zeit);
+
+  tage.forEach(d => {
+    const sp = document.createElement("div");
+    sp.className = "tagspalte";
+    sp.dataset.datum = iso(d);
+    for(let h = STUNDE_VON; h <= STUNDE_BIS; h++){
+      const l = document.createElement("div");
+      l.className = "stunde";
+      l.style.top = ((h - STUNDE_VON) * SPUR) + "px";
+      sp.appendChild(l);
+      if(h < STUNDE_BIS){
+        const hl = document.createElement("div");
+        hl.className = "halbe";
+        hl.style.top = ((h - STUNDE_VON) * SPUR + SPUR/2) + "px";
+        sp.appendChild(hl);
+      }
+    }
+    if(iso(d) === heute){
+      const jetzt = new Date();
+      const min = minutenAmTag(jetzt);
+      if(min >= STUNDE_VON*60 && min <= STUNDE_BIS*60){
+        const lin = document.createElement("div");
+        lin.className = "jetztlinie";
+        lin.style.top = ((min - STUNDE_VON*60) / 60 * SPUR) + "px";
+        sp.appendChild(lin);
+      }
+    }
+    zeichneBloecke(sp, termineAm(d));
+    raster.appendChild(sp);
+  });
+
+  /* --- Reflexionszeile --- */
+  const rf = $("#reflexion");
+  rf.style.gridTemplateColumns = vorlage;
+  rf.innerHTML = `<div class="rf-label">Tages-<br>abschluss</div>` + tage.map(d => {
+    const k = iso(d), r = S.reflexionen[k] || {};
+    return `<div class="rf-zelle">
+      <label class="rf-check${r.ab?" ab":""}">
+        <input type="checkbox" data-datum="${k}" ${r.ab?"checked":""}>
+        <span>Tag durchgezogen</span>
+      </label>
+      <input class="rf-notiz" type="text" data-datum="${k}" value="${(r.notiz||"").replace(/"/g,"&quot;")}"
+             placeholder="Was lief, was nicht?" aria-label="Notiz zum ${k}">
+    </div>`;
+  }).join("");
+
+  rf.querySelectorAll('input[type=checkbox]').forEach(el => {
+    el.addEventListener("change", () => {
+      const k = el.dataset.datum;
+      S.reflexionen[k] = S.reflexionen[k] || {};
+      S.reflexionen[k].ab = el.checked;
+      sichern(); renderMiniziel(); renderZeitAnsicht();
+    });
+  });
+  rf.querySelectorAll(".rf-notiz").forEach(el => {
+    el.addEventListener("change", () => {
+      const k = el.dataset.datum;
+      S.reflexionen[k] = S.reflexionen[k] || {};
+      S.reflexionen[k].notiz = el.value;
+      sichern();
+    });
+  });
+}
+
+/* Überlappende Termine nebeneinander legen — wie im Apple-Kalender */
+function zeichneBloecke(spalte, liste){
+  const gruppen = [];
+  liste.forEach(t => {
+    const von = ausIso(t.start).getTime(), bis = ausIso(t.ende).getTime();
+    let g = gruppen.find(gr => gr.bis > von);
+    if(!g){ g = {von, bis, eintraege:[]}; gruppen.push(g); }
+    g.bis = Math.max(g.bis, bis);
+    g.eintraege.push(t);
+  });
+
+  gruppen.forEach(g => {
+    const spuren = [];              // je Spur der letzte Endzeitpunkt
+    const zuweisung = new Map();    // Termin -> Spurnummer (nichts am Termin selbst ablegen)
+    g.eintraege.forEach(t => {
+      const von = ausIso(t.start).getTime(), bis = ausIso(t.ende).getTime();
+      let idx = spuren.findIndex(ende => ende <= von);
+      if(idx === -1){ spuren.push(bis); idx = spuren.length - 1; }
+      else spuren[idx] = bis;
+      zuweisung.set(t, idx);
+    });
+    const anzahl = spuren.length;
+    g.eintraege.forEach(t => spalte.appendChild(blockEl(t, zuweisung.get(t), anzahl)));
+  });
+}
+
+function blockEl(t, spur, anzahl){
+  const L = LABELS[t.label] || LABELS.gruendung;
+  const von = ausIso(t.start), bis = ausIso(t.ende);
+  const oben = (minutenAmTag(von) - STUNDE_VON*60) / 60 * SPUR;
+  const hoehe = Math.max(15, (bis - von) / 3600000 * SPUR);
+
+  const el = document.createElement("div");
+  el.className = "block" + (hoehe < 32 ? " kurz" : "");
+  el.dataset.id = t.id;
+  el.style.setProperty("--f", L.farbe);
+  el.style.setProperty("--ft", L.text);
+  el.style.setProperty("--fill", L.farbe + "30");
+  el.style.top = oben + "px";
+  el.style.height = hoehe + "px";
+  el.style.left  = `calc(${(spur/anzahl)*100}% + 1px)`;
+  el.style.width = `calc(${100/anzahl}% - 3px)`;
+  el.innerHTML = `<div class="t">${escape(t.titel)}</div>
+                  <div class="z">${uhr(von)}–${uhr(bis)}</div>
+                  <div class="griff"></div>`;
+  el.title = t.notiz ? `${t.titel}\n${t.notiz}` : t.titel;
+  return el;
+}
+const escape = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ===========================================================
+   Monatsansicht
+   =========================================================== */
+function renderMonat(){
+  const wt = $("#m-wochentage");
+  wt.innerHTML = WOCHENTAG.map(w => `<div>${w}</div>`).join("");
+
+  const erster = new Date(anker.getFullYear(), anker.getMonth(), 1);
+  const start = montagVon(erster);
+  const heute = iso(new Date());
+  const g = $("#m-grid"); g.innerHTML = "";
+
+  for(let i=0;i<42;i++){
+    const d = plusTage(start,i);
+    const k = iso(d);
+    const zelle = document.createElement("div");
+    zelle.className = "m-zelle" + (d.getMonth()!==anker.getMonth() ? " fremd":"") + (k===heute?" heute":"");
+    const r = S.reflexionen[k] || {};
+    const liste = termineAm(d);
+    const ganz = S.ganztags.filter(e => k >= e.von && k <= e.bis);
+    zelle.innerHTML =
+      `<div class="m-kopf">${r.ab?'<span class="m-haken">✓</span>':""}<span class="m-nr">${d.getDate()}${d.getDate()===1?". "+MONATE[d.getMonth()].slice(0,3):""}</span></div>` +
+      ganz.map(e => `<div class="m-ganztags" title="${escape(e.notiz||"")}">${escape(e.titel)}</div>`).join("") +
+      liste.slice(0,4).map(t => {
+        const L = LABELS[t.label] || LABELS.gruendung;
+        return `<div class="m-termin"><i style="background:${L.farbe}"></i><span>${escape(t.titel)}</span></div>`;
+      }).join("") +
+      (liste.length > 4 ? `<div class="m-mehr">${liste.length-4} weitere</div>` : "");
+    zelle.addEventListener("click", () => { anker = d; ansicht = "tag"; render(); });
+    g.appendChild(zelle);
+  }
+}
+
+/* ===========================================================
+   Rendern gesamt
+   =========================================================== */
+function render(){
+  $$(".segment button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.ansicht === ansicht)));
+
+  if(ansicht === "monat"){
+    $("#titel").textContent = `${MONATE[anker.getMonth()]} ${anker.getFullYear()}`;
+    $("#zeit-ansicht").style.display = "none";
+    $("#monat-ansicht").style.display = "grid";
+    renderMonat();
+  } else {
+    $("#zeit-ansicht").style.display = "flex";
+    $("#monat-ansicht").style.display = "none";
+    const tage = tageDerAnsicht();
+    if(ansicht === "tag"){
+      $("#titel").textContent = `${WOCHENTAG[(anker.getDay()+6)%7]}, ${anker.getDate()}. ${MONATE[anker.getMonth()]} ${anker.getFullYear()}`;
+    } else {
+      const a = tage[0], b = tage[6];
+      $("#titel").textContent = a.getMonth() === b.getMonth()
+        ? `${MONATE[a.getMonth()]} ${a.getFullYear()}`
+        : `${MONATE[a.getMonth()].slice(0,3)}–${MONATE[b.getMonth()]} ${b.getFullYear()}`;
+    }
+    renderZeitAnsicht();
+  }
+  mmMonat = new Date(anker.getFullYear(), anker.getMonth(), 1);
+  renderMiniMonat();
+  renderMiniziel();
+  $("#pensum-soll").textContent = stundenText(S.pensumSoll);
+}
+
+/* ===========================================================
+   Termine anlegen, ziehen, ändern
+   =========================================================== */
+const RASTER_MIN = 5;
+const runde = m => Math.round(m / RASTER_MIN) * RASTER_MIN;
+
+function minuteAusEvent(e, spalte){
+  const r = spalte.getBoundingClientRect();
+  const y = Math.min(Math.max(0, e.clientY - r.top), r.height);
+  return runde(STUNDE_VON*60 + y / SPUR * 60);
+}
+function setzeZeit(datumIso, minuten){
+  const m = Math.max(0, Math.min(24*60 - 5, minuten));
+  return `${datumIso}T${zwei(Math.floor(m/60))}:${zwei(m%60)}`;
+}
+
+let zug = null;   // {art, id, ...}
+
+$("#raster").addEventListener("pointerdown", e => {
+  const spalte = e.target.closest(".tagspalte");
+  if(!spalte) return;
+  const block = e.target.closest(".block");
+
+  if(block){
+    const t = S.termine.find(x => x.id === block.dataset.id);
+    if(!t) return;
+    const griff = e.target.classList.contains("griff");
+    zug = {
+      art: griff ? "groesse" : "verschieben",
+      id: t.id, el: block, spalte,
+      startMin: minuteAusEvent(e, spalte),
+      urVon: minutenAmTag(ausIso(t.start)),
+      urBis: minutenAmTag(ausIso(t.ende)),
+      urDatum: t.start.slice(0,10),
+      bewegt: false,
+    };
+    try{ block.setPointerCapture(e.pointerId); }catch(_){}
+    e.preventDefault();
+    return;
+  }
+
+  // Auf freier Fläche: neuen Termin aufziehen
+  const min = minuteAusEvent(e, spalte);
+  const geist = document.createElement("div");
+  geist.className = "geist";
+  geist.style.left = "1px"; geist.style.right = "2px";
+  spalte.appendChild(geist);
+  zug = {art:"neu", spalte, startMin:min, geist, bewegt:false};
+  try{ spalte.setPointerCapture(e.pointerId); }catch(_){}
+  e.preventDefault();
+});
+
+window.addEventListener("pointermove", e => {
+  if(!zug) return;
+  const min = minuteAusEvent(e, zug.spalte);
+
+  if(zug.art === "neu"){
+    const von = Math.min(zug.startMin, min), bis = Math.max(zug.startMin, min);
+    zug.bewegt = bis - von >= RASTER_MIN;
+    zug.geist.style.top = ((von - STUNDE_VON*60)/60*SPUR) + "px";
+    zug.geist.style.height = Math.max(4, (bis-von)/60*SPUR) + "px";
+    return;
+  }
+
+  const versatz = min - zug.startMin;
+  if(Math.abs(versatz) >= RASTER_MIN) zug.bewegt = true;
+  const t = S.termine.find(x => x.id === zug.id);
+  if(!t) return;
+
+  // Spaltenwechsel beim Verschieben
+  let zielSpalte = zug.spalte;
+  if(zug.art === "verschieben"){
+    const unten = document.elementFromPoint(e.clientX, e.clientY);
+    const s = unten && unten.closest ? unten.closest(".tagspalte") : null;
+    if(s) zielSpalte = s;
+  }
+
+  if(zug.art === "verschieben"){
+    const dauer = zug.urBis - zug.urVon;
+    let von = Math.max(0, Math.min(24*60 - dauer, zug.urVon + versatz));
+    t.start = setzeZeit(zielSpalte.dataset.datum, von);
+    t.ende  = setzeZeit(zielSpalte.dataset.datum, von + dauer);
+  } else {
+    let bis = Math.max(zug.urVon + RASTER_MIN, Math.min(24*60, zug.urBis + versatz));
+    t.start = setzeZeit(zug.urDatum, zug.urVon);
+    t.ende  = setzeZeit(zug.urDatum, bis);
+  }
+  zug.el.classList.add("zieht");
+  renderZeitAnsicht();
+  const neu = $(`.block[data-id="${zug.id}"]`);
+  if(neu){ neu.classList.add("zieht"); zug.el = neu; }
+});
+
+window.addEventListener("pointerup", e => {
+  if(!zug) return;
+  const z = zug; zug = null;
+
+  if(z.art === "neu"){
+    const min = minuteAusEvent(e, z.spalte);
+    z.geist.remove();
+    let von = Math.min(z.startMin, min), bis = Math.max(z.startMin, min);
+    if(!z.bewegt){ von = z.startMin; bis = von + 60; }        // reiner Klick: 60 Minuten
+    const t = {
+      id: neueId(), titel: "Neuer Termin", label: "gruendung", notiz: "",
+      start: setzeZeit(z.spalte.dataset.datum, von),
+      ende:  setzeZeit(z.spalte.dataset.datum, Math.min(24*60, bis)),
+    };
+    S.termine.push(t); sichern(); render();
+    const el = $(`.block[data-id="${t.id}"]`);
+    oeffneEditor(t, el, true);
+    return;
+  }
+
+  $$(".block.zieht").forEach(b => b.classList.remove("zieht"));
+  if(z.bewegt){ sichern(); render(); }
+  else {
+    const t = S.termine.find(x => x.id === z.id);
+    if(t) oeffneEditor(t, $(`.block[data-id="${z.id}"]`));
+  }
+});
+
+/* Vorlage per Drag & Drop ablegen */
+$("#raster").addEventListener("dragover", e => {
+  if(e.target.closest(".tagspalte")){ e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }
+});
+$("#raster").addEventListener("drop", e => {
+  const spalte = e.target.closest(".tagspalte");
+  if(!spalte) return;
+  e.preventDefault();
+  let v; try{ v = JSON.parse(e.dataTransfer.getData("text/plain")); }catch(_){ return; }
+  if(!v || !v.titel) return;
+  const von = minuteAusEvent(e, spalte);
+  const t = {
+    id: neueId(), titel: v.titel, label: v.label, notiz: "",
+    start: setzeZeit(spalte.dataset.datum, von),
+    ende:  setzeZeit(spalte.dataset.datum, von + (v.min || 60)),
+  };
+  S.termine.push(t); sichern(); render();
+});
+
+/* ===========================================================
+   Editor
+   =========================================================== */
+let bearbeitet = null;
+function oeffneEditor(t, el, neu){
+  bearbeitet = t;
+  $("#pop-titel").textContent = neu ? "Neuer Termin" : "Termin bearbeiten";
+  $("#f-titel").value = t.titel;
+  $("#f-label").innerHTML = Object.entries(LABELS)
+    .map(([k,L]) => `<option value="${k}" ${k===t.label?"selected":""}>${L.name}</option>`).join("");
+  $("#f-datum").value = t.start.slice(0,10);
+  $("#f-start").value = t.start.slice(11,16);
+  $("#f-ende").value  = t.ende.slice(11,16);
+  $("#f-notiz").value = t.notiz || "";
+
+  const pop = $("#pop");
+  pop.classList.add("auf");
+  const r = el ? el.getBoundingClientRect() : {left:innerWidth/2-143, right:innerWidth/2+143, top:innerHeight/3};
+  let links = Math.min(r.right + 8, innerWidth - 298);
+  if(links < 236) links = Math.max(236, r.left - 294);
+  const oben = Math.min(Math.max(58, r.top - 10), innerHeight - pop.offsetHeight - 16);
+  pop.style.left = links + "px";
+  pop.style.top  = oben + "px";
+  $("#f-titel").focus(); $("#f-titel").select();
+}
+
+function schliesseEditor(speichern){
+  const pop = $("#pop");
+  if(!pop.classList.contains("auf")) return;
+  if(speichern && bearbeitet){
+    const t = bearbeitet;
+    t.titel = $("#f-titel").value.trim() || "Ohne Titel";
+    t.label = $("#f-label").value;
+    t.notiz = $("#f-notiz").value;
+    const d = $("#f-datum").value || t.start.slice(0,10);
+    let s = $("#f-start").value || "09:00", e = $("#f-ende").value || "10:00";
+    t.start = `${d}T${s}`;
+    t.ende  = `${d}T${e}`;
+    if(ausIso(t.ende) <= ausIso(t.start)){            // Ende vor Start: 30 Minuten anhängen
+      const bis = ausIso(t.start); bis.setMinutes(bis.getMinutes()+30);
+      t.ende = isoZeit(bis);
+    }
+    sichern();
+  }
+  pop.classList.remove("auf"); bearbeitet = null; render();
+}
+$("#f-fertig").addEventListener("click", () => schliesseEditor(true));
+$("#f-loeschen").addEventListener("click", () => {
+  if(bearbeitet){ S.termine = S.termine.filter(x => x.id !== bearbeitet.id); sichern(); }
+  $("#pop").classList.remove("auf"); bearbeitet = null; render();
+});
+$("#pop").addEventListener("keydown", e => {
+  if(e.key === "Enter" && e.target.tagName !== "TEXTAREA"){ e.preventDefault(); schliesseEditor(true); }
+});
+document.addEventListener("pointerdown", e => {
+  if($("#pop").classList.contains("auf") && !e.target.closest("#pop") && !e.target.closest(".block")) schliesseEditor(true);
+}, true);
+
+/* ===========================================================
+   Bedienung oben, Tastatur, Export/Import
+   =========================================================== */
+$$(".segment button").forEach(b => b.addEventListener("click", () => { ansicht = b.dataset.ansicht; render(); }));
+$("#nav-heute").addEventListener("click", () => { anker = new Date(); render(); });
+$("#nav-zurueck").addEventListener("click", () => blaettern(-1));
+$("#nav-vor").addEventListener("click", () => blaettern(1));
+function blaettern(r){
+  if(ansicht === "tag")   anker = plusTage(anker, r);
+  else if(ansicht === "woche") anker = plusTage(anker, 7*r);
+  else anker = new Date(anker.getFullYear(), anker.getMonth()+r, 1);
+  render();
+}
+$("#mm-zurueck").addEventListener("click", () => { mmMonat = new Date(mmMonat.getFullYear(), mmMonat.getMonth()-1, 1); renderMiniMonat(); });
+$("#mm-vor").addEventListener("click",     () => { mmMonat = new Date(mmMonat.getFullYear(), mmMonat.getMonth()+1, 1); renderMiniMonat(); });
+
+$("#ziel-schalter").addEventListener("click", () => {
+  const z = $("#ziel"), auf = z.hasAttribute("open-panel");
+  if(auf) z.removeAttribute("open-panel"); else z.setAttribute("open-panel","");
+  $("#ziel-schalter").setAttribute("aria-expanded", String(!auf));
+});
+
+$("#btn-neu").addEventListener("click", () => {
+  const d = tageDerAnsicht()[0];
+  const t = {id:neueId(), titel:"Neuer Termin", label:"gruendung", notiz:"",
+             start:setzeZeit(iso(d), 10*60), ende:setzeZeit(iso(d), 11*60)};
+  S.termine.push(t); sichern(); render();
+  oeffneEditor(t, $(`.block[data-id="${t.id}"]`), true);
+});
+
+$("#btn-vorlage-neu").addEventListener("click", () => {
+  const titel = prompt("Titel der Vorlage:");
+  if(!titel) return;
+  const min = parseInt(prompt("Dauer in Minuten:", "60"), 10);
+  const label = prompt("Label — " + Object.keys(LABELS).join(", "), "gruendung");
+  if(!LABELS[label]){ melde("Unbekanntes Label."); return; }
+  S.vorlagen.push({id:neueId(), titel, label, min: Number.isFinite(min) && min > 0 ? min : 60});
+  sichern(); renderVorlagen();
+});
+
+$("#btn-pensum").addEventListener("click", () => {
+  const ein = prompt("Tagespensum in Stunden:", stundenText(S.pensumSoll));
+  if(ein === null) return;
+  const h = parseFloat(ein.replace(",", "."));
+  if(!Number.isFinite(h) || h < 0 || h > 16){ melde("Bitte einen Wert zwischen 0 und 16 angeben."); return; }
+  S.pensumSoll = Math.round(h*60); sichern(); render();
+});
+
+$("#btn-export").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(S, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `arbeitskalender_${iso(new Date())}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  melde("Stand gesichert.");
+});
+$("#btn-import").addEventListener("click", () => $("#datei-import").click());
+$("#datei-import").addEventListener("change", e => {
+  const f = e.target.files[0]; if(!f) return;
+  const leser = new FileReader();
+  leser.onload = () => {
+    try{
+      const d = JSON.parse(leser.result);
+      if(!d || !Array.isArray(d.termine)) throw new Error("Keine Termine in der Datei.");
+      S = {...grundzustand(), ...d};
+      sichern(); renderLabels(); renderVorlagen(); render();
+      melde("Stand geladen.");
+    }catch(err){ melde("Import fehlgeschlagen: " + err.message); }
+  };
+  leser.readAsText(f);
+  e.target.value = "";
+});
+
+document.addEventListener("keydown", e => {
+  if(e.target.matches("input, textarea, select")){
+    if(e.key === "Escape") e.target.blur();
+    return;
+  }
+  if(e.key === "Escape"){ schliesseEditor(false); return; }
+  if(e.key === "ArrowLeft")  { blaettern(-1); e.preventDefault(); }
+  if(e.key === "ArrowRight") { blaettern(1);  e.preventDefault(); }
+  if(e.key === "t" || e.key === "T"){ ansicht = "tag";   render(); }
+  if(e.key === "w" || e.key === "W"){ ansicht = "woche"; render(); }
+  if(e.key === "m" || e.key === "M"){ ansicht = "monat"; render(); }
+  if(e.key === "n" || e.key === "N"){ $("#btn-neu").click(); }
+});
+
+/* ===========================================================
+   Start
+   =========================================================== */
+S = laden();
+// Beim ersten Öffnen auf die Woche des 27.07. springen, wenn sie noch bevorsteht
+if(iso(new Date()) < MINIZIEL_VON) anker = ausIso(MINIZIEL_VON);
+renderLabels();
+renderVorlagen();
+renderMeilensteine();
+render();
+// Raster so scrollen, dass 08:00 knapp unter der Kante steht — nach oben bleibt Luft
+$("#raster-wrap").scrollTop = Math.max(0, (8 - STUNDE_VON) * SPUR - 26);
+setInterval(() => { if(ansicht !== "monat") renderZeitAnsicht(); }, 60000);  // Jetzt-Linie nachführen
+</script>
+</body>
+</html>

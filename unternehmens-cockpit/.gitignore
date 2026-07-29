@@ -3,3 +3,5 @@ node_modules/
 data/
 .env.local
 *.log
+# Build-Zwischenstand von tsc — ändert sich bei jedem Lauf und gehört niemandem.
+tsconfig.tsbuildinfo
