@@ -17,8 +17,8 @@
 
   background: var(--bg);
   color: var(--text);
-  border-radius: 10px;
-  border: 1px solid var(--linie);
+  /* Kein Rahmen und kein Radius: der Kalender sitzt randlos im Inhaltsbereich, wie der
+     Prototyp im Browserfenster — nicht als Karte auf einer hellen Seite. */
   overflow: hidden;
   font-size: 13px;
   line-height: 1.35;
@@ -33,6 +33,25 @@
   cursor: pointer;
 }
 
+/* Das Cockpit stylt in globals.css JEDES input/select/textarea als Formularfeld
+   (width:100%, padding:8px 10px, margin-top:5px, font-size:14px). Im Kalender gilt das
+   Erscheinungsbild des Prototyps, dessen Felder ihre Maße selbst setzen.
+   Ohne diesen Rückbau wuchsen die 13x13px-Kästchen der Label-Filter auf 22x18px: mit
+   box-sizing:border-box kann eine Box nicht schmaler werden als Polster plus Rand, und
+   8+10px Polster schlagen jede kleinere Wunschbreite.
+   :where() zählt bei der Spezifität nicht mit — diese Regel ist damit nur ein Grundzustand,
+   den die konkreten Regeln weiter unten (.kalEintrag input, .rfCheck input, Textfelder)
+   ohne Klimmzüge überschreiben. */
+.kalender :where(input, select, textarea) {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
 .kalender :focus-visible {
   outline: 2px solid #0a84ff;
   outline-offset: 1px;
@@ -44,9 +63,10 @@
 .kalender {
   display: flex;
   align-items: stretch;
-  /* Auf Bildschirmhöhe begrenzt wie im Prototyp: gescrollt wird nur das Stundenraster,
-     Kopfzeile, Zielleiste, Tagesabschluss und Mini-Monat bleiben stehen. */
-  height: calc(100vh - 132px);
+  /* Auf Bildschirmhöhe wie im Prototyp: gescrollt wird nur das Stundenraster,
+     Kopfzeile, Zielleiste, Tagesabschluss und Mini-Monat bleiben stehen. Ohne Seitenkopf
+     und ohne Polster der Seite ist das die volle Fensterhöhe. */
+  height: 100vh;
   min-height: 520px;
 }
 

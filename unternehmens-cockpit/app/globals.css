@@ -188,6 +188,11 @@ a { color: var(--accent-text); }
    deshalb den ganzen Inhaltsbereich, wie im Prototyp, der das Browserfenster füllt. */
 .shell--breit { max-width: none; }
 
+/* Randlose Seite: der Inhalt füllt den Bereich neben der Navigation vollständig aus, ohne
+   Polster und ohne Seitenkopf. Für den Kalender, der wie sein Prototyp das ganze Fenster
+   einnimmt statt als Karte in einer Seite zu sitzen. */
+.shell--randlos { max-width: none; padding: 0; }
+
 /* Seitenkopf innerhalb des Inhalts (ersetzt die frühere Vollkopfzeile) */
 .seitenkopf {
   display: flex;

@@ -531,13 +531,12 @@ export function KalenderAnsicht() {
   }
 
   return (
-    <main className="shell shell--breit" onPointerDown={() => editor && setEditor(null)}>
-      <header className="seitenkopf">
-        <h1 className="seitenkopf__titel">Kalender</h1>
-      </header>
-
-      {/* Der Kalender bringt sein eigenes, dunkles Erscheinungsbild mit (wie der Prototyp)
-          und steht deshalb in einem eigenen Kasten innerhalb der hellen Cockpit-Seite. */}
+    <main className="shell shell--randlos" onPointerDown={() => editor && setEditor(null)}>
+      {/* Kein Seitenkopf: die Navigation links zeigt bereits, wo man ist, und der Kalender
+          bringt seine eigene Kopfzeile mit (Export/Import, Tag/Woche/Monat, Pensum). Eine
+          zusätzliche Überschrift „Kalender" kostete nur Höhe — der Prototyp hat auch keine.
+          Der Kalender bringt sein eigenes, dunkles Erscheinungsbild mit und füllt die
+          Fläche neben der Navigation vollständig aus. */}
       <div className={s.kalender}>
         <KalenderSeitenleiste
           ausgeblendet={ausgeblendet}
