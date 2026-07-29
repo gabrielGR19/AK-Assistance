@@ -8,7 +8,10 @@ import { istLabel } from "./kalender-typen.ts";
 
 export type Pruefung<T> = { ok: true; wert: T } | { ok: false; fehler: string };
 
-const ZEITPUNKT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+// Stunde 00–23, Minute 00–59. Mit \d{2}:\d{2} wären "30:00" oder "12:99" durchgegangen —
+// über die Oberfläche nicht erzeugbar, über eine Importdatei oder einen gebastelten Request
+// schon, und der Block landete dann an einer absurden Position im Raster.
+const ZEITPUNKT = /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/;
 const MAX_TITEL = 200;
 const MAX_NOTIZ = 2000;
 

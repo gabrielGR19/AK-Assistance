@@ -60,6 +60,15 @@ export function spalteAusPosition(pageX: number, spalten: SpaltenMass[]): string
 
 const TAG_MIN = 24 * 60;
 
+// Spätestes zulässiges Ende eines Termins: 23:55.
+//
+// Warum nicht 24:00: die Uhrzeit wird als "YYYY-MM-DDTHH:MM" am selben Kalendertag
+// gespeichert, und "24:00" existiert dort nicht. Beim Anzeigen liest minutenAmTag() aus
+// einem so gebauten Date wieder 0 heraus — der Block schrumpfte auf die Mindesthöhe von
+// 15 px zusammen und war mit "22:00–00:00" beschriftet. Im Editor blieb das Zeitfeld leer,
+// weil <input type="time"> den Wert "24:00" nicht annimmt.
+const TAG_ENDE_MAX = TAG_MIN - RASTER_MIN;
+
 // Neue Startminute beim Verschieben. `griffMin` ist die Uhrzeit, an der angefasst wurde,
 // `zeigerMin` die aktuelle — die Differenz ist der Versatz.
 //
@@ -67,21 +76,23 @@ const TAG_MIN = 24 * 60;
 // Genau das ist beim Vorgänger schiefgegangen.
 export function neueStartMinute(urVon: number, urBis: number, griffMin: number, zeigerMin: number): number {
   const dauer = urBis - urVon;
-  return Math.max(0, Math.min(TAG_MIN - dauer, urVon + (zeigerMin - griffMin)));
+  return Math.max(0, Math.min(TAG_ENDE_MAX - dauer, urVon + (zeigerMin - griffMin)));
 }
 
 // Neues Ende beim Ziehen am unteren Griff. Mindestens eine Rasterstufe nach dem Start,
 // höchstens Mitternacht.
 export function neueEndMinute(urVon: number, urBis: number, griffMin: number, zeigerMin: number): number {
-  return Math.max(urVon + RASTER_MIN, Math.min(TAG_MIN, urBis + (zeigerMin - griffMin)));
+  return Math.max(urVon + RASTER_MIN, Math.min(TAG_ENDE_MAX, urBis + (zeigerMin - griffMin)));
 }
 
 // Aufziehen eines neuen Termins: die beiden Enden können in beliebiger Reihenfolge kommen.
 export function neuerZeitraum(startMin: number, zeigerMin: number): { von: number; bis: number } {
-  const von = Math.min(startMin, zeigerMin);
-  const bis = Math.max(startMin, zeigerMin);
+  // Der Start muss eine Rasterstufe vor dem spätestmöglichen Ende bleiben, sonst ergäbe ein
+  // Aufziehen ganz unten am Raster einen Termin mit Ende vor Start.
+  const von = Math.min(Math.min(startMin, zeigerMin), TAG_ENDE_MAX - RASTER_MIN);
+  const bis = Math.min(TAG_ENDE_MAX, Math.max(startMin, zeigerMin));
   // Reiner Klick ohne Aufziehen ergibt eine Stunde, wie im Prototyp.
-  if (bis - von < RASTER_MIN) return { von, bis: Math.min(TAG_MIN, von + 60) };
+  if (bis - von < RASTER_MIN) return { von, bis: Math.min(TAG_ENDE_MAX, von + 60) };
   return { von, bis };
 }
 

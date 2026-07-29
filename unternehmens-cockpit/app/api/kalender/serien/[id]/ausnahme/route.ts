@@ -31,13 +31,15 @@ export async function POST(request: NextRequest, { params }: Kontext) {
     }
 
     // Ersatztermin außerhalb der Sperre prüfen — Validierung braucht keinen Dateizugriff.
+    //
+    // Der Ersatztermin darf bewusst an einem ANDEREN Tag liegen als das Vorkommen: wer ein
+    // Serien-Vorkommen von Montag auf Dienstag zieht, erzeugt eine Ausnahme am Montag und
+    // einen eigenständigen Termin am Dienstag. Eine Gleichheitsprüfung an dieser Stelle hat
+    // genau diesen Zug abgelehnt, während derselbe Zug bei einem Einzeltermin funktionierte.
     let ersatzEingabe: ReturnType<typeof validiereTermin> | null = null;
     if (body.ersatz !== undefined && body.ersatz !== null) {
       ersatzEingabe = validiereTermin(body.ersatz);
       if (!ersatzEingabe.ok) return Response.json({ fehler: ersatzEingabe.fehler }, { status: 400 });
-      if (ersatzEingabe.wert.start.slice(0, 10) !== datum) {
-        return Response.json({ fehler: "Der Ersatztermin muss am Datum des Vorkommens liegen." }, { status: 400 });
-      }
     }
 
     const ergebnis = await aendereKalender((daten) => {

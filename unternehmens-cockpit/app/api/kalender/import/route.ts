@@ -24,14 +24,15 @@ export async function POST(request: NextRequest) {
       daten.serien = [...daten.serien.filter((s) => s.besitzer !== person), ...neu.serien];
       daten.ganztags = [...daten.ganztags.filter((g) => g.besitzer !== person), ...neu.ganztags];
       daten.vorlagen = [...daten.vorlagen.filter((v) => v.besitzer !== person), ...neu.vorlagen];
-      daten.reflexionen[person] = neu.reflexionen;
+      // Nur ersetzen, wenn die Datei überhaupt Tagesabschlüsse mitbringt.
+      if (neu.reflexionen !== null) daten.reflexionen[person] = neu.reflexionen;
       if (neu.pensumSoll !== null) daten.pensumSoll[person] = neu.pensumSoll;
       return {
         termine: neu.termine.length,
         serien: neu.serien.length,
         ganztags: neu.ganztags.length,
         vorlagen: neu.vorlagen.length,
-        reflexionen: Object.keys(neu.reflexionen).length,
+        reflexionen: neu.reflexionen === null ? 0 : Object.keys(neu.reflexionen).length,
         uebersprungen: neu.uebersprungen,
         aenderungszaehler: daten.aenderungszaehler + 1,
       };

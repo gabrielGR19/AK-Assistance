@@ -90,8 +90,35 @@ test("Verschieben um eine Stunde nach unten", () => {
 
 test("Verschieben wird an den Tagesgrenzen geklemmt, Dauer bleibt erhalten", () => {
   assert.equal(neueStartMinute(10 * 60, 11 * 60, 10 * 60, 0), 0, "nicht vor 00:00");
-  // Ein einstündiger Termin kann spätestens um 23:00 beginnen.
-  assert.equal(neueStartMinute(10 * 60, 11 * 60, 10 * 60, 24 * 60), 23 * 60);
+  // Ein einstündiger Termin endet spätestens um 23:55 und beginnt damit um 22:55.
+  assert.equal(neueStartMinute(10 * 60, 11 * 60, 10 * 60, 24 * 60), 22 * 60 + 55);
+});
+
+// Regression: Ein Ende von exakt 24:00 hat den Block auf die Mindesthöhe zusammenfallen
+// lassen ("22:00–00:00"), weil minutenAmTag() aus einem so gebauten Date wieder 0 liest,
+// und das Zeitfeld im Editor blieb leer. Alle drei Wege ins Ende müssen bei 23:55 stoppen.
+test("kein Termin endet auf 24:00", () => {
+  assert.equal(
+    neueEndMinute(22 * 60, 23 * 60, 23 * 60, 24 * 60),
+    24 * 60 - RASTER_MIN,
+    "Ziehen am unteren Griff bis zur Rasterkante",
+  );
+  assert.equal(
+    neuerZeitraum(22 * 60, 24 * 60).bis,
+    24 * 60 - RASTER_MIN,
+    "Aufziehen eines neuen Termins bis zur Rasterkante",
+  );
+  assert.equal(
+    neueStartMinute(10 * 60, 11 * 60, 10 * 60, 24 * 60) + 60,
+    24 * 60 - RASTER_MIN,
+    "Verschieben nach ganz unten",
+  );
+  assert.equal(alsUhrzeit(24 * 60 - RASTER_MIN), "23:55");
+});
+
+test("Aufziehen ganz unten am Raster ergibt keinen umgekehrten Zeitraum", () => {
+  const z = neuerZeitraum(24 * 60, 24 * 60);
+  assert.ok(z.bis > z.von, `Ende (${z.bis}) muss nach dem Start (${z.von}) liegen`);
 });
 
 test("Größe ändern: Ende folgt, Mindestlänge bleibt", () => {

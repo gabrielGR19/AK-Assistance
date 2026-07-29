@@ -6,6 +6,7 @@
 // arbeiten wir mit Date-Feldern (Jahr/Monat/Tag) genau wie der Prototyp
 // (../planung/arbeitskalender.html, Funktion plusTage).
 import { istLabel, istPerson, vorkommenId, type Serie, type Termin, type Wochentag } from "./kalender-typen.ts";
+import { istEchtesDatum } from "./kalender-termine.ts";
 
 function zwei(n: number): string {
   return String(n).padStart(2, "0");
@@ -67,7 +68,8 @@ export function expandiereSerien(serien: Serie[], vonDatum: string, bisDatum: st
 }
 
 const RE_DATUM = /^\d{4}-\d{2}-\d{2}$/;
-const RE_ZEIT = /^\d{2}:\d{2}$/;
+// Stunde 00–23, Minute 00–59 — siehe die Begründung an ZEITPUNKT in kalender-termine.ts.
+const RE_ZEIT = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Prüft eine Serie auf Plausibilität, bevor sie gespeichert wird. Bricht beim ersten
 // Fehler ab — für die Anzeige im UI reicht eine konkrete Meldung, keine Fehlerliste.
@@ -92,10 +94,15 @@ export function validiereSerie(roh: unknown): { ok: true; wert: Serie } | { ok: 
   if (typeof r.notiz !== "string") {
     return { ok: false, fehler: "Die Notiz muss Text sein." };
   }
-  if (typeof r.startDatum !== "string" || !RE_DATUM.test(r.startDatum)) {
+  // istEchtesDatum zusätzlich zur Regex: sonst wird "2026-02-31" gespeichert und die Serie
+  // beginnt an einem Tag, den es nicht gibt.
+  if (typeof r.startDatum !== "string" || !RE_DATUM.test(r.startDatum) || !istEchtesDatum(r.startDatum)) {
     return { ok: false, fehler: "Das Startdatum hat nicht das Format JJJJ-MM-TT." };
   }
-  if (r.endDatum !== null && (typeof r.endDatum !== "string" || !RE_DATUM.test(r.endDatum))) {
+  if (
+    r.endDatum !== null &&
+    (typeof r.endDatum !== "string" || !RE_DATUM.test(r.endDatum) || !istEchtesDatum(r.endDatum))
+  ) {
     return { ok: false, fehler: "Das Enddatum hat nicht das Format JJJJ-MM-TT." };
   }
   if (typeof r.endDatum === "string" && r.endDatum < r.startDatum) {

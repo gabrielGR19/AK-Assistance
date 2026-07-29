@@ -29,6 +29,13 @@ export interface KalenderDaten {
   vorlagen: Vorlage[];
 }
 
+// Was die Route tatsächlich liefert: `ich` ist dort `PersonId | null`. Null bedeutet, dass
+// der Basic-Auth-Benutzername keiner Kalenderperson entspricht (COCKPIT_BENUTZERNAMEN
+// enthält einen Namen ausser gabriel/moritz). Dieser Fall wird beim Laden abgefangen —
+// unterhalb davon rechnet die Ansicht mit einer echten Person, sonst würde jeder Zugriff
+// auf reflexionen[null] die ganze Seite abstürzen lassen.
+type KalenderAntwort = Omit<KalenderDaten, "ich"> & { ich: PersonId | null };
+
 const POLL_MS = 8000;
 
 // Nur Ansichtszustand dieses Browsers, keine geteilten Daten.
@@ -67,6 +74,10 @@ interface EditorZustand {
   istNeu: boolean;
   terminId: string | null;
   serieId: string | null; // gesetzt, wenn der Eintrag zu einer Serie gehört
+  // Startdatum der Serie, wie es gespeichert ist. Muss mitgeführt werden, weil der Editor
+  // immer das Datum des ANGEKLICKTEN Vorkommens zeigt: würde man das beim Ändern der ganzen
+  // Serie als neues Startdatum schicken, verschwänden alle früheren Vorkommen.
+  serieStartDatum: string | null;
   vorkommenDatum: string | null;
   position: { links: number; oben: number };
   fehler: string | null;
@@ -81,6 +92,8 @@ export function KalenderAnsicht() {
   // Ausgeblendete Label sind reiner Ansichtszustand dieses Browsers — sie gehören nicht in
   // die geteilte Datei, sonst blendet Gabriel Moritz etwas aus.
   const [ausgeblendet, setAusgeblendet] = useState<Set<LabelSchluessel>>(() => new Set());
+  // Anmeldename gehört zu keiner Kalenderperson — dann gibt es nichts anzuzeigen.
+  const [keinZugang, setKeinZugang] = useState(false);
   const zaehlerRef = useRef<number | null>(null);
   const ziehtRef = useRef(false);
   const ladenRef = useRef<(() => void) | null>(null);
@@ -118,11 +131,16 @@ export function KalenderAnsicht() {
     const laden = (erste: boolean) => {
       fetch(`/api/kalender?von=${von}&bis=${bis}`)
         .then((res) => (res.ok ? res.json() : null))
-        .then((antwort: KalenderDaten | null) => {
+        .then((antwort: KalenderAntwort | null) => {
           if (!aktiv || !antwort) return;
+          if (antwort.ich === null) {
+            setKeinZugang(true);
+            return;
+          }
           if (erste || antwort.aenderungszaehler !== zaehlerRef.current) {
             zaehlerRef.current = antwort.aenderungszaehler;
-            setDaten(antwort);
+            // Neu aufbauen statt durchreichen: so weiss TypeScript, dass `ich` hier gesetzt ist.
+            setDaten({ ...antwort, ich: antwort.ich });
           }
         })
         .catch(() => {
@@ -280,7 +298,8 @@ export function KalenderAnsicht() {
     if (
       !window.confirm(
         `"${datei.name}" einspielen?\n\nDeine bisherigen Termine, Serien, ganztägigen Einträge und Vorlagen ` +
-          `werden dabei ersetzt. Die Einträge der anderen Person bleiben unberührt.`,
+          `werden dabei ersetzt — und falls die Datei Tagesabschlüsse oder ein Tagespensum enthält, ` +
+          `auch diese. Die Einträge der anderen Person bleiben unberührt.`,
       )
     ) {
       return;
@@ -290,7 +309,8 @@ export function KalenderAnsicht() {
       const bericht = await api.importiere(inhalt);
       neuLaden();
       melde(
-        `Eingespielt: ${bericht.termine} Termine, ${bericht.ganztags} ganztägig, ${bericht.vorlagen} Vorlagen` +
+        `Eingespielt: ${bericht.termine} Termine, ${bericht.serien} Serien, ${bericht.ganztags} ganztägig, ` +
+          `${bericht.vorlagen} Vorlagen, ${bericht.reflexionen} Tagesabschlüsse` +
           (bericht.uebersprungen ? ` — ${bericht.uebersprungen} Einträge übersprungen.` : "."),
       );
     } catch (err) {
@@ -368,6 +388,7 @@ export function KalenderAnsicht() {
       // seiner Serie und ist danach ein ganz normaler Einzeltermin — die Auswahl
       // "nur dieser / ganze Serie" wäre dann eine Falle.
       serieId: serie ? serie.id : null,
+      serieStartDatum: serie ? serie.startDatum : null,
       vorkommenDatum: t.ausSerie?.datum ?? null,
       position: {
         links: Math.max(12, Math.min(punkt.x + 12, innerWidth - 310)),
@@ -418,7 +439,9 @@ export function KalenderAnsicht() {
           titel: termin.titel,
           label: w.label,
           notiz: w.notiz,
-          startDatum: w.datum,
+          // Das bestehende Startdatum der Serie beibehalten — w.datum ist das Datum des
+          // angeklickten Vorkommens und würde alle früheren Vorkommen abschneiden.
+          startDatum: editor.serieStartDatum ?? w.datum,
           endDatum: w.endDatum || null,
           startZeit: w.start,
           endeZeit: w.ende,
@@ -491,6 +514,21 @@ export function KalenderAnsicht() {
     return () => document.removeEventListener("keydown", aufTaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ansicht]);
+
+  // Steht nach allen Hooks, damit die Aufrufreihenfolge über alle Renderdurchläufe gleich bleibt.
+  if (keinZugang) {
+    return (
+      <main className="shell">
+        <header className="seitenkopf">
+          <h1 className="seitenkopf__titel">Kalender</h1>
+        </header>
+        <p>
+          Dein Anmeldename gehört zu keiner Kalenderperson. Der Kalender kennt nur „gabriel" und
+          „moritz" — melde dich mit einem dieser Namen an.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="shell" onPointerDown={() => editor && setEditor(null)}>

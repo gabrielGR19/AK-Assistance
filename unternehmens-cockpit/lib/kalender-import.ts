@@ -24,7 +24,10 @@ export interface ImportErgebnis {
   serien: Serie[];
   ganztags: Ganztags[];
   vorlagen: Vorlage[];
-  reflexionen: Record<string, Reflexion>;
+  // null = die Datei enthielt gar keinen Reflexionsblock. Dann bleiben die gespeicherten
+  // Tagesabschlüsse stehen, statt von einem leeren Objekt überschrieben zu werden — eine
+  // Sicherung, die nur Termine enthält, darf nicht die Miniziel-Punktleiste löschen.
+  reflexionen: Record<string, Reflexion> | null;
   // null = die Datei enthielt kein brauchbares Pensum, das bestehende bleibt stehen.
   pensumSoll: number | null;
   // Wie viele Einträge unbrauchbar waren. Ein Import bricht daran nicht ab, aber der
@@ -153,6 +156,7 @@ export function leseImport(roh: unknown, person: PersonId): Pruefung<ImportErgeb
     vorlagen.push(baueVorlage(geprueft.wert, person));
   }
 
+  const hatReflexionen = d.reflexionen !== undefined && d.reflexionen !== null;
   const reflexionen = leseReflexionen(d.reflexionen, person);
 
   return {
@@ -162,7 +166,7 @@ export function leseImport(roh: unknown, person: PersonId): Pruefung<ImportErgeb
       serien,
       ganztags,
       vorlagen,
-      reflexionen: reflexionen.werte,
+      reflexionen: hatReflexionen ? reflexionen.werte : null,
       pensumSoll: lesePensum(d.pensumSoll, person),
       uebersprungen: uebersprungen + reflexionen.uebersprungen,
     },

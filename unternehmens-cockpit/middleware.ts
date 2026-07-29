@@ -24,9 +24,16 @@ const CRON_PFADE = ["/api/live/refresh", "/api/reminders", "/api/retell/kunden/f
 export function middleware(request: NextRequest) {
   const passwort = process.env.COCKPIT_PASSWORT;
   if (!passwort) {
+    // In Produktion ist ein fehlendes Passwort ein Konfigurationsfehler, kein Freibrief.
+    // Vorher galt hier derselbe Zweig wie lokal: ein pm2-Neustart ohne .env.local hätte das
+    // gesamte Cockpit ohne Passwort geöffnet — und per Cookie hätte sich jeder als Moritz
+    // ausgeben und in dessen Namen schreiben können. Lieber nicht erreichbar als offen.
+    if (process.env.NODE_ENV === "production") {
+      return new NextResponse("Cockpit ist nicht einsatzbereit: COCKPIT_PASSWORT fehlt.", { status: 503 });
+    }
     // Ungeschützt (lokal). Identität kommt aus einem Cookie, damit sich der
     // Zwei-Personen-Betrieb in zwei Browserprofilen durchspielen lässt; ohne Cookie
-    // ist man Gabriel. Greift nie in Produktion, da dort ein Passwort gesetzt ist.
+    // ist man Gabriel.
     return mitBenutzer(request, request.cookies.get(ENTWICKLUNG_COOKIE)?.value ?? "gabriel");
   }
 

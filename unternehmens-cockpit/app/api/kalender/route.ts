@@ -6,6 +6,21 @@ import { istEchtesDatum } from "@/lib/kalender-termine";
 
 const DATUM = /^\d{4}-\d{2}-\d{2}$/;
 
+// Obergrenze für den abgefragten Zeitraum. `expandiereSerien` läuft Tag für Tag durch die
+// Spanne: ohne Grenze erzeugt ein einziger Aufruf wie ?von=0100-01-01&bis=9999-12-31 bei einer
+// unbefristeten Tagesserie Millionen Vorkommen und beendet den Node-Prozess mit
+// "heap out of memory". Bei einer pm2-fork-Instanz ist damit das ganze Cockpit weg.
+// Die Monatsansicht fragt 42 Tage ab — 400 Tage lassen jede echte Ansicht durch.
+const MAX_SPANNE_TAGE = 400;
+
+// Ganze Tage zwischen zwei "YYYY-MM-DD". Über Date.UTC, damit keine Zeitumstellung
+// hineinrechnet — hier wird nur gezählt, nicht angezeigt.
+function tageZwischen(von: string, bis: string): number {
+  const [jv, mv, tv] = von.split("-").map(Number);
+  const [jb, mb, tb] = bis.split("-").map(Number);
+  return (Date.UTC(jb, mb - 1, tb) - Date.UTC(jv, mv - 1, tv)) / 86400000;
+}
+
 // GET /api/kalender?von=YYYY-MM-DD&bis=YYYY-MM-DD
 //
 // Liefert alles, was die Ansicht für diesen Zeitraum braucht — Termine BEIDER Personen,
@@ -25,6 +40,12 @@ export async function GET(request: NextRequest) {
     }
     if (bis < von) {
       return Response.json({ fehler: "bis darf nicht vor von liegen." }, { status: 400 });
+    }
+    if (tageZwischen(von, bis) > MAX_SPANNE_TAGE) {
+      return Response.json(
+        { fehler: `Der Zeitraum darf höchstens ${MAX_SPANNE_TAGE} Tage umfassen.` },
+        { status: 400 },
+      );
     }
 
     const daten = await ladeKalender();

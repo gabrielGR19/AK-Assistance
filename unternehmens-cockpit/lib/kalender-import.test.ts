@@ -30,6 +30,7 @@ test("Prototyp-Datei wird der importierenden Person zugeschrieben", () => {
 test("leere Reflexionen werden nicht mitgeschleppt", () => {
   const p = leseImport(prototypDatei, "gabriel");
   assert.ok(p.ok);
+  assert.ok(p.wert.reflexionen);
   assert.deepEqual(Object.keys(p.wert.reflexionen), ["2026-07-27"]);
 });
 
@@ -56,6 +57,7 @@ test("aus einem Cockpit-Export kommen nur die eigenen Einträge", () => {
   assert.equal(p.wert.termine.length, 1);
   assert.equal(p.wert.termine[0].titel, "Cold Calls");
   assert.equal(p.wert.ganztags.length, 0);
+  assert.ok(p.wert.reflexionen);
   assert.equal(p.wert.reflexionen["2026-07-27"].notiz, "meins");
   assert.equal(p.wert.pensumSoll, 300);
 });
@@ -116,4 +118,59 @@ test("unsinniges Pensum lässt das bestehende stehen", () => {
   const p = leseImport({ termine: [], pensumSoll: 99999 }, "gabriel");
   assert.ok(p.ok);
   assert.equal(p.wert.pensumSoll, null);
+});
+
+// Regression: Eine Sicherung, die nur Termine enthält, hat die gespeicherten Tagesabschlüsse
+// mit einem leeren Objekt überschrieben — damit war die Miniziel-Punktleiste geleert, ohne
+// dass die Rückfrage das angekündigt hätte. null heißt jetzt "die Datei sagt dazu nichts".
+test("Datei ohne Reflexionsblock lässt die Tagesabschlüsse stehen", () => {
+  const p = leseImport({ termine: [prototypDatei.termine[0]] }, "gabriel");
+  assert.ok(p.ok);
+  assert.equal(p.wert.reflexionen, null);
+});
+
+test("Datei mit leerem Reflexionsblock ersetzt die Tagesabschlüsse sehr wohl", () => {
+  const p = leseImport({ termine: [], reflexionen: {} }, "gabriel");
+  assert.ok(p.ok);
+  assert.deepEqual(p.wert.reflexionen, {});
+});
+
+test("Serien mit unmöglichem Datum oder unmöglicher Uhrzeit werden abgelehnt", () => {
+  const serie = {
+    id: "s1",
+    besitzer: "gabriel",
+    titel: "Test",
+    label: "claude",
+    notiz: "",
+    startDatum: "2026-07-27",
+    endDatum: null,
+    startZeit: "21:00",
+    endeZeit: "21:15",
+    ausnahmen: [],
+    wiederholung: { art: "taeglich" },
+  };
+  const zaehle = (abweichung: object) => {
+    const p = leseImport({ termine: [], serien: [{ ...serie, ...abweichung }] }, "gabriel");
+    assert.ok(p.ok);
+    return p.wert.serien.length;
+  };
+  assert.equal(zaehle({ startDatum: "2026-02-31" }), 0, "den 31. Februar gibt es nicht");
+  assert.equal(zaehle({ startZeit: "99:00" }), 0, "Stunde 99 gibt es nicht");
+  assert.equal(zaehle({ endeZeit: "21:99" }), 0, "Minute 99 gibt es nicht");
+  assert.equal(zaehle({}), 1, "die unveränderte Serie kommt weiterhin durch");
+});
+
+test("Termine mit unmöglicher Uhrzeit werden abgelehnt", () => {
+  const p = leseImport(
+    {
+      termine: [
+        { titel: "Stunde 30", label: "lesen", notiz: "", start: "2026-07-28T30:00", ende: "2026-07-28T31:00" },
+        { titel: "Ende 24:00", label: "lesen", notiz: "", start: "2026-07-28T22:00", ende: "2026-07-28T24:00" },
+      ],
+    },
+    "gabriel",
+  );
+  assert.ok(p.ok);
+  assert.equal(p.wert.termine.length, 0);
+  assert.equal(p.wert.uebersprungen, 2);
 });
