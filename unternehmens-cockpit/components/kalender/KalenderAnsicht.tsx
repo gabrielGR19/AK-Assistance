@@ -531,7 +531,7 @@ export function KalenderAnsicht() {
   }
 
   return (
-    <main className="shell" onPointerDown={() => editor && setEditor(null)}>
+    <main className="shell shell--breit" onPointerDown={() => editor && setEditor(null)}>
       <header className="seitenkopf">
         <h1 className="seitenkopf__titel">Kalender</h1>
       </header>

@@ -182,6 +182,12 @@ a { color: var(--accent-text); }
 
 .shell { max-width: 1180px; margin: 0 auto; padding: 28px 28px 96px; }
 
+/* Seiten, die die volle Breite brauchen. Der Kalender bildet sieben Tagesspalten
+   nebeneinander ab: bei 1180px bleiben dem Raster nach Abzug der Seitenleiste noch rund
+   900px, also gut 120px je Tag — die Termintitel sind dann nicht mehr lesbar. Er nutzt
+   deshalb den ganzen Inhaltsbereich, wie im Prototyp, der das Browserfenster füllt. */
+.shell--breit { max-width: none; }
+
 /* Seitenkopf innerhalb des Inhalts (ersetzt die frühere Vollkopfzeile) */
 .seitenkopf {
   display: flex;
