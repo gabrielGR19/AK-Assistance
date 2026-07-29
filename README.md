@@ -11,6 +11,7 @@ Monorepo für die AK-Assistance-Infrastruktur: Website, Automatisierungen und Ku
 | `phone-agents/` | Telefon-Agent (Retell + Claude + WhatsApp) inkl. Demo |
 | `unternehmens-cockpit/` | Betriebs-Cockpit (Next.js) |
 | `marketing/` | Lead-Generierung und Marketing-Assets |
+| `ak-leadgen/` | CLI-Tool: B2B-Lead-Generierung über Google Places API + Google Sheets |
 | `client-templates/` | Vorlagen für Kundenprojekte |
 | `docs/` | Setup- und Betriebsdokumentation |
 | `assets/` | Logos und geteilte Medien |
