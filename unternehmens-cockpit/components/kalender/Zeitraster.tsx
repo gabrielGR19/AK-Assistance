@@ -91,9 +91,17 @@ export function Zeitraster({
     [beiKlick],
   );
 
+  // Als useCallback, damit die Identität über Neuzeichnungen stabil bleibt. Frisch erzeugte
+  // Funktionen ließen den Zieh-Effekt bei JEDEM Neuzeichnen aufräumen und sich neu
+  // registrieren — mitten im Zug also viele Male je Sekunde. Das kostete nicht nur
+  // Fensterlistener, es setzte auch die Zeitmessung des Mitscrollens jedes Mal zurück und
+  // halbierte dadurch dessen Geschwindigkeit.
+  const holeRaster = useCallback(() => rasterRef.current, []);
+  const holeScroll = useCallback(() => wrapRef.current, []);
+
   const { zug, beginne } = useZiehen({
-    rasterEl: () => rasterRef.current,
-    scrollEl: () => wrapRef.current,
+    rasterEl: holeRaster,
+    scrollEl: holeScroll,
     beiFertig,
     beiKlick: klick,
   });

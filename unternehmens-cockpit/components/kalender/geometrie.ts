@@ -102,6 +102,43 @@ export function alsUhrzeit(minuten: number): string {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
+// ---------- Automatisches Mitscrollen beim Ziehen ----------
+//
+// Zieht man einen Termin an den unteren Rand des sichtbaren Rasters, soll der Bereich von
+// selbst nachrücken, statt dass der Zug an der Kante endet. Auch das ist reine Rechnung:
+// hinein gehen die Zeigerposition und die beim Drücken gemessenen Kanten des Scrollbereichs
+// (Fensterkoordinaten), heraus kommt ein Versatz in Pixeln je Bild. Kein DOM-Zugriff.
+//
+// Der Versatz wächst zum Rand hin an, damit ein Termin knapp an der Kante langsam wandert
+// und nicht davonspringt.
+export const SCROLL_ZONE = 52; // Randstreifen, in dem das Mitscrollen einsetzt
+
+// Höchstgeschwindigkeit direkt an der Kante, in Pixeln je SEKUNDE.
+//
+// Bewusst nicht "Pixel je Bild": ein Bildschirm mit 120 Hz scrollte damit doppelt so
+// schnell wie einer mit 60 Hz, und dasselbe Ziehen führte je nach Gerät woanders hin.
+// Der Scrollweg des Rasters beträgt je nach Fensterhöhe nur etwa 700px — bei 500px/s
+// braucht ein Durchlauf gut eine Sekunde und lässt sich noch auf die Minute genau stoppen.
+export const SCROLL_MAX_PRO_SEKUNDE = 500;
+
+/** Scrollgeschwindigkeit in Pixeln je Sekunde; negativ bedeutet nach oben. */
+export function autoScrollSchritt(zeigerY: number, sichtOben: number, sichtUnten: number): number {
+  // Bei einem sehr flachen Bereich dürfen sich oberer und unterer Streifen nicht überlappen,
+  // sonst zöge es gleichzeitig in beide Richtungen.
+  const zone = Math.min(SCROLL_ZONE, (sichtUnten - sichtOben) / 3);
+  if (zone <= 0) return 0;
+
+  if (zeigerY < sichtOben + zone) {
+    const tiefe = Math.min(zone, sichtOben + zone - zeigerY);
+    return -(tiefe / zone) * SCROLL_MAX_PRO_SEKUNDE;
+  }
+  if (zeigerY > sichtUnten - zone) {
+    const tiefe = Math.min(zone, zeigerY - (sichtUnten - zone));
+    return (tiefe / zone) * SCROLL_MAX_PRO_SEKUNDE;
+  }
+  return 0;
+}
+
 // Pixel-Position eines Zeitpunkts im Raster (für die Vorschau beim Ziehen).
 export function obenAus(minuten: number): number {
   return ((minuten - STUNDE_VON * 60) / 60) * SPUR;

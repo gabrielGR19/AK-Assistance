@@ -11,7 +11,7 @@ import {
   RASTER_MIN,
   type RasterMass,
 } from "./geometrie.ts";
-import { pageYMitScroll } from "./geometrie.ts";
+import { pageYMitScroll, autoScrollSchritt, SCROLL_MAX_PRO_SEKUNDE } from "./geometrie.ts";
 import { STUNDE_VON, SPUR } from "./datum.ts";
 
 test("ohne Scrollen während des Zugs bleibt die Zeigerposition unverändert", () => {
@@ -119,6 +119,51 @@ test("kein Termin endet auf 24:00", () => {
 test("Aufziehen ganz unten am Raster ergibt keinen umgekehrten Zeitraum", () => {
   const z = neuerZeitraum(24 * 60, 24 * 60);
   assert.ok(z.bis > z.von, `Ende (${z.bis}) muss nach dem Start (${z.von}) liegen`);
+});
+
+// Automatisches Mitscrollen: sichtbarer Bereich von 200 bis 800 (Fensterkoordinaten).
+const OBEN = 200;
+const UNTEN = 800;
+
+test("in der Mitte des Rasters wird nicht gescrollt", () => {
+  assert.equal(autoScrollSchritt(500, OBEN, UNTEN), 0);
+  assert.equal(autoScrollSchritt(OBEN + 60, OBEN, UNTEN), 0, "knapp ausserhalb des Randstreifens");
+  assert.equal(autoScrollSchritt(UNTEN - 60, OBEN, UNTEN), 0);
+});
+
+test("am unteren Rand wird nach unten gescrollt, am oberen nach oben", () => {
+  assert.ok(autoScrollSchritt(UNTEN - 10, OBEN, UNTEN) > 0, "unten: positiver Versatz");
+  assert.ok(autoScrollSchritt(OBEN + 10, OBEN, UNTEN) < 0, "oben: negativer Versatz");
+});
+
+test("der Versatz wächst zum Rand hin und bleibt gedeckelt", () => {
+  const knapp = autoScrollSchritt(UNTEN - 40, OBEN, UNTEN);
+  const naeher = autoScrollSchritt(UNTEN - 10, OBEN, UNTEN);
+  assert.ok(naeher > knapp, `näher am Rand muss schneller sein (${naeher} > ${knapp})`);
+  assert.equal(autoScrollSchritt(UNTEN, OBEN, UNTEN), SCROLL_MAX_PRO_SEKUNDE, "direkt an der Kante");
+  assert.equal(autoScrollSchritt(UNTEN + 500, OBEN, UNTEN), SCROLL_MAX_PRO_SEKUNDE, "weit darunter nicht schneller");
+  assert.equal(autoScrollSchritt(OBEN - 500, OBEN, UNTEN), -SCROLL_MAX_PRO_SEKUNDE, "weit darüber nicht schneller");
+});
+
+test("bei einem flachen Bereich überlappen sich die Randstreifen nicht", () => {
+  // Höhe 30: ohne Deckelung läge die Mitte in beiden Streifen und würde gleichzeitig
+  // nach oben und unten ziehen.
+  const mitte = 15;
+  const schritt = autoScrollSchritt(mitte, 0, 30);
+  assert.equal(schritt, 0, "die Mitte eines flachen Bereichs scrollt nicht");
+  assert.ok(autoScrollSchritt(29, 0, 30) > 0);
+  assert.ok(autoScrollSchritt(1, 0, 30) < 0);
+});
+
+// Regression zur 05:30-Fehlerklasse: Beim Mitscrollen bewegt sich die Maus NICHT, nur
+// scrollTop ändert sich. Die Uhrzeit unter dem Zeiger muss trotzdem mitwandern — und zwar
+// über die Aufrechnung des Scroll-Versatzes, nicht über ein erneutes Messen des Rasters.
+test("mitscrollen verschiebt die Uhrzeit unter dem stillstehenden Zeiger", () => {
+  const mass: RasterMass = { obenAbsolut: 100, hoehe: 18 * SPUR };
+  const pageY = 400; // Maus bleibt, wo sie ist
+  const vorher = minuteAusPosition(pageYMitScroll(pageY, 0, 0), mass);
+  const nachher = minuteAusPosition(pageYMitScroll(pageY, 0, SPUR), mass);
+  assert.equal(nachher - vorher, 60, "eine Stunde Scroll = eine Stunde später");
 });
 
 test("Größe ändern: Ende folgt, Mindestlänge bleibt", () => {
