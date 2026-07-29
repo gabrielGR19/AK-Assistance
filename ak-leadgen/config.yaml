@@ -1,0 +1,32 @@
+regionen:
+  - name: "Nürnberg"
+    lat: 49.4521
+    lng: 11.0767
+    radius_km: 25
+  - name: "Fürth"
+    lat: 49.4783
+    lng: 10.9903
+    radius_km: 15
+
+suchbloecke:            # frei erweiterbar, werden der Reihe nach abgearbeitet
+  - begriff: "Schädlingsbekämpfer"
+    anzahl: 20
+  - begriff: "Gebäudereinigung"
+    anzahl: 20
+  - begriff: "Schlüsseldienst"
+    anzahl: 20
+  - begriff: "Bestatter"
+    anzahl: 20
+  - begriff: "Sanitär Heizung"
+    anzahl: 20
+
+filter:                 # ein Lead muss ALLE erfüllen
+  min_bewertungen: 5
+  min_sterne: 3.0
+  telefon_pflicht: true
+  website_pflicht: false
+
+max_neue_leads_pro_lauf: 100
+max_api_calls_pro_lauf: 200      # harte Kostenbremse
+sprache: "de"
+region_code: "DE"

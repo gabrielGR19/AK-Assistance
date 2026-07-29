@@ -1,0 +1,7 @@
+requests
+pyyaml
+gspread
+google-auth
+phonenumbers
+python-dotenv
+pytest
