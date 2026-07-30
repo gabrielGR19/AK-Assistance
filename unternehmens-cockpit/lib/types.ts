@@ -15,6 +15,13 @@ export interface ClaudeInfo {
   restguthabenGeschaetztUsd: number | null;
 }
 
+// Live-Verbrauch von ak-leadgen (Google Places API), gelesen aus dem Meta-Tab des
+// Lead-Sheets, um das monatliche Freikontingent (1.000 Calls) im Blick zu behalten.
+export interface LeadgenInfo {
+  callsMonat: number | null;
+  monat: string | null;
+}
+
 export interface Dienst {
   id: string;
   name: string;
@@ -31,6 +38,7 @@ export interface Dienst {
   letzterAbruf: string | null;
   abrufStatus: AbrufStatus;
   claude?: ClaudeInfo;
+  leadgen?: LeadgenInfo;
   // Snapshots des betrag-Felds über Zeit (ein Eintrag pro Tag mit Änderung), für Trendanzeige.
   // Optional, damit Altbestände in cockpit.json ohne dieses Feld kompatibel bleiben.
   verlauf?: { datum: string; betrag: number }[];
