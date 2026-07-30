@@ -68,6 +68,7 @@ Weitere Produkte: Marketing-Automatisierung, weitere Agenten, App.
 | `n8n-workflows/` | JSON-Exporte der n8n-Workflows (inkl. Blog-Agent) |
 | `client-templates/` | Vorlagen für Kundenprojekte |
 | `docs/`, `marketing/`, `assets/` | Doku, Marketing-Material, Medien |
+| `ak-leadgen/` | CLI-Tool: B2B-Lead-Generierung (Google Places API, SQLite, Google Sheets) |
 
 ## n8n
 

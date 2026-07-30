@@ -7,6 +7,10 @@ export interface VerbrauchErgebnis {
   verbrauchUsd: number | null;
   keinKey: boolean;
   fehler: string | null;
+  // Optionale, nicht-monetäre Kennzahl für Dienste wie ak-leadgen (Anzahl API-Calls
+  // statt USD). Bestehende Provider (Claude, Retell) setzen diese Felder nicht.
+  verbrauchAnzahl?: number | null;
+  monat?: string | null;
 }
 
 // Kapselt Live-Abruf + dienst-spezifisches Zurückschreiben für GENAU einen Dienst.

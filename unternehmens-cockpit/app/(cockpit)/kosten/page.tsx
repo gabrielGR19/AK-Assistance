@@ -8,6 +8,7 @@ import { KostenHero } from "@/components/KostenHero";
 import { DienstTabelle } from "@/components/DienstTabelle";
 import { DienstFormular } from "@/components/DienstFormular";
 import { ClaudeGuthaben } from "@/components/ClaudeGuthaben";
+import { LeadgenVerbrauch } from "@/components/LeadgenVerbrauch";
 
 // Leeres Formular als Ausgangszustand für einen neuen Dienst.
 const LEER: DienstEingabe = {
@@ -188,6 +189,7 @@ export default function KostenSeite() {
 
   const heute = new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
   const claudeDienst = daten.dienste.find((d) => d.claude);
+  const leadgenDienst = daten.dienste.find((d) => d.leadgen);
 
   return (
     <main className="shell">
@@ -206,6 +208,13 @@ export default function KostenSeite() {
           dienst={claudeDienst}
           onSpeichern={claudeSpeichern}
           onAbrufen={() => liveAbrufen(claudeDienst.id)}
+        />
+      )}
+
+      {leadgenDienst && (
+        <LeadgenVerbrauch
+          dienst={leadgenDienst}
+          onAbrufen={() => liveAbrufen(leadgenDienst.id)}
         />
       )}
 

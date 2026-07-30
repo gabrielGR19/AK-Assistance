@@ -35,7 +35,7 @@ export async function fuehreLiveAbrufAus(
     return { typ: "abgeschlossen", daten, live: { ok: false, keinKey: true, fehler: ergebnis.fehler } };
   }
 
-  if (!ergebnis.ok || ergebnis.verbrauchUsd == null) {
+  if (!ergebnis.ok || (ergebnis.verbrauchUsd == null && ergebnis.verbrauchAnzahl == null)) {
     // Abruf fehlgeschlagen: markieren, damit der alte Wert nicht als aktuell erscheint.
     d.abrufStatus = "fehlgeschlagen";
     await speichereDaten(daten);

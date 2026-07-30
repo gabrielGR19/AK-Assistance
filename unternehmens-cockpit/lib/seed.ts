@@ -65,6 +65,17 @@ export function seedDaten(): CockpitData {
           restguthabenGeschaetztUsd: null,
         },
       }),
+      dienst({
+        id: "leadgen",
+        name: "Google Places API (Leadgen)",
+        kategorie: "Marketing/API",
+        abrechnungsmodell: "verbrauch",
+        waehrung: "EUR",
+        notiz:
+          "Kein echter Kostenpunkt, reine Verbrauchsanzeige gegen das 1.000-Calls-Freikontingent/Monat " +
+          "(SKU Enterprise+Atmosphere). Bei Überschreitung: $40 pro 1.000 weitere Calls.",
+        leadgen: { callsMonat: null, monat: null },
+      }),
     ],
   };
 }
