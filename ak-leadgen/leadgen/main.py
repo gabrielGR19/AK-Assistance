@@ -244,6 +244,22 @@ def befehl_run(args, config, umgebung):
         gefiltert_gesamt, duplikate_gesamt, neu_gesamt,
     )
 
+    if not args.dry_run:
+        # Bestes-Bemühen: Leads sind zu diesem Zeitpunkt schon erfolgreich exportiert,
+        # ein Netzwerk-/Sheet-Fehler hier darf den sonst erfolgreichen Lauf nicht als
+        # Fehler beenden. Zeigt Gabriel im Cockpit den Monatsverbrauch gg. das
+        # 1.000-Calls-Freikontingent der Places API.
+        try:
+            monat = datetime.now().strftime("%Y-%m")
+            calls_monat = store.calls_dieser_monat(conn, monat)
+            meta_worksheet = sheet.meta_verbinden(umgebung)
+            sheet.meta_calls_aktualisieren(
+                meta_worksheet, monat, calls_monat,
+                datetime.now().isoformat(timespec="seconds"),
+            )
+        except Exception as fehler:
+            print(f"Warnung: Monatsverbrauch konnte nicht ins Meta-Tab geschrieben werden: {fehler}")
+
     if args.dry_run:
         conn.rollback()
     else:

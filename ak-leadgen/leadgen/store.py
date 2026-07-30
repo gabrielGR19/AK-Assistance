@@ -1,6 +1,7 @@
 """SQLite-Speicher für Leads und Läufe. Keine Netzwerkabhängigkeit."""
 
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 import phonenumbers
@@ -118,6 +119,17 @@ def lauf_beenden(conn, lauf_id, api_calls, gefunden, gefiltert, duplikate, neu):
         """,
         (api_calls, gefunden, gefiltert, duplikate, neu, lauf_id),
     )
+
+
+def calls_dieser_monat(conn, monat=None):
+    """Summiert api_calls aller Läufe eines Monats (Format 'YYYY-MM', Default: aktueller Monat)."""
+    if monat is None:
+        monat = datetime.now().strftime("%Y-%m")
+    cur = conn.execute(
+        "SELECT COALESCE(SUM(api_calls), 0) FROM runs WHERE strftime('%Y-%m', gestartet_am) = ?",
+        (monat,),
+    )
+    return cur.fetchone()[0]
 
 
 def als_exportiert_markieren(conn, place_ids):

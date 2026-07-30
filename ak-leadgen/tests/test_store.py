@@ -39,3 +39,27 @@ def test_telefonnormalisierung_deutsche_nummer():
 def test_telefonnormalisierung_ungueltige_nummer_gibt_none():
     assert store.normalisiere_telefon("keine-telefonnummer") is None
     assert store.normalisiere_telefon(None) is None
+
+
+def _lauf_einfuegen(conn, gestartet_am, api_calls):
+    conn.execute(
+        "INSERT INTO runs (gestartet_am, beendet_am, api_calls, gefunden, gefiltert, duplikate, neu) "
+        "VALUES (?, ?, ?, 0, 0, 0, 0)",
+        (gestartet_am, gestartet_am, api_calls),
+    )
+
+
+def test_calls_dieser_monat_summiert_nur_den_angefragten_monat():
+    conn = store.verbindung_oeffnen(":memory:")
+    _lauf_einfuegen(conn, "2026-07-05 08:00:00", 10)
+    _lauf_einfuegen(conn, "2026-07-20 08:00:00", 15)
+    _lauf_einfuegen(conn, "2026-08-01 08:00:00", 99)
+    conn.commit()
+
+    assert store.calls_dieser_monat(conn, "2026-07") == 25
+    assert store.calls_dieser_monat(conn, "2026-08") == 99
+
+
+def test_calls_dieser_monat_ohne_laeufe_gibt_null():
+    conn = store.verbindung_oeffnen(":memory:")
+    assert store.calls_dieser_monat(conn, "2026-07") == 0

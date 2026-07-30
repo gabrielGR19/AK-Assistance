@@ -9,22 +9,59 @@ SHEET_HEADER = [
 ]
 
 TABELLENBLATT_NAME = "Leads"
+META_TABELLENBLATT_NAME = "Meta"
+META_HEADER = ["Monat", "API-Calls", "Aktualisiert am"]
 
 
 class SheetFehler(Exception):
     """Sheet nicht erreichbar oder Header weicht vom erwarteten Schema ab."""
 
 
+def _tabelle_oeffnen(umgebung):
+    """Öffnet die Google-Spreadsheet-Datei (Anker für alle Tabellenblätter)."""
+    client = gspread.service_account(filename=umgebung["GOOGLE_SERVICE_ACCOUNT_FILE"])
+    return client.open_by_key(umgebung["SHEET_ID"])
+
+
 def verbinden(umgebung):
     """Öffnet das Tabellenblatt 'Leads', legt es an, falls es fehlt."""
-    client = gspread.service_account(filename=umgebung["GOOGLE_SERVICE_ACCOUNT_FILE"])
-    tabelle = client.open_by_key(umgebung["SHEET_ID"])
+    tabelle = _tabelle_oeffnen(umgebung)
     try:
         return tabelle.worksheet(TABELLENBLATT_NAME)
     except gspread.exceptions.WorksheetNotFound:
         return tabelle.add_worksheet(
             title=TABELLENBLATT_NAME, rows=1000, cols=len(SHEET_HEADER)
         )
+
+
+def meta_verbinden(umgebung):
+    """Öffnet das Tabellenblatt 'Meta' (Monatsverbrauch fürs Cockpit), legt es an, falls es fehlt."""
+    tabelle = _tabelle_oeffnen(umgebung)
+    try:
+        worksheet = tabelle.worksheet(META_TABELLENBLATT_NAME)
+    except gspread.exceptions.WorksheetNotFound:
+        worksheet = tabelle.add_worksheet(
+            title=META_TABELLENBLATT_NAME, rows=100, cols=len(META_HEADER)
+        )
+    if not worksheet.row_values(1):
+        worksheet.append_row(META_HEADER, value_input_option="USER_ENTERED")
+    return worksheet
+
+
+def meta_calls_aktualisieren(worksheet, monat, calls, zeitstempel):
+    """Schreibt die Monats-Calls-Zahl für 'monat' - Update statt Append. Weicht bewusst vom
+    Append-only-Prinzip der Leads ab: hier steht ein kumulativer Zählerstand pro Monat,
+    keine unveränderliche Einzelbeobachtung."""
+    monatsspalte = worksheet.col_values(1)
+    for i, wert in enumerate(monatsspalte):
+        if wert == monat:
+            zeile = i + 1
+            worksheet.update(
+                [[monat, calls, zeitstempel]], f"A{zeile}:C{zeile}",
+                value_input_option="USER_ENTERED",
+            )
+            return
+    worksheet.append_row([monat, calls, zeitstempel], value_input_option="USER_ENTERED")
 
 
 def header_pruefen(worksheet):

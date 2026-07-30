@@ -84,6 +84,16 @@ python -m leadgen.main stats                    # Bestand je Branche und Region
 Das Tool schreibt ausschließlich per `append_rows` (nie überschreiben, sortieren
 oder löschen). Manuell eingetragene Werte in G–K überleben jeden weiteren Lauf.
 
+## Google Sheet — Tabellenblatt "Meta"
+
+Nach jedem echten Lauf (nicht bei `--dry-run`) schreibt das Tool zusätzlich eine
+Zeile pro Monat mit dem kumulierten API-Call-Verbrauch: `Monat` (YYYY-MM),
+`API-Calls`, `Aktualisiert am`. Anders als bei "Leads" wird diese Zeile bei
+jedem Lauf im selben Monat überschrieben, nicht angehängt — es ist ein
+Zählerstand, keine Einzelbeobachtung. Das Unternehmens-Cockpit liest dieses
+Tabellenblatt, um den Monatsverbrauch gegen das kostenlose Kontingent der
+Places API (1.000 Calls/Monat bei der hier genutzten Feldmaske) anzuzeigen.
+
 ## Tests
 
 ```
