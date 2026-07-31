@@ -24,7 +24,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Sucht die bestehende Buchung dieses Kunden. Gesucht wird ausschliesslich\n// innerhalb des Event-Types aus der Kunden-Config.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\n\nconst referenz = String(p.referenz || p.bestaetigungsnummer || '').trim();\nconst telefon = normTelefon(p.telefon);\nconst name = String(p.name || '').trim().toLowerCase();\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\nelse if (!referenz && !telefon && !name) fehler = 'kein suchkriterium';\n\nreturn [{ json: Object.assign({}, e, {\n  referenz: referenz, telefon: telefon, name_such: name,\n  grund: String(p.grund || 'Absage per Telefonagent').slice(0, 200),\n  fehler: fehler,\n}) }];"
+        "jsCode": "// Sucht die bestehende Buchung dieses Kunden. Gesucht wird ausschliesslich\n// innerhalb des Event-Types aus der Kunden-Config.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\n// Rufnummern kommen in vielen Schreibweisen. Verglichen wird ueber die\n// letzten neun Ziffern - das trifft 0170…, +49170… und 0049170… gleich.\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\nfunction ziffern(t) { return String(t || '').replace(/[^0-9]/g, '').slice(-9); }\n\nconst referenz = String(p.referenz || p.bestaetigungsnummer || '').trim();\n// Die Nummer aus der Telefonie zaehlt mehr als die im Gespraech genannte.\nconst telefon = normTelefon(e.from_number || p.telefon);\nconst name_such = String(p.name || '').trim().toLowerCase();\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\n  else if (String(c.kalender_typ || 'calcom') !== 'calcom') fehler = 'kalender nicht unterstuetzt';\nelse if (!referenz && !telefon && !name_such) fehler = 'kein suchkriterium';\n\nreturn [{ json: Object.assign({}, e, {\n  referenz: referenz, telefon: telefon, name_such: name_such,\n  grund: String(p.grund || 'Absage per Telefonagent').slice(0, 200),\n  fehler: fehler,\n}) }];"
       }
     },
     {
@@ -75,7 +75,7 @@
         "method": "GET",
         "url": "={{ $json.config.cal_api_base }}/bookings",
         "options": {
-          "timeout": 15000,
+          "timeout": 8000,
           "response": {
             "response": {
               "neverError": true,
@@ -114,9 +114,6 @@
       },
       "onError": "continueRegularOutput",
       "alwaysOutputData": true,
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1000,
       "credentials": {
         "httpHeaderAuth": {
           "id": "AK_CALCOM_CREDENTIAL_ID",
@@ -134,7 +131,7 @@
         200
       ],
       "parameters": {
-        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: { gefunden: false, message: ktx.fehler } }];\n\nconst r = $input.first().json || {};\nif (r.error || Number(r.statusCode) >= 400) {\n  return [{ json: { gefunden: false, message: 'kalender nicht erreichbar' } }];\n}\n\nconst liste = ((r.body || {}).data) || [];\nconst zielTyp = String(ktx.config.cal_event_type_id);\n\nfunction ziffern(t) { return String(t || '').replace(/[^0-9]/g, '').slice(-9); }\n\nlet treffer = null;\nif (ktx.referenz) {\n  treffer = liste.find(b => String(b.uid) === ktx.referenz || String(b.id) === ktx.referenz) || null;\n}\nif (!treffer && ktx.telefon) {\n  const ziel = ziffern(ktx.telefon);\n  treffer = liste.find(b => (b.attendees || []).some(a =>\n    ziffern(a.phoneNumber) === ziel || ziffern(a.phone) === ziel)) || null;\n}\nif (!treffer && ktx.name_such) {\n  treffer = liste.find(b => (b.attendees || []).some(a =>\n    String(a.name || '').trim().toLowerCase() === ktx.name_such)) || null;\n}\n\nif (!treffer) {\n  return [{ json: { gefunden: false, message: 'kein passender termin gefunden' } }];\n}\n\n// MANDANTENCHECK vor dem schreibenden Schritt: die gefundene Buchung muss zum\n// Event-Type dieses Kunden gehoeren. Ohne diesen Check koennte eine\n// manipulierte Referenz auf einen fremden Termin zeigen.\nconst typTreffer = String(treffer.eventTypeId || (treffer.eventType && treffer.eventType.id) || '');\nif (typTreffer && typTreffer !== zielTyp) {\n  return [{ json: { gefunden: false, message: 'termin gehoert nicht zu diesem betrieb' } }];\n}\n\nreturn [{ json: { gefunden: true, uid: String(treffer.uid || treffer.id),\n  start_alt: String(treffer.start || ''), message: '' } }];"
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\n// Rufnummern kommen in vielen Schreibweisen. Verglichen wird ueber die\n// letzten neun Ziffern - das trifft 0170…, +49170… und 0049170… gleich.\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\nfunction ziffern(t) { return String(t || '').replace(/[^0-9]/g, '').slice(-9); }\n\nif (ktx.fehler) return [{ json: { gefunden: false, message: ktx.fehler } }];\n\nconst r = $input.first().json || {};\nif (r.error || Number(r.statusCode) >= 400) {\n  return [{ json: { gefunden: false, message: 'kalender nicht erreichbar' } }];\n}\n\nconst liste = ((r.body || {}).data) || [];\nconst zielTyp = String(ktx.config.cal_event_type_id);\nconst zielNummer = ziffern(ktx.telefon);\n\nfunction nummerPasst(b) {\n  if (!zielNummer) return false;\n  return (b.attendees || []).some(a =>\n    ziffern(a.phoneNumber) === zielNummer || ziffern(a.phone) === zielNummer);\n}\n\nlet treffer = null;\nlet ueberNummer = false;\n\nif (ktx.referenz) {\n  // Wurde eine Bestaetigungsnummer genannt, gilt nur sie. Kein stiller\n  // Rueckfall auf Name oder Telefon - sonst landet ein Tippfehler auf\n  // einem fremden Termin.\n  treffer = liste.find(b => String(b.uid) === ktx.referenz || String(b.id) === ktx.referenz) || null;\n  if (!treffer) {\n    return [{ json: { gefunden: false, message: 'zu dieser nummer gibt es keinen termin' } }];\n  }\n  ueberNummer = nummerPasst(treffer);\n} else {\n  treffer = liste.find(nummerPasst) || null;\n  ueberNummer = !!treffer;\n  if (!treffer && ktx.name_such) {\n    treffer = liste.find(b => (b.attendees || []).some(a =>\n      String(a.name || '').trim().toLowerCase() === ktx.name_such)) || null;\n  }\n}\n\nif (!treffer) {\n  return [{ json: { gefunden: false, message: 'kein passender termin gefunden' } }];\n}\n\n// MANDANTENCHECK vor dem schreibenden Schritt: die Buchung muss zum Event-Type\n// dieses Kunden gehoeren. Fehlt die Angabe, wird abgelehnt - ein Sicherheitscheck\n// darf bei fehlender Information nicht durchlassen.\nconst typTreffer = String(treffer.eventTypeId || (treffer.eventType && treffer.eventType.id) || '');\nif (typTreffer !== zielTyp) {\n  return [{ json: { gefunden: false, message: 'termin gehoert nicht zu diesem betrieb' } }];\n}\n\n// IDENTITAETSCHECK: ein Name allein reicht nicht. Namen kann jeder nennen,\n// die Rufnummer kommt aus der Telefonie. Ohne Nummernbestaetigung wird der\n// Anrufer nach der Bestaetigungsnummer gefragt.\nif (!ueberNummer) {\n  return [{ json: { gefunden: false,\n    message: 'zur sicherheit bitte die bestaetigungsnummer nennen' } }];\n}\n\nreturn [{ json: { gefunden: true, uid: String(treffer.uid || treffer.id),\n  start_alt: String(treffer.start || ''), message: '' } }];"
       }
     },
     {
@@ -185,7 +182,7 @@
         "method": "POST",
         "url": "={{ $('Eingaben pruefen').first().json.config.cal_api_base }}/bookings/{{ $json.uid }}/cancel",
         "options": {
-          "timeout": 15000,
+          "timeout": 8000,
           "response": {
             "response": {
               "neverError": true,
@@ -231,20 +228,20 @@
         300
       ],
       "parameters": {
-        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\n// Fehlerpfade zuerst: fehlende Eingaben, nicht gefundene oder fremde Buchung.\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst item = $input.first().json || {};\nif (item.gefunden === false) {\n  return [{ json: antwort(false, { storniert: false }, item.message || 'kein termin gefunden') }];\n}\nif (item.error) return [{ json: antwort(false, { storniert: false }, 'kalender nicht erreichbar') }];\nif (Number(item.statusCode) >= 400) {\n  return [{ json: antwort(false, { storniert: false, code: Number(item.statusCode) },\n    Number(item.statusCode) === 409 ? 'neuer termin nicht frei' : 'aenderung fehlgeschlagen') }];\n}\n\nconst d = (item.body || {}).data || {};\nconst gewaehlt = $('Buchung waehlen').first().json;\nreturn [{ json: antwort(true, {\n  storniert: true,\n  bestaetigungsnummer: String(d.uid || gewaehlt.uid || ''),\n  start: String(d.start || ''),\n  alter_termin: String(gewaehlt.start_alt || ''),\n}, 'termin storniert') }];"
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\n// Fehlerpfade zuerst: fehlende Eingaben, nicht gefundene oder fremde Buchung.\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst item = $input.first().json || {};\nif (item.gefunden === false) {\n  return [{ json: antwort(false, { storniert: false }, item.message || 'kein termin gefunden') }];\n}\nif (item.error) return [{ json: antwort(false, { storniert: false }, 'kalender nicht erreichbar') }];\nif (Number(item.statusCode) >= 400) {\n  return [{ json: antwort(false, { storniert: false, code: Number(item.statusCode) },\n    Number(item.statusCode) === 409 ? 'termin ist bereits storniert' : 'stornierung fehlgeschlagen') }];\n}\n\nconst d = (item.body || {}).data || {};\nconst gewaehlt = $('Buchung waehlen').first().json;\nreturn [{ json: antwort(true, {\n  storniert: true,\n  bestaetigungsnummer: String(d.uid || gewaehlt.uid || ''),\n  start: String(d.start || ''),\n  alter_termin: String(gewaehlt.start_alt || ''),\n}, 'termin storniert') }];"
       }
     },
     {
-      "id": "notiz_6779",
-      "name": "Notiz 6779",
+      "id": "notiz_8802",
+      "name": "Notiz 8802",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         220,
-        560
+        600
       ],
       "parameters": {
-        "content": "## ak-sub-cancel_appointment\nSucht die Buchung ueber Referenz, Telefon oder Name - in dieser Reihenfolge - und prueft **vor** dem Schreiben, dass sie zum Event-Type dieses Kunden gehoert.\nCal.com kann nicht nach Telefon filtern, deshalb die Liste + Abgleich im Code.",
+        "content": "## ak-sub-cancel_appointment\nSucht ueber Bestaetigungsnummer oder Anrufernummer. **Ein Name allein reicht nicht** - sonst koennte jeder den Termin eines anderen absagen.\nVor dem Schreiben wird geprueft, dass die Buchung zum Event-Type dieses Kunden gehoert; fehlt die Angabe, wird abgelehnt.",
         "width": 460,
         "height": 220,
         "color": 4
@@ -349,6 +346,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 20
   }
 }

@@ -47,8 +47,8 @@
       }
     },
     {
-      "id": "notiz_6083",
-      "name": "Notiz 6083",
+      "id": "notiz_8620",
+      "name": "Notiz 8620",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -92,6 +92,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 15
   }
 }

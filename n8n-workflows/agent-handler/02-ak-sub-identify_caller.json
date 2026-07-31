@@ -24,7 +24,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Prueft Eingaben und normalisiert die Rufnummer. Die CRM-Quelle kommt\n// ausschliesslich aus der Kunden-Config - dieser Workflow kennt keine\n// eigenen Kundendaten.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\n// Nur Ziffern und fuehrendes + behalten, damit der Abgleich stabil ist.\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\n\nconst telefon = normTelefon(p.telefon || p.from_number || e.from_number);\nlet fehler = '';\nif (!telefon) fehler = 'telefon fehlt';\nelse if (c.crm_typ === 'none' || !c.crm_typ) fehler = 'kein crm konfiguriert';\nelse if (!c.crm_quelle) fehler = 'crm quelle fehlt';\n\nreturn [{ json: Object.assign({}, e, {\n  telefon: telefon,\n  telefon_kurz: telefon.slice(-9),   // fuer Sheets-Vergleiche ohne Laendervorwahl\n  fehler: fehler,\n}) }];"
+        "jsCode": "// Prueft Eingaben und normalisiert die Rufnummer. Die CRM-Quelle kommt\n// ausschliesslich aus der Kunden-Config - dieser Workflow kennt keine\n// eigenen Kundendaten.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\n// Rufnummern kommen in vielen Schreibweisen. Verglichen wird ueber die\n// letzten neun Ziffern - das trifft 0170…, +49170… und 0049170… gleich.\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\nfunction ziffern(t) { return String(t || '').replace(/[^0-9]/g, '').slice(-9); }\n\n// Die Nummer aus der Telefonie hat Vorrang vor dem, was im Gespraech gesagt wird.\nconst telefon = normTelefon(e.from_number || p.telefon || p.from_number);\nconst erlaubteTypen = ['sheets', 'http'];\n\nlet fehler = '';\nif (!telefon) fehler = 'telefon fehlt';\nelse if (!c.crm_typ || c.crm_typ === 'none') fehler = 'kein crm konfiguriert';\nelse if (erlaubteTypen.indexOf(c.crm_typ) === -1) fehler = 'crm typ unbekannt';\nelse if (!c.crm_quelle) fehler = 'crm quelle fehlt';\n\nreturn [{ json: Object.assign({}, e, {\n  telefon: telefon,\n  telefon_kurz: ziffern(telefon),\n  fehler: fehler,\n}) }];"
       }
     },
     {
@@ -153,6 +153,19 @@
       "alwaysOutputData": true
     },
     {
+      "id": "crm_token_holen",
+      "name": "CRM-Token holen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        380
+      ],
+      "parameters": {
+        "jsCode": "// Das Token gehoert zum Endpunkt dieses Kunden. Es steht serverseitig in einer\n// Umgebungsvariablen; die Config nennt nur deren Namen. Damit geht nie ein\n// gemeinsames Secret an einen kundenspezifischen Host.\nconst e = $input.first().json;\nlet token = '';\ntry {\n  const name = String((e.config || {}).system_token_env || '');\n  if (name) token = String($env[name] || '');\n} catch (err) { token = ''; }\nreturn [{ json: Object.assign({}, e, { crm_token: token }) }];"
+      }
+    },
+    {
       "id": "crm_abfragen",
       "name": "CRM abfragen",
       "type": "n8n-nodes-base.httpRequest",
@@ -165,7 +178,7 @@
         "method": "GET",
         "url": "={{ $json.config.crm_quelle }}",
         "options": {
-          "timeout": 15000,
+          "timeout": 8000,
           "response": {
             "response": {
               "neverError": true,
@@ -173,8 +186,15 @@
             }
           }
         },
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.crm_token ? 'Bearer ' + $json.crm_token : undefined }}"
+            }
+          ]
+        },
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -193,13 +213,7 @@
       "alwaysOutputData": true,
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "AK_CRM_CREDENTIAL_ID",
-          "name": "CRM API"
-        }
-      }
+      "waitBetweenTries": 1000
     },
     {
       "id": "antwort_bauen",
@@ -211,20 +225,20 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Baut die Antwort fuer alle drei Zweige (Sheet, HTTP, kein CRM).\n// Der Kontext kommt aus \"Eingaben pruefen\", weil die CRM-Nodes das Item ersetzen.\nconst ktx = $('Eingaben pruefen').first().json;\n\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) {\n  // Kein CRM konfiguriert ist kein Absturz: der Agent behandelt den Anrufer\n  // dann einfach als unbekannt.\n  return [{ json: antwort(true, { ist_bekannt: false, kundenstatus: 'unbekannt',\n    letztes_anliegen: '', vorgeschichte_notiz: '' }, ktx.fehler) }];\n}\n\nconst items = $input.all().map(i => i.json).filter(Boolean);\nlet treffer = null;\n\nif (ktx.config.crm_typ === 'sheets') {\n  // Im Sheet wird ueber die letzten 9 Ziffern verglichen, damit\n  // 0170..., +49170... und 0049170... denselben Kontakt finden.\n  const ziel = ktx.telefon_kurz;\n  treffer = items.find(z => {\n    const felder = [z.telefon, z.Telefon, z.telefonnummer, z.Telefonnummer, z.phone];\n    return felder.some(f => f && String(f).replace(/[^0-9]/g, '').slice(-9) === ziel.replace(/[^0-9]/g, '').slice(-9));\n  }) || null;\n} else {\n  const r = items[0] || {};\n  if (r.error || (r.statusCode && r.statusCode >= 400)) {\n    return [{ json: antwort(false, {}, 'crm nicht erreichbar') }];\n  }\n  const b = r.body || r;\n  treffer = (b && (b.kontakt || b.data || (Array.isArray(b) ? b[0] : null))) || null;\n  if (treffer && Array.isArray(treffer)) treffer = treffer[0] || null;\n}\n\nif (!treffer) {\n  return [{ json: antwort(true, { ist_bekannt: false, kundenstatus: 'neu',\n    letztes_anliegen: '', vorgeschichte_notiz: '' }, 'kein treffer') }];\n}\n\nreturn [{ json: antwort(true, {\n  ist_bekannt: true,\n  name: String(treffer.name || treffer.Name || ''),\n  kundenstatus: String(treffer.kundenstatus || treffer.Kundenstatus || 'bestand'),\n  letztes_anliegen: String(treffer.letztes_anliegen || treffer['Letztes Anliegen'] || ''),\n  vorgeschichte_notiz: String(treffer.notiz || treffer.Notiz || ''),\n}, 'kontakt gefunden') }];"
+        "jsCode": "// Baut die Antwort fuer alle drei Zweige (Sheet, HTTP, kein CRM).\n// Der Kontext kommt aus \"Eingaben pruefen\", weil die CRM-Nodes das Item ersetzen.\nconst ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\n// Rufnummern kommen in vielen Schreibweisen. Verglichen wird ueber die\n// letzten neun Ziffern - das trifft 0170…, +49170… und 0049170… gleich.\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\nfunction ziffern(t) { return String(t || '').replace(/[^0-9]/g, '').slice(-9); }\n\nif (ktx.fehler) {\n  // Kein CRM konfiguriert ist kein Absturz: der Agent behandelt den Anrufer\n  // dann einfach als unbekannt.\n  const weich = (ktx.fehler === 'kein crm konfiguriert');\n  return [{ json: antwort(weich, weich ? { ist_bekannt: false, kundenstatus: 'unbekannt',\n    letztes_anliegen: '', vorgeschichte_notiz: '' } : {}, ktx.fehler) }];\n}\n\nconst items = $input.all().map(i => i.json).filter(Boolean);\n\n// Ein ausgefallenes CRM darf NICHT als \"neuer Anrufer\" durchgehen - sonst\n// wird ein Bestandskunde bei jeder Stoerung wie ein Fremder begruesst.\nif (items.length === 0 || (items.length === 1 && items[0].error)) {\n  return [{ json: antwort(false, {}, 'crm nicht erreichbar') }];\n}\n\nlet treffer = null;\nif (ktx.config.crm_typ === 'sheets') {\n  const ziel = ziffern(ktx.telefon);\n  treffer = items.find(z => {\n    const felder = [z.telefon, z.Telefon, z.telefonnummer, z.Telefonnummer, z.phone];\n    return felder.some(f => f && ziffern(f) === ziel);\n  }) || null;\n} else {\n  const r = items[0] || {};\n  if (Number(r.statusCode) >= 400) {\n    return [{ json: antwort(false, {}, 'crm nicht erreichbar') }];\n  }\n  const b = r.body || r;\n  treffer = (b && (b.kontakt || b.data || (Array.isArray(b) ? b[0] : null))) || null;\n  if (treffer && Array.isArray(treffer)) treffer = treffer[0] || null;\n}\n\nif (!treffer) {\n  return [{ json: antwort(true, { ist_bekannt: false, kundenstatus: 'neu',\n    letztes_anliegen: '', vorgeschichte_notiz: '' }, 'kein treffer') }];\n}\n\nreturn [{ json: antwort(true, {\n  ist_bekannt: true,\n  name: String(treffer.name || treffer.Name || ''),\n  kundenstatus: String(treffer.kundenstatus || treffer.Kundenstatus || 'bestand'),\n  letztes_anliegen: String(treffer.letztes_anliegen || treffer['Letztes Anliegen'] || ''),\n  vorgeschichte_notiz: String(treffer.notiz || treffer.Notiz || ''),\n}, 'kontakt gefunden') }];"
       }
     },
     {
-      "id": "notiz_4339",
-      "name": "Notiz 4339",
+      "id": "notiz_620",
+      "name": "Notiz 620",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         220,
-        560
+        600
       ],
       "parameters": {
-        "content": "## ak-sub-identify_caller\nSchlaegt den Anrufer in der CRM-Quelle DIESES Kunden nach (`crm_typ`: sheets | http | none).\n\n**Kein Treffer ist kein Fehler** - der Agent bekommt `ist_bekannt: false` und begruesst neutral.",
+        "content": "## ak-sub-identify_caller\nSchlaegt den Anrufer in der CRM-Quelle DIESES Kunden nach (`crm_typ`: sheets | http | none).\n\nGesucht wird mit der **Nummer aus der Telefonie**, nicht mit der, die im Gespraech genannt wird.\nEin CRM-Ausfall meldet einen Fehler - **nie** faelschlich 'neuer Kunde'.",
         "width": 460,
         "height": 220,
         "color": 4
@@ -272,7 +286,7 @@
         ],
         [
           {
-            "node": "CRM abfragen",
+            "node": "CRM-Token holen",
             "type": "main",
             "index": 0
           }
@@ -280,6 +294,17 @@
         [
           {
             "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM-Token holen": {
+      "main": [
+        [
+          {
+            "node": "CRM abfragen",
             "type": "main",
             "index": 0
           }
@@ -314,6 +339,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 20
   }
 }

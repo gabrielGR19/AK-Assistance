@@ -24,7 +24,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Baut die Buchung. eventTypeId stammt ausschliesslich aus der Kunden-Config:\n// selbst wenn ein Agent eine fremde ID mitschickt, wird sie ignoriert.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nfunction text(w, max) { return String(w == null ? '' : w).trim().slice(0, max); }\n\nconst name = text(p.name, 120);\nconst start = String(p.start || p.zeitpunkt || '').trim();\nconst telefon = text(p.telefon, 32);\n// Cal.com verlangt eine E-Mail. Ohne echte Adresse wird eine technische\n// Platzhalteradresse des Kunden genutzt (siehe README).\nconst email = text(p.email, 160) || (c.buchung_platzhalter_email || '');\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\nelse if (!name) fehler = 'name fehlt';\nelse if (!/^\\d{4}-\\d{2}-\\d{2}T/.test(start)) fehler = 'startzeit fehlt oder ungueltig';\nelse if (!email) fehler = 'email fehlt';\n\nreturn [{ json: Object.assign({}, e, {\n  buchung: {\n    eventTypeId: Number(c.cal_event_type_id),\n    start: start,\n    attendee: {\n      name: name,\n      email: email,\n      timeZone: c.zeitzone,\n      language: 'de',\n      phoneNumber: telefon || undefined,\n    },\n    metadata: {\n      // Herkunft mitschreiben, damit im Kalender sichtbar ist, wer gebucht hat.\n      quelle: 'ak-telefonagent',\n      kunde_id: String(e.kunde_id),\n      agent_typ: String(e.agent_typ),\n    },\n    bookingFieldsResponses: { notizen: text(p.anliegen, 500) },\n  },\n  fehler: fehler,\n}) }];"
+        "jsCode": "// Baut die Buchung. eventTypeId stammt ausschliesslich aus der Kunden-Config:\n// selbst wenn ein Agent eine fremde ID mitschickt, wird sie ignoriert.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nfunction text(w, max) { return String(w == null ? '' : w).trim().slice(0, max); }\n\nconst name = text(p.name, 120);\nconst start = String(p.start || p.zeitpunkt || '').trim();\nconst telefon = text(p.telefon || e.from_number, 32);\n// Cal.com verlangt eine E-Mail. Am Telefon nennt kaum jemand eine - deshalb\n// eine technische Adresse, entweder aus der Config oder als Sammeladresse.\nconst email = text(p.email, 160) || String(c.buchung_platzhalter_email || '')\n  || ('telefontermin+' + String(e.kunde_id || 'unbekannt').replace(/[^a-z0-9]/gi, '') + '@ak-assistance.de');\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\n  else if (String(c.kalender_typ || 'calcom') !== 'calcom') fehler = 'kalender nicht unterstuetzt';\nelse if (!name) fehler = 'name fehlt';\nelse if (!/^\\d{4}-\\d{2}-\\d{2}T/.test(start)) fehler = 'startzeit fehlt oder ungueltig';\n\nconst anhang = { name: name, email: email, timeZone: c.zeitzone, language: 'de' };\nif (telefon) anhang.phoneNumber = telefon;\n\nreturn [{ json: Object.assign({}, e, {\n  buchung: {\n    eventTypeId: Number(c.cal_event_type_id),\n    start: start,\n    attendee: anhang,\n    metadata: {\n      // Herkunft mitschreiben, damit im Kalender sichtbar ist, wer gebucht hat.\n      quelle: 'ak-telefonagent',\n      kunde_id: String(e.kunde_id),\n      agent_typ: String(e.agent_typ),\n    },\n    bookingFieldsResponses: { notizen: text(p.anliegen, 500) },\n  },\n  fehler: fehler,\n}) }];"
       }
     },
     {
@@ -75,7 +75,7 @@
         "method": "POST",
         "url": "={{ $json.config.cal_api_base }}/bookings",
         "options": {
-          "timeout": 15000,
+          "timeout": 8000,
           "response": {
             "response": {
               "neverError": true,
@@ -125,8 +125,8 @@
       }
     },
     {
-      "id": "notiz_6259",
-      "name": "Notiz 6259",
+      "id": "notiz_2577",
+      "name": "Notiz 2577",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -134,7 +134,7 @@
         560
       ],
       "parameters": {
-        "content": "## ak-sub-book_appointment\n`POST /v2/bookings`.\n\n**Kein Retry** - ein zweiter Versuch koennte denselben Termin doppelt buchen.\nHTTP 409 wird als 'termin nicht mehr frei' zurueckgegeben, damit der Agent neu anbietet.",
+        "content": "## ak-sub-book_appointment\n`POST /v2/bookings`.\n\n**Kein Retry** - ein zweiter Versuch koennte denselben Termin doppelt buchen.\nHTTP 409 wird als 'termin nicht mehr frei' zurueckgegeben, damit der Agent neu anbietet.\nOhne E-Mail im Gespraech greift die Sammeladresse aus der Config.",
         "width": 460,
         "height": 220,
         "color": 4
@@ -199,6 +199,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 20
   }
 }

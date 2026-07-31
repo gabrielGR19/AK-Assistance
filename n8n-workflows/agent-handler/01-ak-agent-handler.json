@@ -28,7 +28,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// SCHRITT 1+2 - Authentifizierung und Eingabevalidierung.\n// Dieser Node wirft nie eine Exception: ein Abbruchgrund wird als\n// fehler_code weitergereicht, damit Retell immer eine valide Antwort bekommt.\nconst eingang = $input.first().json;\nconst headers = eingang.headers || {};\nconst body = eingang.body || {};\n\n// Das Secret liegt serverseitig in der Umgebungsvariablen AK_WEBHOOK_SECRET\n// und steht bewusst nirgends im Workflow.\nconst erwartet = String($env.AK_WEBHOOK_SECRET || '');\n// n8n liefert Header-Namen kleingeschrieben; die zweite Variante ist nur Absicherung.\nconst gesendet = String(headers['x-ak-auth'] || headers['X-AK-Auth'] || '');\n\n// Vergleich in konstanter Zeit, damit die Antwortzeit nichts ueber das Secret verraet.\nfunction gleich(a, b) {\n  if (a.length !== b.length) return false;\n  let diff = 0;\n  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);\n  return diff === 0;\n}\n\nconst basis = {\n  request_id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8),\n  start_ms: Date.now(),\n  kunde_id: String(body.kunde_id == null ? '' : body.kunde_id).trim(),\n  agent_typ: String(body.agent_typ == null ? '' : body.agent_typ).trim(),\n  action: String(body.action == null ? '' : body.action).trim(),\n  params: (body.params && typeof body.params === 'object' && !Array.isArray(body.params)) ? body.params : {},\n  // Retell schickt die call_id je nach Konfiguration auf zwei Wegen mit.\n  call_id: String(body.call_id || (body.call && body.call.call_id) || ''),\n  fehler_code: '',\n  http_code: 200,\n  message: '',\n};\n\nif (!erwartet) {\n  // Kein Secret gesetzt = Fehlkonfiguration. Dann wird grundsaetzlich nichts durchgelassen.\n  return [{ json: Object.assign({}, basis, { fehler_code: 'unauthorized', http_code: 401, message: 'unauthorized' }) }];\n}\nif (!gesendet || !gleich(gesendet, erwartet)) {\n  return [{ json: Object.assign({}, basis, { fehler_code: 'unauthorized', http_code: 401, message: 'unauthorized' }) }];\n}\nif (!basis.kunde_id || !basis.agent_typ || !basis.action) {\n  return [{ json: Object.assign({}, basis, { fehler_code: 'invalid_request', message: 'invalid request' }) }];\n}\nreturn [{ json: basis }];"
+        "jsCode": "// SCHRITT 1+2 - Authentifizierung und Eingabevalidierung.\n// Dieser Node wirft nie eine Exception: jeder Abbruchgrund wird als\n// fehler_code weitergereicht, damit Retell immer eine valide Antwort bekommt.\n// Selbst ein unerwarteter Fehler endet in \"unauthorized\" - im Zweifel zu.\nconst notfall_id = String(Date.now()) + '-fehler';\ntry {\n  const eingang = $input.first().json;\n  const headers = eingang.headers || {};\n  const body = eingang.body || {};\n  const query = eingang.query || {};\n\n  // Das Secret liegt serverseitig in der Umgebungsvariablen AK_WEBHOOK_SECRET\n  // und steht bewusst nirgends im Workflow.\n  const erwartet = String($env.AK_WEBHOOK_SECRET || '');\n  // n8n liefert Header-Namen kleingeschrieben; die zweite Variante ist nur Absicherung.\n  const gesendet = String(headers['x-ak-auth'] || headers['X-AK-Auth'] || '');\n\n  // Vergleich in konstanter Zeit, damit die Antwortzeit nichts ueber das Secret verraet.\n  function gleich(a, b) {\n    if (a.length !== b.length) return false;\n    let diff = 0;\n    for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);\n    return diff === 0;\n  }\n\n  // Zwei Aufrufformate werden unterstuetzt:\n  //  a) direkt   { kunde_id, agent_typ, action, params }   - z.B. per curl\n  //  b) Retell   { name, args, call }                      - Custom Function\n  // kunde_id und agent_typ werden BEVORZUGT aus der Query der Tool-URL gelesen.\n  // Grund: den Body fuellt bei Retell das Sprachmodell, die URL steht fest im\n  // Agenten. So kann kein Anrufer im Gespraech den Mandanten umbiegen.\n  function feld(name) {\n    const ausQuery = query[name];\n    if (ausQuery !== undefined && ausQuery !== null && String(ausQuery).trim() !== '') {\n      return String(ausQuery).trim();\n    }\n    const ausBody = body[name];\n    return String(ausBody == null ? '' : ausBody).trim();\n  }\n\n  function objekt(w) {\n    if (w && typeof w === 'object' && !Array.isArray(w)) return w;\n    // Manche Retell-Setups liefern die Argumente als JSON-Text.\n    if (typeof w === 'string' && w.trim().startsWith('{')) {\n      try {\n        const p = JSON.parse(w);\n        return (p && typeof p === 'object' && !Array.isArray(p)) ? p : null;\n      } catch (e) { return null; }\n    }\n    return null;\n  }\n\n  const anruf = body.call || {};\n  const basis = {\n    request_id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8),\n    start_ms: Date.now(),\n    kunde_id: feld('kunde_id'),\n    agent_typ: feld('agent_typ'),\n    // Bei Retell ist der Tool-Name die Action; er ist im Agenten fest hinterlegt.\n    action: feld('action') || String(body.name == null ? '' : body.name).trim(),\n    params: objekt(body.params) || objekt(body.args) || {},\n    call_id: String(body.call_id || anruf.call_id || ''),\n    // Die Rufnummer stammt aus der Telefonie, nicht aus dem Gespraech. Sie ist\n    // damit das einzige Merkmal, das ein Anrufer nicht frei behaupten kann.\n    from_number: String(anruf.from_number || body.from_number || query.from_number || '').trim(),\n    fehler_code: '',\n    http_code: 200,\n    message: '',\n  };\n\n  // Flacher Payload (\"args only\" bei Retell): alles ausser den Steuerfeldern\n  // als params behandeln. Steuerfelder aus dem Body werden dabei bewusst\n  // verworfen - sie kommen aus der Query.\n  if (Object.keys(basis.params).length === 0) {\n    const flach = {};\n    Object.keys(body).forEach(k => {\n      if (['kunde_id', 'agent_typ', 'action', 'params', 'args', 'name', 'call',\n           'call_id', 'from_number'].indexOf(k) === -1) {\n        flach[k] = body[k];\n      }\n    });\n    basis.params = flach;\n  }\n\n  if (!erwartet) {\n    // Kein Secret gesetzt = Fehlkonfiguration. Dann wird grundsaetzlich nichts durchgelassen.\n    return [{ json: Object.assign({}, basis, { fehler_code: 'unauthorized', http_code: 401, message: 'unauthorized' }) }];\n  }\n  if (!gesendet || !gleich(gesendet, erwartet)) {\n    return [{ json: Object.assign({}, basis, { fehler_code: 'unauthorized', http_code: 401, message: 'unauthorized' }) }];\n  }\n  if (!basis.kunde_id || !basis.agent_typ || !basis.action) {\n    return [{ json: Object.assign({}, basis, { fehler_code: 'invalid_request', message: 'invalid request' }) }];\n  }\n  return [{ json: basis }];\n} catch (e) {\n  // Haeufigster realer Fall: $env ist gesperrt (N8N_BLOCK_ENV_ACCESS_IN_NODE).\n  // Dann darf auf keinen Fall durchgelassen werden.\n  return [{ json: {\n    request_id: notfall_id, start_ms: Date.now(), kunde_id: '', agent_typ: '',\n    action: '', params: {}, call_id: '', from_number: '',\n    fehler_code: 'unauthorized', http_code: 401, message: 'unauthorized',\n  } }];\n}"
       }
     },
     {
@@ -107,7 +107,7 @@
         200
       ],
       "parameters": {
-        "jsCode": "// SCHRITT 3 - Kunden-Config auswerten. Es gibt bewusst KEINEN Default-Kunden:\n// ohne passende, aktive Zeile wird die Anfrage abgelehnt. Das ist der Kern\n// der Mandantentrennung - ab hier traegt jeder Folgeschritt genau diese Config.\nconst anfrage = $('Auth und Validierung').first().json;\nconst roh = $input.all().map(i => i.json).filter(z => z && z.kunde_id);\n\nfunction jsonFeld(wert, standard) {\n  if (wert === null || wert === undefined || wert === '') return standard;\n  if (typeof wert === 'object') return wert;\n  try { return JSON.parse(String(wert)); } catch (e) { return standard; }\n}\n\nif (roh.length === 0) {\n  return [{ json: Object.assign({}, anfrage, { fehler_code: 'unknown_kunde', message: 'unknown kunde_id' }) }];\n}\n\nconst z = roh[0];\n// aktiv kann als Boolean oder als Text aus der DataTable kommen.\nconst aktiv = z.aktiv === true || String(z.aktiv).toLowerCase() === 'true';\nif (!aktiv) {\n  return [{ json: Object.assign({}, anfrage, { fehler_code: 'kunde_inaktiv', message: 'kunde inaktiv' }) }];\n}\n\nconst config = {\n  kunde_id: String(z.kunde_id),\n  kunde_name: String(z.kunde_name || z.kunde_id),\n  zeitzone: String(z.zeitzone || 'Europe/Berlin'),\n  // Kalender\n  kalender_typ: String(z.kalender_typ || 'calcom'),\n  cal_api_base: String(z.cal_api_base || 'https://api.cal.com/v2').replace(/\\/+$/, ''),\n  cal_event_type_id: String(z.cal_event_type_id || ''),\n  cal_username: String(z.cal_username || ''),\n  // Telefonie\n  sms_from: String(z.sms_from || ''),\n  twilio_account_sid: String(z.twilio_account_sid || ''),\n  // CRM\n  crm_typ: String(z.crm_typ || 'none'),\n  crm_quelle: String(z.crm_quelle || ''),\n  crm_blatt: String(z.crm_blatt || 'Tabelle1'),\n  // Bereitschaft\n  dispatch_kanal: String(z.dispatch_kanal || ''),\n  dispatch_ziel: String(z.dispatch_ziel || ''),\n  // Freiform\n  system_endpoints: jsonFeld(z.system_endpoints, {}),\n  sms_vorlagen: jsonFeld(z.sms_vorlagen, {}),\n};\n\n// Sicherheitsnetz: die geladene Config muss zur angefragten kunde_id gehoeren.\nif (config.kunde_id !== anfrage.kunde_id) {\n  return [{ json: Object.assign({}, anfrage, { fehler_code: 'config_mismatch', message: 'config mismatch' }) }];\n}\n\nreturn [{ json: Object.assign({}, anfrage, { config: config }) }];"
+        "jsCode": "// SCHRITT 3 - Kunden-Config auswerten. Es gibt bewusst KEINEN Default-Kunden:\n// ohne passende, aktive Zeile wird die Anfrage abgelehnt. Das ist der Kern\n// der Mandantentrennung - ab hier traegt jeder Folgeschritt genau diese Config.\nconst anfrage = $('Auth und Validierung').first().json;\n\ntry {\n  const roh = $input.all().map(i => i.json).filter(z => z && z.kunde_id);\n\n  function jsonFeld(wert, standard) {\n    if (wert === null || wert === undefined || wert === '') return standard;\n    if (typeof wert === 'object') return wert;\n    try { return JSON.parse(String(wert)); } catch (e) { return standard; }\n  }\n\n  if (roh.length === 0) {\n    return [{ json: Object.assign({}, anfrage, { fehler_code: 'unknown_kunde', message: 'unknown kunde_id' }) }];\n  }\n  if (roh.length > 1) {\n    // Zwei Zeilen mit derselben kunde_id: welche gilt, waere Zufall - und der\n    // Zufall wuerde ueber Kalender und Absendernummer entscheiden.\n    return [{ json: Object.assign({}, anfrage, { fehler_code: 'config_mehrdeutig', message: 'config mehrdeutig' }) }];\n  }\n\n  const z = roh[0];\n  // aktiv kann als Boolean oder als Text aus der DataTable kommen.\n  const aktiv = z.aktiv === true || String(z.aktiv).toLowerCase() === 'true';\n  if (!aktiv) {\n    return [{ json: Object.assign({}, anfrage, { fehler_code: 'kunde_inaktiv', message: 'kunde inaktiv' }) }];\n  }\n\n  const config = {\n    kunde_id: String(z.kunde_id),\n    kunde_name: String(z.kunde_name || z.kunde_id),\n    zeitzone: String(z.zeitzone || 'Europe/Berlin'),\n    // Kalender. Die API-Basis kommt bewusst NICHT aus der Kundenzeile: sonst\n    // koennte eine Config-Zeile den gemeinsamen Cal.com-Key an einen fremden\n    // Host schicken. Abweichungen nur serverseitig ueber AK_CAL_API_BASE.\n    kalender_typ: String(z.kalender_typ || 'calcom'),\n    cal_api_base: String($env.AK_CAL_API_BASE || 'https://api.cal.com/v2').replace(/\\/+$/, ''),\n    cal_event_type_id: String(z.cal_event_type_id || ''),\n    cal_username: String(z.cal_username || ''),\n    buchung_platzhalter_email: String(z.buchung_platzhalter_email || ''),\n    // Telefonie\n    sms_from: String(z.sms_from || ''),\n    twilio_account_sid: String(z.twilio_account_sid || ''),\n    // Nur diese Vorwahlen duerfen angeschrieben werden.\n    sms_prefixe: jsonFeld(z.sms_prefixe, ['+49']),\n    // CRM\n    crm_typ: String(z.crm_typ || 'none'),\n    crm_quelle: String(z.crm_quelle || ''),\n    crm_blatt: String(z.crm_blatt || 'Tabelle1'),\n    // Bereitschaft\n    dispatch_kanal: String(z.dispatch_kanal || ''),\n    dispatch_ziel: String(z.dispatch_ziel || ''),\n    // Freiform\n    system_endpoints: jsonFeld(z.system_endpoints, {}),\n    sms_vorlagen: jsonFeld(z.sms_vorlagen, {}),\n    // Name der Umgebungsvariablen mit dem Token fuer die Kundensysteme.\n    system_token_env: String(z.system_token_env || ''),\n  };\n\n  // Sicherheitsnetz: die geladene Config muss zur angefragten kunde_id gehoeren.\n  if (config.kunde_id !== anfrage.kunde_id) {\n    return [{ json: Object.assign({}, anfrage, { fehler_code: 'config_mismatch', message: 'config mismatch' }) }];\n  }\n\n  // Optionale Einschraenkung: welcher Agent darf welche Action ausloesen.\n  // Leere Liste = alles erlaubt.\n  const erlaubt = jsonFeld(z.erlaubte_actions, []);\n  if (Array.isArray(erlaubt) && erlaubt.length > 0 && erlaubt.indexOf(anfrage.action) === -1) {\n    return [{ json: Object.assign({}, anfrage, { fehler_code: 'action_gesperrt', message: 'action nicht erlaubt' }) }];\n  }\n\n  return [{ json: Object.assign({}, anfrage, { config: config }) }];\n} catch (e) {\n  return [{ json: Object.assign({}, anfrage, { fehler_code: 'config_fehler', message: 'config fehler' }) }];\n}"
       }
     },
     {
@@ -565,7 +565,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// SCHRITT 5 - Einheitliche Antwort. Alle Pfade (Auth-Fehler, unbekannter\n// Kunde, unbekannte Action, Sub-Workflow-Ergebnis, Sub-Workflow-Absturz)\n// muenden hier und ergeben immer { success, data, message }.\nconst anfrage = $('Auth und Validierung').first().json;\nconst item = $input.first().json || {};\n\nlet success = false;\nlet data = {};\nlet message = 'unerwartete antwort';\nlet http_code = 200;\n\nif (item.fehler_code) {\n  message = String(item.message || item.fehler_code);\n  http_code = Number(item.http_code || 200);\n} else if (item.error) {\n  // Sub-Workflow ist gelaufen, hat aber eine Exception geworfen\n  // (onError = continueRegularOutput). Details bleiben im Log, nicht in der Antwort.\n  message = 'interner fehler';\n} else if (typeof item.success === 'boolean') {\n  success = item.success;\n  data = (item.data && typeof item.data === 'object') ? item.data : {};\n  message = String(item.message || '');\n}\n\nreturn [{ json: {\n  success: success,\n  data: data,\n  message: message,\n  http_code: http_code,\n  // Felder ab hier nur fuers Logging, sie sind nicht Teil der Antwort an Retell.\n  request_id: anfrage.request_id,\n  kunde_id: anfrage.kunde_id,\n  agent_typ: anfrage.agent_typ,\n  action: anfrage.action,\n  call_id: anfrage.call_id,\n  dauer_ms: Date.now() - Number(anfrage.start_ms || Date.now()),\n} }];"
+        "jsCode": "// SCHRITT 5 - Einheitliche Antwort. Alle Pfade (Auth-Fehler, unbekannter\n// Kunde, unbekannte Action, Sub-Workflow-Ergebnis, Sub-Workflow-Absturz)\n// muenden hier und ergeben immer { success, data, message }.\nlet anfrage = {};\ntry { anfrage = $('Auth und Validierung').first().json || {}; } catch (e) { anfrage = {}; }\n\nlet success = false;\nlet data = {};\nlet message = 'unerwartete antwort';\nlet http_code = 200;\nlet details = '';\n\ntry {\n  const item = $input.first().json || {};\n\n  if (item.fehler_code) {\n    message = String(item.message || item.fehler_code);\n    http_code = Number(item.http_code || 200);\n    details = String(item.fehler_code);\n  } else if (item.error) {\n    // Sub-Workflow ist gelaufen, hat aber eine Exception geworfen\n    // (onError = continueRegularOutput). Details bleiben im Log, nicht in der Antwort.\n    message = 'interner fehler';\n    details = String((item.error && (item.error.message || item.error.name)) || 'sub_fehler').slice(0, 200);\n  } else if (typeof item.success === 'boolean') {\n    success = item.success;\n    data = (item.data && typeof item.data === 'object') ? item.data : {};\n    message = String(item.message || '');\n  }\n} catch (e) {\n  message = 'interner fehler';\n  details = 'antwort_fehler';\n}\n\nreturn [{ json: {\n  success: success,\n  data: data,\n  message: message,\n  http_code: http_code,\n  // Felder ab hier nur fuers Logging, sie sind nicht Teil der Antwort an Retell.\n  request_id: String(anfrage.request_id || ''),\n  kunde_id: String(anfrage.kunde_id || ''),\n  agent_typ: String(anfrage.agent_typ || ''),\n  action: String(anfrage.action || ''),\n  call_id: String(anfrage.call_id || ''),\n  details: details,\n  dauer_ms: Date.now() - Number(anfrage.start_ms || Date.now()),\n} }];"
       }
     },
     {
@@ -612,7 +612,8 @@
             "call_id": "={{ $json.call_id }}",
             "success": "={{ $json.success }}",
             "dauer_ms": "={{ $json.dauer_ms }}",
-            "message": "={{ $json.message }}"
+            "message": "={{ $json.message }}",
+            "details": "={{ $json.details }}"
           },
           "matchingColumns": [],
           "schema": [],
@@ -625,8 +626,8 @@
       "alwaysOutputData": true
     },
     {
-      "id": "notiz_3707",
-      "name": "Notiz 3707",
+      "id": "notiz_7694",
+      "name": "Notiz 7694",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -634,15 +635,15 @@
         40
       ],
       "parameters": {
-        "content": "## ak-agent-handler\nEinziger Einstiegspunkt fuer die Retell-Agenten 2, 3 und 4.\nBody: `{ kunde_id, agent_typ, action, params }`\nAntwort immer: `{ success, data, message }`\n\n**Agent 1 (Empfang) ruft hier nichts auf** - der hat keine Function Calls.",
+        "content": "## ak-agent-handler\nEinziger Einstiegspunkt fuer die Retell-Agenten 2, 3 und 4.\nURL: `/webhook/ak-agent-handler?kunde_id=…&agent_typ=…`\nAntwort immer: `{ success, data, message }`\n\n**Agent 1 (Empfang) ruft hier nichts auf** - der hat keine Function Calls.",
         "width": 460,
         "height": 230,
         "color": 4
       }
     },
     {
-      "id": "notiz_8279",
-      "name": "Notiz 8279",
+      "id": "notiz_9218",
+      "name": "Notiz 9218",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -650,15 +651,15 @@
         480
       ],
       "parameters": {
-        "content": "### Auth + Validierung\nSecret kommt aus `$env.AK_WEBHOOK_SECRET`, nicht aus dem Workflow.\nFalsches/fehlendes Secret -> HTTP 401, keine weitere Verarbeitung.",
+        "content": "### Auth + Validierung\nSecret kommt aus `$env.AK_WEBHOOK_SECRET`, nicht aus dem Workflow.\nFalsches, fehlendes oder nicht lesbares Secret -> HTTP 401. Der Node laesst im Zweifel **nichts** durch.",
         "width": 380,
-        "height": 180,
+        "height": 190,
         "color": 3
       }
     },
     {
-      "id": "notiz_871",
-      "name": "Notiz 871",
+      "id": "notiz_2785",
+      "name": "Notiz 2785",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -666,15 +667,15 @@
         380
       ],
       "parameters": {
-        "content": "### Mandantentrennung\nDie Config wird EINMAL hier geladen und an jeden Sub-Workflow mitgegeben. Kein Sub-Workflow ermittelt Kalender, Nummer oder CRM selbst.\nUnbekannte oder inaktive kunde_id -> Abbruch, **nie** ein Default-Kunde.",
+        "content": "### Mandantentrennung\nDie Config wird EINMAL hier geladen und an jeden Sub-Workflow mitgegeben. Kein Sub-Workflow ermittelt Kalender, Nummer oder CRM selbst.\nUnbekannte, inaktive oder mehrdeutige kunde_id -> Abbruch, **nie** ein Default-Kunde.",
         "width": 420,
         "height": 220,
         "color": 3
       }
     },
     {
-      "id": "notiz_6067",
-      "name": "Notiz 6067",
+      "id": "notiz_7087",
+      "name": "Notiz 7087",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -964,6 +965,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 25
   }
 }

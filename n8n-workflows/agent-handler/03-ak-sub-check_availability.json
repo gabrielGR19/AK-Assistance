@@ -24,7 +24,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Prueft Eingaben und leitet den Suchzeitraum ab. Der Event-Type kommt\n// IMMER aus der Kunden-Config, nie aus den Agent-Parametern.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nconst heute = $now.setZone(c.zeitzone || 'Europe/Berlin');\nfunction datum(wert, standard) {\n  const s = String(wert || '').trim();\n  // erlaubt sind nur ISO-Daten; alles andere faellt auf den Standard zurueck\n  return /^\\d{4}-\\d{2}-\\d{2}/.test(s) ? s.slice(0, 10) : standard;\n}\n\nconst von = datum(p.zeitraum_von, heute.toFormat('yyyy-MM-dd'));\nconst bis = datum(p.zeitraum_bis, heute.plus({ days: 14 }).toFormat('yyyy-MM-dd'));\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\nelse if (bis < von) fehler = 'zeitraum ungueltig';\n\nreturn [{ json: Object.assign({}, e, {\n  von: von, bis: bis, terminart: String(p.terminart || ''), fehler: fehler,\n}) }];"
+        "jsCode": "// Prueft Eingaben und leitet den Suchzeitraum ab. Der Event-Type kommt\n// IMMER aus der Kunden-Config, nie aus den Agent-Parametern.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nconst zone = c.zeitzone || 'Europe/Berlin';\nconst heute = $now.setZone(zone);\n\nfunction istDatum(w) { return /^\\d{4}-\\d{2}-\\d{2}/.test(String(w || '').trim()); }\n\n// Startpunkt: gewuenschter Zeitraum, sonst heute. Nie in der Vergangenheit.\nlet von = istDatum(p.zeitraum_von) ? String(p.zeitraum_von).slice(0, 10) : heute.toFormat('yyyy-MM-dd');\nif (von < heute.toFormat('yyyy-MM-dd')) von = heute.toFormat('yyyy-MM-dd');\n\n// Das Ende haengt am Start, nicht an heute: fragt jemand nach Dezember, wird\n// auch im Dezember gesucht und nicht im naechsten Termin-Nichts.\nconst vonDt = DateTime.fromISO(von, { zone: zone });\nlet bis = istDatum(p.zeitraum_bis) ? String(p.zeitraum_bis).slice(0, 10)\n                                   : vonDt.plus({ days: 14 }).toFormat('yyyy-MM-dd');\n// Deckel, damit eine unsinnige Anfrage nicht ein ganzes Jahr abfragt.\nconst maxBis = vonDt.plus({ days: 60 }).toFormat('yyyy-MM-dd');\nif (bis > maxBis) bis = maxBis;\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\n  else if (String(c.kalender_typ || 'calcom') !== 'calcom') fehler = 'kalender nicht unterstuetzt';\nelse if (bis < von) fehler = 'zeitraum ungueltig';\n\nreturn [{ json: Object.assign({}, e, {\n  von: von, bis: bis, terminart: String(p.terminart || ''), fehler: fehler,\n}) }];"
       }
     },
     {
@@ -75,7 +75,7 @@
         "method": "GET",
         "url": "={{ $json.config.cal_api_base }}/slots",
         "options": {
-          "timeout": 15000,
+          "timeout": 8000,
           "response": {
             "response": {
               "neverError": true,
@@ -138,12 +138,12 @@
         300
       ],
       "parameters": {
-        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) return [{ json: antwort(false, {}, 'kalender nicht erreichbar') }];\nif (Number(r.statusCode) >= 400) {\n  return [{ json: antwort(false, {}, 'kalender antwortet mit fehler ' + r.statusCode) }];\n}\n\nconst daten = (r.body && r.body.data) || {};\n// Cal.com liefert { \"2026-08-01\": [{ start: \"...\" }], ... } - fuer den Agenten\n// wird daraus eine flache, vorlesbare Liste.\nconst zeiten = [];\nObject.keys(daten).sort().forEach(tag => {\n  (daten[tag] || []).forEach(s => {\n    if (s && s.start) zeiten.push(s.start);\n  });\n});\n\nif (zeiten.length === 0) {\n  return [{ json: antwort(true, { verfuegbare_zeiten: [], anzahl: 0 },\n    'keine freien termine im zeitraum') }];\n}\n\n// Maximal 5 Vorschlaege - mehr kann sich am Telefon niemand merken.\nconst auswahl = zeiten.slice(0, 5);\nreturn [{ json: antwort(true, {\n  verfuegbare_zeiten: auswahl,\n  anzahl: zeiten.length,\n  zeitzone: ktx.config.zeitzone,\n}, 'termine gefunden') }];"
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) return [{ json: antwort(false, {}, 'kalender nicht erreichbar') }];\nif (Number(r.statusCode) >= 400) {\n  return [{ json: antwort(false, {}, 'kalender antwortet mit fehler ' + r.statusCode) }];\n}\n\nconst daten = (r.body && r.body.data) || {};\n// Cal.com liefert { \"2026-08-01\": [{ start: \"...\" }], ... }. Hoechstens zwei\n// Vorschlaege pro Tag, damit der Agent verschiedene Tage anbietet statt\n// fuenfmal denselben Vormittag.\nconst auswahl = [];\nlet gesamt = 0;\nObject.keys(daten).sort().forEach(tag => {\n  const slots = daten[tag] || [];\n  gesamt += slots.length;\n  slots.slice(0, 2).forEach(s => {\n    if (s && s.start && auswahl.length < 5) auswahl.push(s.start);\n  });\n});\n\nif (gesamt === 0) {\n  return [{ json: antwort(true, { verfuegbare_zeiten: [], anzahl: 0 },\n    'keine freien termine im zeitraum') }];\n}\n\nreturn [{ json: antwort(true, {\n  verfuegbare_zeiten: auswahl,\n  anzahl: gesamt,\n  zeitzone: ktx.config.zeitzone,\n}, 'termine gefunden') }];"
       }
     },
     {
-      "id": "notiz_6215",
-      "name": "Notiz 6215",
+      "id": "notiz_2083",
+      "name": "Notiz 2083",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -151,7 +151,7 @@
         560
       ],
       "parameters": {
-        "content": "## ak-sub-check_availability\n`GET /v2/slots` im Cal.com-Konto dieses Kunden.\nOhne `zeitraum_von`/`zeitraum_bis`: heute bis +14 Tage.\nGibt hoechstens 5 Zeiten zurueck (Telefon!).",
+        "content": "## ak-sub-check_availability\n`GET /v2/slots` im Cal.com-Konto dieses Kunden.\nOhne Angabe: heute bis +14 Tage. Mit `zeitraum_von` haengt das Ende am Start (max. 60 Tage).\nMax. 5 Zeiten, davon hoechstens 2 pro Tag.",
         "width": 460,
         "height": 220,
         "color": 4
@@ -216,6 +216,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 20
   }
 }

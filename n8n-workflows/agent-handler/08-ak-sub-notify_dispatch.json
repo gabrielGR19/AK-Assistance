@@ -24,7 +24,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Alarmiert den Bereitschaftskontakt dieses Kunden. Kanal und Ziel stehen in\n// der Config - der Agent kann das Ziel nicht ueberschreiben.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nconst kanal = String(c.dispatch_kanal || '').toLowerCase();\nconst ziel = String(c.dispatch_ziel || '');\n\n// Der Agent liefert nur Sachinformationen, keinen fertigen Text.\nconst meldung = [\n  'NOTFALL ueber Telefonagent',\n  'Betrieb: ' + String(c.kunde_name || c.kunde_id),\n  'Anrufer: ' + String(p.name || 'unbekannt'),\n  'Rueckruf: ' + String(p.telefon || 'unbekannt'),\n  'Ort: ' + String(p.ort || 'unbekannt'),\n  'Anliegen: ' + String(p.anliegen || p.beschreibung || 'keine Angabe'),\n].join('\\n').slice(0, 900);\n\nlet fehler = '';\nif (!kanal || !ziel) fehler = 'keine bereitschaft konfiguriert';\nelse if (['sms', 'telegram', 'email'].indexOf(kanal) === -1) fehler = 'kanal unbekannt';\n\nreturn [{ json: Object.assign({}, e, {\n  kanal: kanal, ziel: ziel, meldung: meldung, fehler: fehler,\n  // Fuer den SMS-Weg wird der bestehende Sub-Workflow wiederverwendet.\n  params: Object.assign({}, p, {\n    telefon: ziel, textvorlage: 'notfall', werte: {\n      betrieb: String(c.kunde_name || ''), anrufer: String(p.name || ''),\n      telefon: String(p.telefon || ''), anliegen: String(p.anliegen || ''),\n    },\n  }),\n}) }];"
+        "jsCode": "// Alarmiert den Bereitschaftskontakt dieses Kunden. Kanal und Ziel stehen in\n// der Config - der Agent kann das Ziel nicht ueberschreiben.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nconst kanal = String(c.dispatch_kanal || '').toLowerCase();\nconst ziel = String(c.dispatch_ziel || '');\n\n// Der Agent liefert nur Sachinformationen, den Text baut dieser Workflow.\n// Bewusst ohne Vorlage aus der Config: ein Notruf darf nicht daran scheitern,\n// dass jemand vergessen hat, eine Vorlage anzulegen.\nconst meldung = [\n  'NOTFALL ueber Telefonagent',\n  'Betrieb: ' + String(c.kunde_name || c.kunde_id),\n  'Anrufer: ' + String(p.name || 'unbekannt'),\n  'Rueckruf: ' + String(p.telefon || e.from_number || 'unbekannt'),\n  'Ort: ' + String(p.ort || 'unbekannt'),\n  'Anliegen: ' + String(p.anliegen || p.beschreibung || 'keine Angabe'),\n].join('\\n').slice(0, 900);\n\nlet fehler = '';\nif (!kanal || !ziel) fehler = 'keine bereitschaft konfiguriert';\nelse if (['sms', 'telegram', 'email'].indexOf(kanal) === -1) fehler = 'kanal unbekannt';\nelse if (kanal === 'sms' && !c.twilio_account_sid) fehler = 'twilio nicht konfiguriert';\nelse if (kanal === 'sms' && !c.sms_from) fehler = 'keine absendernummer konfiguriert';\n\nreturn [{ json: Object.assign({}, e, {\n  kanal: kanal, ziel: ziel, meldung: meldung, fehler: fehler,\n}) }];"
       }
     },
     {
@@ -146,27 +146,58 @@
       }
     },
     {
-      "id": "sms_workflow_aufrufen",
-      "name": "SMS-Workflow aufrufen",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
+      "id": "alarm_sms_senden",
+      "name": "Alarm-SMS senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         700,
         140
       ],
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "ID_SEND_SMS",
-          "mode": "id",
-          "cachedResultName": "ak-sub-send_sms"
-        },
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.config.twilio_account_sid }}/Messages.json",
         "options": {
-          "waitForSubWorkflow": true
+          "timeout": 8000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "={{ $json.config.sms_from }}"
+            },
+            {
+              "name": "To",
+              "value": "={{ $json.ziel }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.meldung }}"
+            }
+          ]
         }
       },
       "onError": "continueRegularOutput",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "AK_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio API"
+        }
+      }
     },
     {
       "id": "telegram_senden",
@@ -191,7 +222,10 @@
         }
       },
       "onError": "continueRegularOutput",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500
     },
     {
       "id": "e_mail_senden",
@@ -216,7 +250,10 @@
         }
       },
       "onError": "continueRegularOutput",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500
     },
     {
       "id": "antwort_bauen",
@@ -228,12 +265,12 @@
         300
       ],
       "parameters": {
-        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, { alarmiert: false }, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) {\n  return [{ json: antwort(false, { alarmiert: false }, 'bereitschaft nicht erreichbar') }];\n}\n// Der SMS-Weg liefert bereits das Standardschema zurueck und wird durchgereicht.\nif (typeof r.success === 'boolean') {\n  return [{ json: antwort(r.success, { alarmiert: r.success, kanal: ktx.kanal },\n    r.success ? 'bereitschaft alarmiert' : String(r.message || 'alarm fehlgeschlagen')) }];\n}\nreturn [{ json: antwort(true, { alarmiert: true, kanal: ktx.kanal }, 'bereitschaft alarmiert') }];"
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, { alarmiert: false }, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) {\n  return [{ json: antwort(false, { alarmiert: false, kanal: ktx.kanal },\n    'bereitschaft nicht erreichbar') }];\n}\n// Der SMS-Weg laeuft ueber HTTP und liefert einen Statuscode.\nif (r.statusCode !== undefined) {\n  if (Number(r.statusCode) >= 400) {\n    return [{ json: antwort(false, { alarmiert: false, kanal: ktx.kanal,\n      code: Number(r.statusCode) }, 'alarm konnte nicht zugestellt werden') }];\n  }\n}\nreturn [{ json: antwort(true, { alarmiert: true, kanal: ktx.kanal }, 'bereitschaft alarmiert') }];"
       }
     },
     {
-      "id": "notiz_9910",
-      "name": "Notiz 9910",
+      "id": "notiz_2026",
+      "name": "Notiz 2026",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -241,7 +278,7 @@
         640
       ],
       "parameters": {
-        "content": "## ak-sub-notify_dispatch\nKanal (`sms` | `telegram` | `email`) und Ziel kommen aus der Kunden-Config.\nDer SMS-Weg ruft `ak-sub-send_sms` auf - deshalb braucht der Kunde dann eine Vorlage namens `notfall`.",
+        "content": "## ak-sub-notify_dispatch\nKanal (`sms` | `telegram` | `email`) und Ziel kommen aus der Kunden-Config.\nDer Alarmtext wird hier gebaut und haengt an **keiner** Kundenvorlage.\nEinziger Ort mit Retry auf einem Sendevorgang: eine doppelte Alarm-SMS ist besser als keine.",
         "width": 460,
         "height": 220,
         "color": 4
@@ -282,7 +319,7 @@
         ],
         [
           {
-            "node": "SMS-Workflow aufrufen",
+            "node": "Alarm-SMS senden",
             "type": "main",
             "index": 0
           }
@@ -310,7 +347,7 @@
         ]
       ]
     },
-    "SMS-Workflow aufrufen": {
+    "Alarm-SMS senden": {
       "main": [
         [
           {
@@ -349,6 +386,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 20
   }
 }

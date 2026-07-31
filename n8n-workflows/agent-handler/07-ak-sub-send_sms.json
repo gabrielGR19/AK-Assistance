@@ -24,7 +24,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Baut den SMS-Text aus einer Vorlage der Kunden-Config. Der Agent liefert nur\n// Werte, nie den fertigen Text - so kann er den Inhalt nicht frei bestimmen.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\n\nconst an = normTelefon(p.telefon);\nconst vorlagen = c.sms_vorlagen || {};\nconst schluessel = String(p.textvorlage || '').trim();\nlet text = vorlagen[schluessel];\n\nconst werte = (p.werte && typeof p.werte === 'object') ? p.werte : {};\nif (text) {\n  // Platzhalter {{name}} serverseitig fuellen; unbekannte Platzhalter werden geleert.\n  text = String(text).replace(/{{\\s*([a-zA-Z0-9_]+)\\s*}}/g, (_, k) => {\n    const v = werte[k];\n    return v === undefined || v === null ? '' : String(v).slice(0, 200);\n  }).trim();\n}\n\nlet fehler = '';\nif (!c.sms_from) fehler = 'keine absendernummer konfiguriert';\nelse if (!c.twilio_account_sid) fehler = 'twilio nicht konfiguriert';\nelse if (!an || an.length < 8) fehler = 'zielnummer fehlt oder ungueltig';\nelse if (!schluessel) fehler = 'textvorlage fehlt';\nelse if (!text) fehler = 'textvorlage unbekannt';\n\nreturn [{ json: Object.assign({}, e, {\n  an: an, text: (text || '').slice(0, 600), fehler: fehler,\n}) }];"
+        "jsCode": "// Baut den SMS-Text aus einer Vorlage der Kunden-Config. Der Agent liefert nur\n// Werte, nie den fertigen Text - so kann er den Inhalt nicht frei bestimmen.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\n// Rufnummern kommen in vielen Schreibweisen. Verglichen wird ueber die\n// letzten neun Ziffern - das trifft 0170…, +49170… und 0049170… gleich.\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\nfunction ziffern(t) { return String(t || '').replace(/[^0-9]/g, '').slice(-9); }\n\nconst an = normTelefon(p.telefon || e.from_number);\nconst vorlagen = (c.sms_vorlagen && typeof c.sms_vorlagen === 'object') ? c.sms_vorlagen : {};\nconst schluessel = String(p.textvorlage || '').trim();\n\n// hasOwnProperty, damit \"toString\" oder \"constructor\" keine Prototyp-Funktion\n// als Vorlage durchreichen.\nlet text = Object.prototype.hasOwnProperty.call(vorlagen, schluessel)\n  ? String(vorlagen[schluessel] || '') : '';\n\nconst werte = (p.werte && typeof p.werte === 'object') ? p.werte : {};\nif (text) {\n  // Platzhalter {{name}} serverseitig fuellen; unbekannte Platzhalter werden geleert.\n  text = text.replace(/{{\\s*([a-zA-Z0-9_]+)\\s*}}/g, (_, k) => {\n    const v = werte[k];\n    return v === undefined || v === null ? '' : String(v).slice(0, 200);\n  }).trim();\n}\n\n// Zielnummern-Allowlist: ohne sie koennte ein manipuliertes Gespraech SMS an\n// beliebige Nummern weltweit ausloesen - auf Rechnung des Kunden.\nconst prefixe = Array.isArray(c.sms_prefixe) && c.sms_prefixe.length ? c.sms_prefixe : ['+49'];\nconst erlaubt = prefixe.some(pre => an.startsWith(String(pre)));\n\nlet fehler = '';\nif (!c.sms_from) fehler = 'keine absendernummer konfiguriert';\nelse if (!c.twilio_account_sid) fehler = 'twilio nicht konfiguriert';\nelse if (!an || an.length < 8) fehler = 'zielnummer fehlt oder ungueltig';\nelse if (!erlaubt) fehler = 'zielnummer nicht erlaubt';\nelse if (!schluessel) fehler = 'textvorlage fehlt';\nelse if (!text) fehler = 'textvorlage unbekannt';\n\nreturn [{ json: Object.assign({}, e, {\n  an: an, text: text.slice(0, 600), fehler: fehler,\n}) }];"
       }
     },
     {
@@ -75,7 +75,7 @@
         "method": "POST",
         "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.config.twilio_account_sid }}/Messages.json",
         "options": {
-          "timeout": 15000,
+          "timeout": 8000,
           "response": {
             "response": {
               "neverError": true,
@@ -123,12 +123,12 @@
         300
       ],
       "parameters": {
-        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) return [{ json: antwort(false, { gesendet: false }, 'sms-dienst nicht erreichbar') }];\nif (Number(r.statusCode) >= 400) {\n  return [{ json: antwort(false, { gesendet: false, code: Number(r.statusCode) }, 'sms fehlgeschlagen') }];\n}\nconst b = r.body || {};\nreturn [{ json: antwort(true, { gesendet: true, sid: String(b.sid || ''),\n  status: String(b.status || '') }, 'sms verschickt') }];"
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, { gesendet: false }, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) return [{ json: antwort(false, { gesendet: false }, 'sms-dienst nicht erreichbar') }];\n\nconst code = Number(r.statusCode);\nif (code === 401 || code === 403 || code === 404) {\n  // Typischer Fall: twilio_account_sid in der Config passt nicht zum Credential.\n  return [{ json: antwort(false, { gesendet: false, code: code },\n    'sms-konto passt nicht zur konfiguration') }];\n}\nif (code >= 400) {\n  return [{ json: antwort(false, { gesendet: false, code: code }, 'sms fehlgeschlagen') }];\n}\nconst b = r.body || {};\nreturn [{ json: antwort(true, { gesendet: true, sid: String(b.sid || ''),\n  status: String(b.status || '') }, 'sms verschickt') }];"
       }
     },
     {
-      "id": "notiz_3440",
-      "name": "Notiz 3440",
+      "id": "notiz_1545",
+      "name": "Notiz 1545",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -136,7 +136,7 @@
         560
       ],
       "parameters": {
-        "content": "## ak-sub-send_sms\nAbsendernummer kommt **immer** aus der Kunden-Config, nie aus den Agent-Parametern.\nDer Agent waehlt nur eine Vorlage (`textvorlage`) und liefert `werte` - den Text baut dieser Workflow.",
+        "content": "## ak-sub-send_sms\nAbsendernummer **immer** aus der Kunden-Config, nie aus den Agent-Parametern.\nDer Agent waehlt nur eine Vorlage und liefert `werte` - den Text baut dieser Workflow.\nZielnummern nur mit erlaubter Vorwahl (`sms_prefixe`, Standard `+49`).",
         "width": 460,
         "height": 220,
         "color": 4
@@ -201,6 +201,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 20
   }
 }

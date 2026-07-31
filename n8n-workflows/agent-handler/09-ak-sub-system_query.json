@@ -24,7 +24,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Reine Weiche: hier steht bewusst KEINE Systemlogik. Es wird nur geprueft, ob\n// fuer das angefragte System ein Endpunkt in der Kunden-Config hinterlegt ist.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nconst system = String(p.system || '').trim();\nconst endpunkte = (c.system_endpoints && typeof c.system_endpoints === 'object') ? c.system_endpoints : {};\n\nlet ziel = '';\nlet fehler = '';\nif (!system) {\n  fehler = 'system fehlt';\n} else if (!Object.prototype.hasOwnProperty.call(endpunkte, system)) {\n  fehler = 'no system configured';\n} else {\n  ziel = String(endpunkte[system] || '');\n  // Nur HTTPS zulassen - der Wert kommt aus der Config, wird aber trotzdem geprueft.\n  if (!/^https:\\/\\//.test(ziel)) fehler = 'no system configured';\n}\n\n// Die Abfrageparameter des Agenten werden als Ganzes weitergereicht, aber ohne\n// Felder, die die Zuordnung ueberschreiben koennten.\nconst nutzlast = {};\nObject.keys(p).forEach(k => {\n  if (['system', 'kunde_id', 'config'].indexOf(k) === -1) nutzlast[k] = p[k];\n});\n\nreturn [{ json: Object.assign({}, e, {\n  system: system, ziel: ziel, fehler: fehler,\n  nutzlast: { kunde_id: String(e.kunde_id), system: system, params: nutzlast },\n}) }];"
+        "jsCode": "// Reine Weiche: hier steht bewusst KEINE Systemlogik. Es wird nur geprueft, ob\n// fuer das angefragte System ein Endpunkt in der Kunden-Config hinterlegt ist.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nconst system = String(p.system || '').trim();\nconst endpunkte = (c.system_endpoints && typeof c.system_endpoints === 'object') ? c.system_endpoints : {};\n\nlet ziel = '';\nlet fehler = '';\nif (!system) {\n  fehler = 'system fehlt';\n} else if (!Object.prototype.hasOwnProperty.call(endpunkte, system)) {\n  fehler = 'no system configured';\n} else {\n  ziel = String(endpunkte[system] || '');\n  // Nur HTTPS zulassen - der Wert kommt aus der Config, wird aber trotzdem geprueft.\n  if (!/^https:\\/\\//.test(ziel)) fehler = 'no system configured';\n}\n\n// Das Token gehoert zum System DIESES Kunden und steht serverseitig in einer\n// Umgebungsvariablen; die Config nennt nur deren Namen. So geht nie ein\n// gemeinsames Secret an einen kundenspezifischen Host.\nlet token = '';\ntry {\n  const tname = String(c.system_token_env || '');\n  if (tname) token = String($env[tname] || '');\n} catch (err) { token = ''; }\n\n// Die Abfrageparameter des Agenten werden weitergereicht, aber ohne Felder,\n// die die Zuordnung ueberschreiben koennten.\nconst nutzlast = {};\nObject.keys(p).forEach(k => {\n  if (['system', 'kunde_id', 'config'].indexOf(k) === -1) nutzlast[k] = p[k];\n});\n\nreturn [{ json: Object.assign({}, e, {\n  system: system, ziel: ziel, fehler: fehler, system_token: token,\n  // request_id mitschicken, damit das Kundensystem Wiederholungen erkennen kann.\n  nutzlast: { kunde_id: String(e.kunde_id), system: system,\n              request_id: String(e.request_id || ''), params: nutzlast },\n}) }];"
       }
     },
     {
@@ -75,7 +75,7 @@
         "method": "POST",
         "url": "={{ $json.ziel }}",
         "options": {
-          "timeout": 10000,
+          "timeout": 8000,
           "response": {
             "response": {
               "neverError": true,
@@ -83,14 +83,16 @@
             }
           }
         },
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $json.system_token ? 'Bearer ' + $json.system_token : undefined }}"
             }
           ]
         },
@@ -99,16 +101,7 @@
         "jsonBody": "={{ JSON.stringify($json.nutzlast) }}"
       },
       "onError": "continueRegularOutput",
-      "alwaysOutputData": true,
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 1000,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "AK_CRM_CREDENTIAL_ID",
-          "name": "CRM API"
-        }
-      }
+      "alwaysOutputData": true
     },
     {
       "id": "antwort_bauen",
@@ -124,8 +117,8 @@
       }
     },
     {
-      "id": "notiz_1155",
-      "name": "Notiz 1155",
+      "id": "notiz_7883",
+      "name": "Notiz 7883",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
@@ -133,7 +126,7 @@
         560
       ],
       "parameters": {
-        "content": "## ak-sub-system_query\nNur eine Weiche: Endpunkt aus `system_endpoints` der Kunden-Config, sonst `no system configured`.\n**Hier niemals kundenspezifische Logik einbauen** - die gehoert hinter den Endpunkt.",
+        "content": "## ak-sub-system_query\nNur eine Weiche: Endpunkt aus `system_endpoints` der Kunden-Config, sonst `no system configured`.\nDas Token kommt aus der Umgebungsvariablen, die `system_token_env` benennt - **kein gemeinsames Credential an fremde Hosts**.",
         "width": 460,
         "height": 220,
         "color": 4
@@ -198,6 +191,7 @@
     "saveManualExecutions": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "timezone": "Europe/Berlin"
+    "timezone": "Europe/Berlin",
+    "executionTimeout": 20
   }
 }
