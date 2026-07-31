@@ -167,32 +167,33 @@ Bewusst **ohne** Gesprächsinhalte, Namen oder Telefonnummern. `details` hält
 nur den technischen Grund (`unauthorized`, `unknown_kunde`, Fehlertext eines
 Sub-Workflows) für die Fehlersuche.
 
-### 4. Workflows importieren und verdrahten
+### 4. Workflows in n8n
 
-1. Alle zehn JSONs importieren (n8n → *Import from File*), Reihenfolge egal.
-2. Die neun `ak-sub-*`- und `ak-health`-Workflows **speichern** — dabei
-   vergibt n8n je eine Workflow-ID (steht in der URL).
-3. In `ak-agent-handler` die acht `Sub …`-Nodes öffnen und den jeweiligen
-   Sub-Workflow auswählen. Im JSON stehen dort Platzhalter (`ID_BOOK_APPOINTMENT`
-   usw.), die genau so ersetzt werden:
+Auf `n8n.ak-assistance.de` sind alle zehn bereits angelegt — **inaktiv** und
+mit korrekt eingetragenen Sub-Workflow-IDs:
 
-   | Node im Handler | Sub-Workflow |
-   |---|---|
-   | `Sub identify_caller` | `ak-sub-identify_caller` |
-   | `Sub check_availability` | `ak-sub-check_availability` |
-   | `Sub book_appointment` | `ak-sub-book_appointment` |
-   | `Sub reschedule_appointment` | `ak-sub-reschedule_appointment` |
-   | `Sub cancel_appointment` | `ak-sub-cancel_appointment` |
-   | `Sub send_sms` | `ak-sub-send_sms` |
-   | `Sub notify_dispatch` | `ak-sub-notify_dispatch` |
-   | `Sub system_query` | `ak-sub-system_query` |
+| Workflow | ID |
+|---|---|
+| `ak-agent-handler` | `ww8zB7nz78M3zgaO` |
+| `ak-sub-identify_caller` | `ejBo2mAaKB9CEIM4` |
+| `ak-sub-check_availability` | `Wf0LjCKahvIrftGZ` |
+| `ak-sub-book_appointment` | `j3xYodOzaMv7866A` |
+| `ak-sub-reschedule_appointment` | `2qCGROEXchEqRP59` |
+| `ak-sub-cancel_appointment` | `WOonFxMOZKQCHAqd` |
+| `ak-sub-send_sms` | `PwpMpmrb2yEE75Qn` |
+| `ak-sub-notify_dispatch` | `xUd3i5EoJvSLdyWu` |
+| `ak-sub-system_query` | `5NQecJWYW9aRjQN4` |
+| `ak-health` | `1XpPQbJC3wftO6Tk` |
 
-4. Erst `ak-agent-handler` und `ak-health` aktivieren (Publish). Die
-   Sub-Workflows brauchen **keine** Aktivierung — sie werden aufgerufen,
-   nicht getriggert.
+Zu aktivieren (Publish) sind nur `ak-agent-handler` und `ak-health` — und
+erst, wenn Schritte 1 bis 3 erledigt sind. Die Sub-Workflows brauchen
+**keine** Aktivierung, sie werden aufgerufen und nicht getriggert. Die
+Sub-Workflows rufen sich untereinander nicht auf; jeder hängt nur am Handler.
 
-Die Sub-Workflows rufen sich untereinander nicht auf; jeder hängt nur am
-Handler.
+Beim Import in eine **andere** Instanz (Test-Umgebung, Neuaufbau) stimmen
+diese IDs nicht mehr: dann in den acht `Sub …`-Nodes des Handlers den
+jeweiligen Sub-Workflow neu auswählen. Der Node-Name sagt, welcher gemeint
+ist.
 
 ### 5. Retell-Agenten anbinden
 
