@@ -41,8 +41,18 @@ gleich ändert.
 - **Anrufe/Transkripte:** `list-calls` (gefiltert nach Agent), Transkripte
   für Qualitätsanalyse zusammenfassen: Was lief gut, wo brach das
   Gespräch, welche Prompt-Stelle verursachte es.
-- Für alles Weitere: Retell-Doku live nachschlagen, nicht raten —
-  die API ändert sich.
+- **Schema-/Feldfragen (welche Felder hat ein Node/Agent/Flow?): immer
+  zuerst `GET` am echten Objekt** (`get-agent`, `get-conversation-flow`)
+  — das gelieferte JSON ist die Wahrheit, keine Doku-Suche nötig. Zum
+  Ändern das Objekt holen, gezielt patchen, per GET gegenprüfen.
+- Für alles Weitere: Retell-Doku live nachschlagen (WebFetch auf
+  docs.retellai.com), nicht raten — aber **max. 2 Doku-Abfragen pro
+  Frage**. Beantworten sie es nicht, ist das ein Eskalationsfall:
+  stoppen, Stand benennen, Ansatz wechseln (z.B. Test-Objekt anlegen und
+  Response lesen) statt die Abfrage umzuformulieren. (Hintergrund:
+  31.07.2026 — 8 umformulierte Doku-Abfragen zum SMS-Node ohne Ergebnis,
+  Gabriel musste 2x abbrechen; der GET am Flow hätte das Schema sofort
+  gezeigt.)
 
 ### 4. Guardrails (nicht verhandelbar)
 
