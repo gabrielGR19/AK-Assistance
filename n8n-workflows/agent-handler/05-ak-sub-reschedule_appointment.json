@@ -1,0 +1,354 @@
+{
+  "name": "ak-sub-reschedule_appointment",
+  "nodes": [
+    {
+      "id": "aufruf_vom_handler",
+      "name": "Aufruf vom Handler",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "eingaben_pruefen",
+      "name": "Eingaben pruefen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Sucht die bestehende Buchung dieses Kunden. Gesucht wird ausschliesslich\n// innerhalb des Event-Types aus der Kunden-Config.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\n\nconst referenz = String(p.referenz || p.bestaetigungsnummer || '').trim();\nconst telefon = normTelefon(p.telefon);\nconst name = String(p.name || '').trim().toLowerCase();\nconst neue_zeit = String(p.neue_zeit || p.start || '').trim();\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\nelse if (!referenz && !telefon && !name) fehler = 'kein suchkriterium';\nelse if (!/^\\\\d{4}-\\\\d{2}-\\\\d{2}T/.test(neue_zeit)) fehler = 'neue zeit fehlt oder ungueltig';\n\nreturn [{ json: Object.assign({}, e, {\n  referenz: referenz, telefon: telefon, name_such: name,\n  neue_zeit: neue_zeit,\n  fehler: fehler,\n}) }];"
+      }
+    },
+    {
+      "id": "eingaben_ok",
+      "name": "Eingaben ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.fehler }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "buchungen_suchen",
+      "name": "Buchungen suchen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.config.cal_api_base }}/bookings",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "cal-api-version",
+              "value": "2024-08-13"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "eventTypeId",
+              "value": "={{ $json.config.cal_event_type_id }}"
+            },
+            {
+              "name": "status",
+              "value": "upcoming"
+            },
+            {
+              "name": "take",
+              "value": "100"
+            }
+          ]
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "AK_CALCOM_CREDENTIAL_ID",
+          "name": "Cal.com API"
+        }
+      }
+    },
+    {
+      "id": "buchung_waehlen",
+      "name": "Buchung waehlen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: { gefunden: false, message: ktx.fehler } }];\n\nconst r = $input.first().json || {};\nif (r.error || Number(r.statusCode) >= 400) {\n  return [{ json: { gefunden: false, message: 'kalender nicht erreichbar' } }];\n}\n\nconst liste = ((r.body || {}).data) || [];\nconst zielTyp = String(ktx.config.cal_event_type_id);\n\nfunction ziffern(t) { return String(t || '').replace(/[^0-9]/g, '').slice(-9); }\n\nlet treffer = null;\nif (ktx.referenz) {\n  treffer = liste.find(b => String(b.uid) === ktx.referenz || String(b.id) === ktx.referenz) || null;\n}\nif (!treffer && ktx.telefon) {\n  const ziel = ziffern(ktx.telefon);\n  treffer = liste.find(b => (b.attendees || []).some(a =>\n    ziffern(a.phoneNumber) === ziel || ziffern(a.phone) === ziel)) || null;\n}\nif (!treffer && ktx.name_such) {\n  treffer = liste.find(b => (b.attendees || []).some(a =>\n    String(a.name || '').trim().toLowerCase() === ktx.name_such)) || null;\n}\n\nif (!treffer) {\n  return [{ json: { gefunden: false, message: 'kein passender termin gefunden' } }];\n}\n\n// MANDANTENCHECK vor dem schreibenden Schritt: die gefundene Buchung muss zum\n// Event-Type dieses Kunden gehoeren. Ohne diesen Check koennte eine\n// manipulierte Referenz auf einen fremden Termin zeigen.\nconst typTreffer = String(treffer.eventTypeId || (treffer.eventType && treffer.eventType.id) || '');\nif (typTreffer && typTreffer !== zielTyp) {\n  return [{ json: { gefunden: false, message: 'termin gehoert nicht zu diesem betrieb' } }];\n}\n\nreturn [{ json: { gefunden: true, uid: String(treffer.uid || treffer.id),\n  start_alt: String(treffer.start || ''), message: '' } }];"
+      }
+    },
+    {
+      "id": "buchung_gefunden",
+      "name": "Buchung gefunden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1180,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.gefunden }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "termin_verschieben",
+      "name": "Termin verschieben",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Eingaben pruefen').first().json.config.cal_api_base }}/bookings/{{ $json.uid }}/reschedule",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "cal-api-version",
+              "value": "2024-08-13"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ start: $('Eingaben pruefen').first().json.neue_zeit, reschedulingReason: 'Verschoben per Telefonagent' }) }}"
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "AK_CALCOM_CREDENTIAL_ID",
+          "name": "Cal.com API"
+        }
+      }
+    },
+    {
+      "id": "antwort_bauen",
+      "name": "Antwort bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\n// Fehlerpfade zuerst: fehlende Eingaben, nicht gefundene oder fremde Buchung.\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst item = $input.first().json || {};\nif (item.gefunden === false) {\n  return [{ json: antwort(false, { verschoben: false }, item.message || 'kein termin gefunden') }];\n}\nif (item.error) return [{ json: antwort(false, { verschoben: false }, 'kalender nicht erreichbar') }];\nif (Number(item.statusCode) >= 400) {\n  return [{ json: antwort(false, { verschoben: false, code: Number(item.statusCode) },\n    Number(item.statusCode) === 409 ? 'neuer termin nicht frei' : 'aenderung fehlgeschlagen') }];\n}\n\nconst d = (item.body || {}).data || {};\nconst gewaehlt = $('Buchung waehlen').first().json;\nreturn [{ json: antwort(true, {\n  verschoben: true,\n  bestaetigungsnummer: String(d.uid || gewaehlt.uid || ''),\n  start: String(d.start || ''),\n  alter_termin: String(gewaehlt.start_alt || ''),\n}, 'termin verschoben') }];"
+      }
+    },
+    {
+      "id": "notiz_7468",
+      "name": "Notiz 7468",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        220,
+        560
+      ],
+      "parameters": {
+        "content": "## ak-sub-reschedule_appointment\nSucht die Buchung ueber Referenz, Telefon oder Name - in dieser Reihenfolge - und prueft **vor** dem Schreiben, dass sie zum Event-Type dieses Kunden gehoert.\nCal.com kann nicht nach Telefon filtern, deshalb die Liste + Abgleich im Code.",
+        "width": 460,
+        "height": 220,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Aufruf vom Handler": {
+      "main": [
+        [
+          {
+            "node": "Eingaben pruefen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben pruefen": {
+      "main": [
+        [
+          {
+            "node": "Eingaben ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben ok?": {
+      "main": [
+        [
+          {
+            "node": "Buchungen suchen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buchungen suchen": {
+      "main": [
+        [
+          {
+            "node": "Buchung waehlen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buchung waehlen": {
+      "main": [
+        [
+          {
+            "node": "Buchung gefunden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buchung gefunden?": {
+      "main": [
+        [
+          {
+            "node": "Termin verschieben",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Termin verschieben": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Europe/Berlin"
+  }
+}

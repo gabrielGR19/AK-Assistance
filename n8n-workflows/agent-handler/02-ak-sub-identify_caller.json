@@ -1,0 +1,319 @@
+{
+  "name": "ak-sub-identify_caller",
+  "nodes": [
+    {
+      "id": "aufruf_vom_handler",
+      "name": "Aufruf vom Handler",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "eingaben_pruefen",
+      "name": "Eingaben pruefen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Prueft Eingaben und normalisiert die Rufnummer. Die CRM-Quelle kommt\n// ausschliesslich aus der Kunden-Config - dieser Workflow kennt keine\n// eigenen Kundendaten.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\n// Nur Ziffern und fuehrendes + behalten, damit der Abgleich stabil ist.\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\n\nconst telefon = normTelefon(p.telefon || p.from_number || e.from_number);\nlet fehler = '';\nif (!telefon) fehler = 'telefon fehlt';\nelse if (c.crm_typ === 'none' || !c.crm_typ) fehler = 'kein crm konfiguriert';\nelse if (!c.crm_quelle) fehler = 'crm quelle fehlt';\n\nreturn [{ json: Object.assign({}, e, {\n  telefon: telefon,\n  telefon_kurz: telefon.slice(-9),   // fuer Sheets-Vergleiche ohne Laendervorwahl\n  fehler: fehler,\n}) }];"
+      }
+    },
+    {
+      "id": "crm_typ",
+      "name": "CRM-Typ",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "s1",
+                    "leftValue": "={{ $json.fehler }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "abbruch"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "s2",
+                    "leftValue": "={{ $json.config.crm_typ }}",
+                    "rightValue": "sheets",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sheets"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "s3",
+                    "leftValue": "={{ $json.config.crm_typ }}",
+                    "rightValue": "http",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "http"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "unbekannt"
+        }
+      }
+    },
+    {
+      "id": "crm_sheet_lesen",
+      "name": "CRM Sheet lesen",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        180
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $json.config.crm_quelle }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.config.crm_blatt }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wsJoY3Er54e5eiJ4",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "crm_abfragen",
+      "name": "CRM abfragen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        380
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.config.crm_quelle }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "telefon",
+              "value": "={{ $json.telefon }}"
+            },
+            {
+              "name": "kunde_id",
+              "value": "={{ $json.kunde_id }}"
+            }
+          ]
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "AK_CRM_CREDENTIAL_ID",
+          "name": "CRM API"
+        }
+      }
+    },
+    {
+      "id": "antwort_bauen",
+      "name": "Antwort bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Baut die Antwort fuer alle drei Zweige (Sheet, HTTP, kein CRM).\n// Der Kontext kommt aus \"Eingaben pruefen\", weil die CRM-Nodes das Item ersetzen.\nconst ktx = $('Eingaben pruefen').first().json;\n\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) {\n  // Kein CRM konfiguriert ist kein Absturz: der Agent behandelt den Anrufer\n  // dann einfach als unbekannt.\n  return [{ json: antwort(true, { ist_bekannt: false, kundenstatus: 'unbekannt',\n    letztes_anliegen: '', vorgeschichte_notiz: '' }, ktx.fehler) }];\n}\n\nconst items = $input.all().map(i => i.json).filter(Boolean);\nlet treffer = null;\n\nif (ktx.config.crm_typ === 'sheets') {\n  // Im Sheet wird ueber die letzten 9 Ziffern verglichen, damit\n  // 0170..., +49170... und 0049170... denselben Kontakt finden.\n  const ziel = ktx.telefon_kurz;\n  treffer = items.find(z => {\n    const felder = [z.telefon, z.Telefon, z.telefonnummer, z.Telefonnummer, z.phone];\n    return felder.some(f => f && String(f).replace(/[^0-9]/g, '').slice(-9) === ziel.replace(/[^0-9]/g, '').slice(-9));\n  }) || null;\n} else {\n  const r = items[0] || {};\n  if (r.error || (r.statusCode && r.statusCode >= 400)) {\n    return [{ json: antwort(false, {}, 'crm nicht erreichbar') }];\n  }\n  const b = r.body || r;\n  treffer = (b && (b.kontakt || b.data || (Array.isArray(b) ? b[0] : null))) || null;\n  if (treffer && Array.isArray(treffer)) treffer = treffer[0] || null;\n}\n\nif (!treffer) {\n  return [{ json: antwort(true, { ist_bekannt: false, kundenstatus: 'neu',\n    letztes_anliegen: '', vorgeschichte_notiz: '' }, 'kein treffer') }];\n}\n\nreturn [{ json: antwort(true, {\n  ist_bekannt: true,\n  name: String(treffer.name || treffer.Name || ''),\n  kundenstatus: String(treffer.kundenstatus || treffer.Kundenstatus || 'bestand'),\n  letztes_anliegen: String(treffer.letztes_anliegen || treffer['Letztes Anliegen'] || ''),\n  vorgeschichte_notiz: String(treffer.notiz || treffer.Notiz || ''),\n}, 'kontakt gefunden') }];"
+      }
+    },
+    {
+      "id": "notiz_4339",
+      "name": "Notiz 4339",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        220,
+        560
+      ],
+      "parameters": {
+        "content": "## ak-sub-identify_caller\nSchlaegt den Anrufer in der CRM-Quelle DIESES Kunden nach (`crm_typ`: sheets | http | none).\n\n**Kein Treffer ist kein Fehler** - der Agent bekommt `ist_bekannt: false` und begruesst neutral.",
+        "width": 460,
+        "height": 220,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Aufruf vom Handler": {
+      "main": [
+        [
+          {
+            "node": "Eingaben pruefen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben pruefen": {
+      "main": [
+        [
+          {
+            "node": "CRM-Typ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM-Typ": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CRM Sheet lesen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CRM abfragen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Sheet lesen": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM abfragen": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Europe/Berlin"
+  }
+}

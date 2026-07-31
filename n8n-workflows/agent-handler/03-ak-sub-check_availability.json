@@ -1,0 +1,221 @@
+{
+  "name": "ak-sub-check_availability",
+  "nodes": [
+    {
+      "id": "aufruf_vom_handler",
+      "name": "Aufruf vom Handler",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "eingaben_pruefen",
+      "name": "Eingaben pruefen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Prueft Eingaben und leitet den Suchzeitraum ab. Der Event-Type kommt\n// IMMER aus der Kunden-Config, nie aus den Agent-Parametern.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nconst heute = $now.setZone(c.zeitzone || 'Europe/Berlin');\nfunction datum(wert, standard) {\n  const s = String(wert || '').trim();\n  // erlaubt sind nur ISO-Daten; alles andere faellt auf den Standard zurueck\n  return /^\\d{4}-\\d{2}-\\d{2}/.test(s) ? s.slice(0, 10) : standard;\n}\n\nconst von = datum(p.zeitraum_von, heute.toFormat('yyyy-MM-dd'));\nconst bis = datum(p.zeitraum_bis, heute.plus({ days: 14 }).toFormat('yyyy-MM-dd'));\n\nlet fehler = '';\nif (!c.cal_event_type_id) fehler = 'kalender nicht konfiguriert';\nelse if (bis < von) fehler = 'zeitraum ungueltig';\n\nreturn [{ json: Object.assign({}, e, {\n  von: von, bis: bis, terminart: String(p.terminart || ''), fehler: fehler,\n}) }];"
+      }
+    },
+    {
+      "id": "eingaben_ok",
+      "name": "Eingaben ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.fehler }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "slots_abrufen",
+      "name": "Slots abrufen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.config.cal_api_base }}/slots",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "cal-api-version",
+              "value": "2024-09-04"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "eventTypeId",
+              "value": "={{ $json.config.cal_event_type_id }}"
+            },
+            {
+              "name": "start",
+              "value": "={{ $json.von }}"
+            },
+            {
+              "name": "end",
+              "value": "={{ $json.bis }}"
+            },
+            {
+              "name": "timeZone",
+              "value": "={{ $json.config.zeitzone }}"
+            }
+          ]
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "AK_CALCOM_CREDENTIAL_ID",
+          "name": "Cal.com API"
+        }
+      }
+    },
+    {
+      "id": "antwort_bauen",
+      "name": "Antwort bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) return [{ json: antwort(false, {}, 'kalender nicht erreichbar') }];\nif (Number(r.statusCode) >= 400) {\n  return [{ json: antwort(false, {}, 'kalender antwortet mit fehler ' + r.statusCode) }];\n}\n\nconst daten = (r.body && r.body.data) || {};\n// Cal.com liefert { \"2026-08-01\": [{ start: \"...\" }], ... } - fuer den Agenten\n// wird daraus eine flache, vorlesbare Liste.\nconst zeiten = [];\nObject.keys(daten).sort().forEach(tag => {\n  (daten[tag] || []).forEach(s => {\n    if (s && s.start) zeiten.push(s.start);\n  });\n});\n\nif (zeiten.length === 0) {\n  return [{ json: antwort(true, { verfuegbare_zeiten: [], anzahl: 0 },\n    'keine freien termine im zeitraum') }];\n}\n\n// Maximal 5 Vorschlaege - mehr kann sich am Telefon niemand merken.\nconst auswahl = zeiten.slice(0, 5);\nreturn [{ json: antwort(true, {\n  verfuegbare_zeiten: auswahl,\n  anzahl: zeiten.length,\n  zeitzone: ktx.config.zeitzone,\n}, 'termine gefunden') }];"
+      }
+    },
+    {
+      "id": "notiz_6215",
+      "name": "Notiz 6215",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        220,
+        560
+      ],
+      "parameters": {
+        "content": "## ak-sub-check_availability\n`GET /v2/slots` im Cal.com-Konto dieses Kunden.\nOhne `zeitraum_von`/`zeitraum_bis`: heute bis +14 Tage.\nGibt hoechstens 5 Zeiten zurueck (Telefon!).",
+        "width": 460,
+        "height": 220,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Aufruf vom Handler": {
+      "main": [
+        [
+          {
+            "node": "Eingaben pruefen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben pruefen": {
+      "main": [
+        [
+          {
+            "node": "Eingaben ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben ok?": {
+      "main": [
+        [
+          {
+            "node": "Slots abrufen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slots abrufen": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Europe/Berlin"
+  }
+}

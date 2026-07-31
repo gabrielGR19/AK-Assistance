@@ -1,0 +1,206 @@
+{
+  "name": "ak-sub-send_sms",
+  "nodes": [
+    {
+      "id": "aufruf_vom_handler",
+      "name": "Aufruf vom Handler",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "eingaben_pruefen",
+      "name": "Eingaben pruefen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Baut den SMS-Text aus einer Vorlage der Kunden-Config. Der Agent liefert nur\n// Werte, nie den fertigen Text - so kann er den Inhalt nicht frei bestimmen.\nconst e = $input.first().json;\nconst p = e.params || {};\nconst c = e.config || {};\n\nfunction normTelefon(t) {\n  let s = String(t || '').trim().replace(/[^0-9+]/g, '');\n  if (s.startsWith('00')) s = '+' + s.slice(2);\n  if (s.startsWith('0')) s = '+49' + s.slice(1);\n  return s;\n}\n\nconst an = normTelefon(p.telefon);\nconst vorlagen = c.sms_vorlagen || {};\nconst schluessel = String(p.textvorlage || '').trim();\nlet text = vorlagen[schluessel];\n\nconst werte = (p.werte && typeof p.werte === 'object') ? p.werte : {};\nif (text) {\n  // Platzhalter {{name}} serverseitig fuellen; unbekannte Platzhalter werden geleert.\n  text = String(text).replace(/{{\\s*([a-zA-Z0-9_]+)\\s*}}/g, (_, k) => {\n    const v = werte[k];\n    return v === undefined || v === null ? '' : String(v).slice(0, 200);\n  }).trim();\n}\n\nlet fehler = '';\nif (!c.sms_from) fehler = 'keine absendernummer konfiguriert';\nelse if (!c.twilio_account_sid) fehler = 'twilio nicht konfiguriert';\nelse if (!an || an.length < 8) fehler = 'zielnummer fehlt oder ungueltig';\nelse if (!schluessel) fehler = 'textvorlage fehlt';\nelse if (!text) fehler = 'textvorlage unbekannt';\n\nreturn [{ json: Object.assign({}, e, {\n  an: an, text: (text || '').slice(0, 600), fehler: fehler,\n}) }];"
+      }
+    },
+    {
+      "id": "eingaben_ok",
+      "name": "Eingaben ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.fehler }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "sms_senden",
+      "name": "SMS senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.config.twilio_account_sid }}/Messages.json",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "={{ $json.config.sms_from }}"
+            },
+            {
+              "name": "To",
+              "value": "={{ $json.an }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "AK_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio API"
+        }
+      }
+    },
+    {
+      "id": "antwort_bauen",
+      "name": "Antwort bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const ktx = $('Eingaben pruefen').first().json;\n// Vereinheitlicht die Antwort. Kein Sub-Workflow gibt je etwas anderes\n// zurueck als { success, data, message } - darauf bauen die Retell-Agenten\n// ihre Erfolgs- und Fehlerzweige auf.\nfunction antwort(success, data, message) {\n  return { success: !!success, data: data || {}, message: String(message || '') };\n}\n\nif (ktx.fehler) return [{ json: antwort(false, {}, ktx.fehler) }];\n\nconst r = $input.first().json || {};\nif (r.error) return [{ json: antwort(false, { gesendet: false }, 'sms-dienst nicht erreichbar') }];\nif (Number(r.statusCode) >= 400) {\n  return [{ json: antwort(false, { gesendet: false, code: Number(r.statusCode) }, 'sms fehlgeschlagen') }];\n}\nconst b = r.body || {};\nreturn [{ json: antwort(true, { gesendet: true, sid: String(b.sid || ''),\n  status: String(b.status || '') }, 'sms verschickt') }];"
+      }
+    },
+    {
+      "id": "notiz_3440",
+      "name": "Notiz 3440",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        220,
+        560
+      ],
+      "parameters": {
+        "content": "## ak-sub-send_sms\nAbsendernummer kommt **immer** aus der Kunden-Config, nie aus den Agent-Parametern.\nDer Agent waehlt nur eine Vorlage (`textvorlage`) und liefert `werte` - den Text baut dieser Workflow.",
+        "width": 460,
+        "height": 220,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Aufruf vom Handler": {
+      "main": [
+        [
+          {
+            "node": "Eingaben pruefen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben pruefen": {
+      "main": [
+        [
+          {
+            "node": "Eingaben ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben ok?": {
+      "main": [
+        [
+          {
+            "node": "SMS senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS senden": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Europe/Berlin"
+  }
+}

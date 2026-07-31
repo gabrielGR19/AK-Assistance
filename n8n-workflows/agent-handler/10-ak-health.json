@@ -1,0 +1,97 @@
+{
+  "name": "ak-health",
+  "nodes": [
+    {
+      "id": "health_anfrage",
+      "name": "Health Anfrage",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "ak-health",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "ak-health"
+    },
+    {
+      "id": "status_bauen",
+      "name": "Status bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Liefert einen simplen OK-Status fuer einen externen Uptime-Monitor.\n// Bewusst ohne Auth und ohne Details - die Seite verraet nichts ueber Kunden.\nreturn [{ json: {\n  success: true,\n  data: { status: 'ok', zeit: new Date().toISOString() },\n  message: 'ak-agent-handler erreichbar',\n} }];"
+      }
+    },
+    {
+      "id": "status_senden",
+      "name": "Status senden",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "notiz_6083",
+      "name": "Notiz 6083",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        160
+      ],
+      "parameters": {
+        "content": "## ak-health\nGET `/webhook/ak-health` -> `{ success: true, ... }`\nFuer externes Uptime-Monitoring. Muss aktiviert (Publish) sein, sonst antwortet nur die Test-URL.",
+        "width": 420,
+        "height": 180,
+        "color": 6
+      }
+    }
+  ],
+  "connections": {
+    "Health Anfrage": {
+      "main": [
+        [
+          {
+            "node": "Status bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status bauen": {
+      "main": [
+        [
+          {
+            "node": "Status senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Europe/Berlin"
+  }
+}

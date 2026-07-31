@@ -1,0 +1,969 @@
+{
+  "name": "ak-agent-handler",
+  "nodes": [
+    {
+      "id": "retell_anfrage",
+      "name": "Retell Anfrage",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -260,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ak-agent-handler",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "ak-agent-handler"
+    },
+    {
+      "id": "auth_und_validierung",
+      "name": "Auth und Validierung",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// SCHRITT 1+2 - Authentifizierung und Eingabevalidierung.\n// Dieser Node wirft nie eine Exception: ein Abbruchgrund wird als\n// fehler_code weitergereicht, damit Retell immer eine valide Antwort bekommt.\nconst eingang = $input.first().json;\nconst headers = eingang.headers || {};\nconst body = eingang.body || {};\n\n// Das Secret liegt serverseitig in der Umgebungsvariablen AK_WEBHOOK_SECRET\n// und steht bewusst nirgends im Workflow.\nconst erwartet = String($env.AK_WEBHOOK_SECRET || '');\n// n8n liefert Header-Namen kleingeschrieben; die zweite Variante ist nur Absicherung.\nconst gesendet = String(headers['x-ak-auth'] || headers['X-AK-Auth'] || '');\n\n// Vergleich in konstanter Zeit, damit die Antwortzeit nichts ueber das Secret verraet.\nfunction gleich(a, b) {\n  if (a.length !== b.length) return false;\n  let diff = 0;\n  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);\n  return diff === 0;\n}\n\nconst basis = {\n  request_id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8),\n  start_ms: Date.now(),\n  kunde_id: String(body.kunde_id == null ? '' : body.kunde_id).trim(),\n  agent_typ: String(body.agent_typ == null ? '' : body.agent_typ).trim(),\n  action: String(body.action == null ? '' : body.action).trim(),\n  params: (body.params && typeof body.params === 'object' && !Array.isArray(body.params)) ? body.params : {},\n  // Retell schickt die call_id je nach Konfiguration auf zwei Wegen mit.\n  call_id: String(body.call_id || (body.call && body.call.call_id) || ''),\n  fehler_code: '',\n  http_code: 200,\n  message: '',\n};\n\nif (!erwartet) {\n  // Kein Secret gesetzt = Fehlkonfiguration. Dann wird grundsaetzlich nichts durchgelassen.\n  return [{ json: Object.assign({}, basis, { fehler_code: 'unauthorized', http_code: 401, message: 'unauthorized' }) }];\n}\nif (!gesendet || !gleich(gesendet, erwartet)) {\n  return [{ json: Object.assign({}, basis, { fehler_code: 'unauthorized', http_code: 401, message: 'unauthorized' }) }];\n}\nif (!basis.kunde_id || !basis.agent_typ || !basis.action) {\n  return [{ json: Object.assign({}, basis, { fehler_code: 'invalid_request', message: 'invalid request' }) }];\n}\nreturn [{ json: basis }];"
+      }
+    },
+    {
+      "id": "anfrage_gueltig",
+      "name": "Anfrage gueltig?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        180,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.fehler_code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "kunden_config_lesen",
+      "name": "Kunden-Config lesen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        200
+      ],
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ak_kunden_config"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "kunde_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.kunde_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "kunden_config_pruefen",
+      "name": "Kunden-Config pruefen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        200
+      ],
+      "parameters": {
+        "jsCode": "// SCHRITT 3 - Kunden-Config auswerten. Es gibt bewusst KEINEN Default-Kunden:\n// ohne passende, aktive Zeile wird die Anfrage abgelehnt. Das ist der Kern\n// der Mandantentrennung - ab hier traegt jeder Folgeschritt genau diese Config.\nconst anfrage = $('Auth und Validierung').first().json;\nconst roh = $input.all().map(i => i.json).filter(z => z && z.kunde_id);\n\nfunction jsonFeld(wert, standard) {\n  if (wert === null || wert === undefined || wert === '') return standard;\n  if (typeof wert === 'object') return wert;\n  try { return JSON.parse(String(wert)); } catch (e) { return standard; }\n}\n\nif (roh.length === 0) {\n  return [{ json: Object.assign({}, anfrage, { fehler_code: 'unknown_kunde', message: 'unknown kunde_id' }) }];\n}\n\nconst z = roh[0];\n// aktiv kann als Boolean oder als Text aus der DataTable kommen.\nconst aktiv = z.aktiv === true || String(z.aktiv).toLowerCase() === 'true';\nif (!aktiv) {\n  return [{ json: Object.assign({}, anfrage, { fehler_code: 'kunde_inaktiv', message: 'kunde inaktiv' }) }];\n}\n\nconst config = {\n  kunde_id: String(z.kunde_id),\n  kunde_name: String(z.kunde_name || z.kunde_id),\n  zeitzone: String(z.zeitzone || 'Europe/Berlin'),\n  // Kalender\n  kalender_typ: String(z.kalender_typ || 'calcom'),\n  cal_api_base: String(z.cal_api_base || 'https://api.cal.com/v2').replace(/\\/+$/, ''),\n  cal_event_type_id: String(z.cal_event_type_id || ''),\n  cal_username: String(z.cal_username || ''),\n  // Telefonie\n  sms_from: String(z.sms_from || ''),\n  twilio_account_sid: String(z.twilio_account_sid || ''),\n  // CRM\n  crm_typ: String(z.crm_typ || 'none'),\n  crm_quelle: String(z.crm_quelle || ''),\n  crm_blatt: String(z.crm_blatt || 'Tabelle1'),\n  // Bereitschaft\n  dispatch_kanal: String(z.dispatch_kanal || ''),\n  dispatch_ziel: String(z.dispatch_ziel || ''),\n  // Freiform\n  system_endpoints: jsonFeld(z.system_endpoints, {}),\n  sms_vorlagen: jsonFeld(z.sms_vorlagen, {}),\n};\n\n// Sicherheitsnetz: die geladene Config muss zur angefragten kunde_id gehoeren.\nif (config.kunde_id !== anfrage.kunde_id) {\n  return [{ json: Object.assign({}, anfrage, { fehler_code: 'config_mismatch', message: 'config mismatch' }) }];\n}\n\nreturn [{ json: Object.assign({}, anfrage, { config: config }) }];"
+      }
+    },
+    {
+      "id": "kunde_bekannt",
+      "name": "Kunde bekannt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.fehler_code }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "router",
+      "name": "Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1060,
+        200
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_identify_caller",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "identify_caller",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "identify_caller"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_check_availability",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "check_availability",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "check_availability"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_book_appointment",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "book_appointment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "book_appointment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_reschedule_appointment",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "reschedule_appointment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reschedule_appointment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_cancel_appointment",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "cancel_appointment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancel_appointment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_send_sms",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "send_sms",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "send_sms"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_notify_dispatch",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "notify_dispatch",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "notify_dispatch"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r_system_query",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "system_query",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "system_query"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "unbekannt"
+        }
+      }
+    },
+    {
+      "id": "sub_identify_caller",
+      "name": "Sub identify_caller",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        -120
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_IDENTIFY_CALLER",
+          "mode": "id",
+          "cachedResultName": "ak-sub-identify_caller"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sub_check_availability",
+      "name": "Sub check_availability",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        -10
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_CHECK_AVAILABILITY",
+          "mode": "id",
+          "cachedResultName": "ak-sub-check_availability"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sub_book_appointment",
+      "name": "Sub book_appointment",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        100
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_BOOK_APPOINTMENT",
+          "mode": "id",
+          "cachedResultName": "ak-sub-book_appointment"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sub_reschedule_appointment",
+      "name": "Sub reschedule_appointment",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        210
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_RESCHEDULE_APPOINTMENT",
+          "mode": "id",
+          "cachedResultName": "ak-sub-reschedule_appointment"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sub_cancel_appointment",
+      "name": "Sub cancel_appointment",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        320
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_CANCEL_APPOINTMENT",
+          "mode": "id",
+          "cachedResultName": "ak-sub-cancel_appointment"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sub_send_sms",
+      "name": "Sub send_sms",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        430
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_SEND_SMS",
+          "mode": "id",
+          "cachedResultName": "ak-sub-send_sms"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sub_notify_dispatch",
+      "name": "Sub notify_dispatch",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        540
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_NOTIFY_DISPATCH",
+          "mode": "id",
+          "cachedResultName": "ak-sub-notify_dispatch"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sub_system_query",
+      "name": "Sub system_query",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        650
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ID_SYSTEM_QUERY",
+          "mode": "id",
+          "cachedResultName": "ak-sub-system_query"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "unbekannte_action",
+      "name": "Unbekannte Action",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        780
+      ],
+      "parameters": {
+        "jsCode": "// Fallback des Routers: action existiert nicht. Bewusst keine Liste der\n// gueltigen Actions in der Antwort - der Agent soll nicht raten koennen.\nconst e = $input.first().json;\nreturn [{ json: Object.assign({}, e, { fehler_code: 'unknown_action', message: 'unknown action' }) }];"
+      }
+    },
+    {
+      "id": "antwort_bauen",
+      "name": "Antwort bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// SCHRITT 5 - Einheitliche Antwort. Alle Pfade (Auth-Fehler, unbekannter\n// Kunde, unbekannte Action, Sub-Workflow-Ergebnis, Sub-Workflow-Absturz)\n// muenden hier und ergeben immer { success, data, message }.\nconst anfrage = $('Auth und Validierung').first().json;\nconst item = $input.first().json || {};\n\nlet success = false;\nlet data = {};\nlet message = 'unerwartete antwort';\nlet http_code = 200;\n\nif (item.fehler_code) {\n  message = String(item.message || item.fehler_code);\n  http_code = Number(item.http_code || 200);\n} else if (item.error) {\n  // Sub-Workflow ist gelaufen, hat aber eine Exception geworfen\n  // (onError = continueRegularOutput). Details bleiben im Log, nicht in der Antwort.\n  message = 'interner fehler';\n} else if (typeof item.success === 'boolean') {\n  success = item.success;\n  data = (item.data && typeof item.data === 'object') ? item.data : {};\n  message = String(item.message || '');\n}\n\nreturn [{ json: {\n  success: success,\n  data: data,\n  message: message,\n  http_code: http_code,\n  // Felder ab hier nur fuers Logging, sie sind nicht Teil der Antwort an Retell.\n  request_id: anfrage.request_id,\n  kunde_id: anfrage.kunde_id,\n  agent_typ: anfrage.agent_typ,\n  action: anfrage.action,\n  call_id: anfrage.call_id,\n  dauer_ms: Date.now() - Number(anfrage.start_ms || Date.now()),\n} }];"
+      }
+    },
+    {
+      "id": "antwort_senden",
+      "name": "Antwort senden",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: $json.success, data: $json.data, message: $json.message }) }}",
+        "options": {
+          "responseCode": "={{ $json.http_code }}"
+        }
+      }
+    },
+    {
+      "id": "log_schreiben",
+      "name": "Log schreiben",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2040,
+        300
+      ],
+      "parameters": {
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ak_agent_log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ts": "={{ $now.toISO() }}",
+            "request_id": "={{ $json.request_id }}",
+            "kunde_id": "={{ $json.kunde_id }}",
+            "agent_typ": "={{ $json.agent_typ }}",
+            "action": "={{ $json.action }}",
+            "call_id": "={{ $json.call_id }}",
+            "success": "={{ $json.success }}",
+            "dauer_ms": "={{ $json.dauer_ms }}",
+            "message": "={{ $json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "notiz_3707",
+      "name": "Notiz 3707",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        40
+      ],
+      "parameters": {
+        "content": "## ak-agent-handler\nEinziger Einstiegspunkt fuer die Retell-Agenten 2, 3 und 4.\nBody: `{ kunde_id, agent_typ, action, params }`\nAntwort immer: `{ success, data, message }`\n\n**Agent 1 (Empfang) ruft hier nichts auf** - der hat keine Function Calls.",
+        "width": 460,
+        "height": 230,
+        "color": 4
+      }
+    },
+    {
+      "id": "notiz_8279",
+      "name": "Notiz 8279",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        480
+      ],
+      "parameters": {
+        "content": "### Auth + Validierung\nSecret kommt aus `$env.AK_WEBHOOK_SECRET`, nicht aus dem Workflow.\nFalsches/fehlendes Secret -> HTTP 401, keine weitere Verarbeitung.",
+        "width": 380,
+        "height": 180,
+        "color": 3
+      }
+    },
+    {
+      "id": "notiz_871",
+      "name": "Notiz 871",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        380
+      ],
+      "parameters": {
+        "content": "### Mandantentrennung\nDie Config wird EINMAL hier geladen und an jeden Sub-Workflow mitgegeben. Kein Sub-Workflow ermittelt Kalender, Nummer oder CRM selbst.\nUnbekannte oder inaktive kunde_id -> Abbruch, **nie** ein Default-Kunde.",
+        "width": 420,
+        "height": 220,
+        "color": 3
+      }
+    },
+    {
+      "id": "notiz_6067",
+      "name": "Notiz 6067",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        460
+      ],
+      "parameters": {
+        "content": "### Antwort + Log\nDie Antwort geht zuerst an Retell, das Logging laeuft danach - so wartet der Agent nicht auf die DataTable.\nEin Fehler beim Loggen kann die Antwort nicht mehr kaputt machen.",
+        "width": 420,
+        "height": 180,
+        "color": 5
+      }
+    }
+  ],
+  "connections": {
+    "Retell Anfrage": {
+      "main": [
+        [
+          {
+            "node": "Auth und Validierung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth und Validierung": {
+      "main": [
+        [
+          {
+            "node": "Anfrage gueltig?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anfrage gueltig?": {
+      "main": [
+        [
+          {
+            "node": "Kunden-Config lesen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kunden-Config lesen": {
+      "main": [
+        [
+          {
+            "node": "Kunden-Config pruefen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kunden-Config pruefen": {
+      "main": [
+        [
+          {
+            "node": "Kunde bekannt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kunde bekannt?": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Sub identify_caller",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub check_availability",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub book_appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub reschedule_appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub cancel_appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub send_sms",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub notify_dispatch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub system_query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unbekannte Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub identify_caller": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub check_availability": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub book_appointment": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub reschedule_appointment": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub cancel_appointment": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub send_sms": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub notify_dispatch": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub system_query": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unbekannte Action": {
+      "main": [
+        [
+          {
+            "node": "Antwort bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort bauen": {
+      "main": [
+        [
+          {
+            "node": "Antwort senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort senden": {
+      "main": [
+        [
+          {
+            "node": "Log schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "Europe/Berlin"
+  }
+}
