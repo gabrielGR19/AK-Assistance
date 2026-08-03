@@ -11,7 +11,12 @@ mindestens die Team-Regeln unten.
 - **Git-Fluss:** Sessionstart = automatischer Pull (Hook), Sessionende =
   automatischer Push committeter Arbeit (Hook). Jede fertige
   Funktionseinheit sofort committen — nichts bleibt uncommitted liegen.
-  Gemergte Branches nie löschen.
+  Gemergte Branches nie löschen. **Ausnahme:** maschinell erzeugte
+  Einmal-Branches des Blog-Agents (`blog/<post_id>`, ein Branch pro
+  automatisch veröffentlichtem Artikel) werden nach dem Merge automatisch
+  gelöscht — der Artikel-Inhalt bleibt über den Merge-Commit auf main
+  erhalten, ohne Löschen sammeln sich sonst Dutzende Einmal-Branches an
+  (Entscheidung Gabriel, 03.08.2026).
 - **main ist geschützt (GitHub-Ruleset "main-schutz", seit 23.07.2026):**
   keine Direkt-Pushes, keine Force-Pushes, kein Löschen — für niemanden,
   auch nicht für Admins. Änderungen erreichen main ausschließlich per

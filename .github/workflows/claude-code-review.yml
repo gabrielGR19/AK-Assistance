@@ -3,12 +3,11 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    # Automatisch erzeugte Blog-Artikel-PRs (Approval-Handler, Branch+PR+Auto-Merge
+    # innerhalb von Sekunden) brauchen keinen Code-Review - der Branch ist meist
+    # schon geloescht, bevor der Review-Lauf durch waere.
+    paths-ignore:
+      - "website/blog/**"
 
 jobs:
   claude-review:

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-03T11:51:19.107Z",
+  "updatedAt": "2026-08-03T13:39:25.232Z",
   "createdAt": "2026-06-02T21:46:41.891Z",
   "id": "ispDA5uyFhkkZT37",
   "name": "AK Blog-Agent — Approval-Handler (Telegram)",
@@ -25,8 +25,8 @@
       "webhookId": "d82cf077-29f8-4c3c-9f0e-e02fc24869be",
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       }
     },
@@ -62,8 +62,8 @@
       "webhookId": "0e51249f-2be6-49d7-9d8f-9477ab3275aa",
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       }
     },
@@ -188,8 +188,8 @@
       "webhookId": "aff21a97-e990-4994-9b27-d35a2870f94d",
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       }
     },
@@ -211,9 +211,9 @@
     },
     {
       "parameters": {
-        "content": "## Auto-Publish via GitHub API\n**Freigeben:** published_at setzen → HTML bauen → GitHub committen (Artikel + Index).\n**Dry-Run:** Wenn dry_run=true im Archiv, wird nur bestätigt — kein GitHub-Commit.\n**Duplikat-Schutz:** Wenn Datei bereits auf GitHub existiert, wird gewarnt und nichts überschrieben.\n\nCredential: **GitHub API** (HTTP Header Auth) mit `Authorization: Bearer ghp_...`",
-        "height": 200,
-        "width": 540,
+        "content": "## Auto-Publish via GitHub API (Branch + PR + Auto-Merge)\n**Freigeben:** published_at setzen → HTML bauen → main-SHA lesen → alten Branch idempotent löschen → Branch anlegen → Artikel+Index auf den Branch committen → PR gegen main → PR automatisch mergen (squash) → Branch löschen.\nGrund für den Umweg über Branch/PR statt Direkt-Commit: GitHub-Ruleset \"main-schutz\" (seit 23.07.2026) verbietet Direkt-Commits auf main; required_approving_review_count=0, also braucht der PR keine menschliche Freigabe.\n**Dry-Run:** Wenn dry_run=true im Archiv, wird nur bestätigt — kein GitHub-Commit.\n**Duplikat-Schutz:** Wenn Datei bereits auf main existiert, wird gewarnt und nichts überschrieben.\n\nCredential: **GitHub API** (HTTP Header Auth) mit `Authorization: Bearer ghp_...`",
+        "height": 240,
+        "width": 560,
         "color": 4
       },
       "id": "8f6e2f2d-6275-4324-8649-2dfb15c54a06",
@@ -323,8 +323,8 @@
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "a047f8f5-70cd-4e04-ab24-75b55372fccc"
@@ -342,15 +342,15 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "8740574505",
-        "text": "={{ (() => { const body = $('Daten aufbereiten').first().json.body_markdown || ''; return body.length > 3800 ? body.slice(0, 3800) + '\\n\\n_(Artikel gekürzt)_' : body; })() }}",
+        "text": "={{ (() => { const body = $('Daten aufbereiten').first().json.body_markdown || ''; if (body.length <= 3800) return body; const slice = body.slice(0, 3800); const enders = ['. ', '.\\n', '! ', '!\\n', '? ', '?\\n']; let cut = -1; for (const e of enders) { const i = slice.lastIndexOf(e); if (i > cut) cut = i; } const text = cut >= 3000 ? slice.slice(0, cut + 1) : slice; return text + '\\n\\n_(Artikel gekürzt)_'; })() }}",
         "additionalFields": {
           "appendAttribution": false
         }
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "a5e40aac-172c-41b3-a300-3859320814da"
@@ -438,8 +438,8 @@
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "1e534b91-16f8-4d5e-9abb-cabb7366df7c"
@@ -511,8 +511,8 @@
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "ef6825f6-53b6-4336-a62f-106be6aeca2b"
@@ -550,8 +550,8 @@
       },
       "credentials": {
         "httpHeaderAuth": {
-          "name": "GitHub API",
-          "id": "CJf1IoksyuWPDgO9"
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
         }
       },
       "onError": "continueErrorOutput"
@@ -609,8 +609,8 @@
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "256f988d-a16c-455b-bc20-b8953aa3d6fc"
@@ -644,15 +644,15 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ message: 'Blog-Artikel veröffentlicht: ' + $('HTML und Pfad berechnen').first().json.title, content: $('HTML und Pfad berechnen').first().json.contentBase64 }) }}",
+        "jsonBody": "={{ JSON.stringify({ message: 'Blog-Artikel veröffentlicht: ' + $('HTML und Pfad berechnen').first().json.title, content: $('HTML und Pfad berechnen').first().json.contentBase64, branch: 'blog/' + $('Callback parsen').first().json.post_id }) }}",
         "options": {
           "timeout": 30000
         }
       },
       "credentials": {
         "httpHeaderAuth": {
-          "name": "GitHub API",
-          "id": "CJf1IoksyuWPDgO9"
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
         }
       },
       "onError": "continueErrorOutput"
@@ -690,8 +690,8 @@
       },
       "credentials": {
         "httpHeaderAuth": {
-          "name": "GitHub API",
-          "id": "CJf1IoksyuWPDgO9"
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
         }
       },
       "onError": "continueErrorOutput"
@@ -738,15 +738,15 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ message: 'Blog-Index aktualisiert: ' + $('HTML und Pfad berechnen').first().json.title, content: $json.updatedContent, sha: $json.sha }) }}",
+        "jsonBody": "={{ JSON.stringify({ message: 'Blog-Index aktualisiert: ' + $('HTML und Pfad berechnen').first().json.title, content: $json.updatedContent, sha: $json.sha, branch: 'blog/' + $('Callback parsen').first().json.post_id }) }}",
         "options": {
           "timeout": 30000
         }
       },
       "credentials": {
         "httpHeaderAuth": {
-          "name": "GitHub API",
-          "id": "CJf1IoksyuWPDgO9"
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
         }
       },
       "onError": "continueErrorOutput"
@@ -772,8 +772,8 @@
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "ad128e4f-bae2-41b3-8227-cd6f9e8a9654"
@@ -791,15 +791,15 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('Callback parsen').first().json.chat_id }}",
-        "text": "=❌ GitHub-Fehler beim Veröffentlichen.\nPost-ID: {{ $('Callback parsen').first().json.post_id }}\nBitte n8n-Log prüfen.",
+        "text": "=❌ Blogartikel konnte nicht veröffentlicht werden.\nPost-ID: {{ $('Callback parsen').first().json.post_id }}\nGrund: {{ (() => { try { const raw = $json.error?.message || ''; const jsonPart = raw.slice(raw.indexOf('{')); return JSON.parse(jsonPart).message || raw || 'unbekannt'; } catch(e) { return $json.error?.message || 'unbekannt'; } })() }}\n\nmain ist unberührt, nichts ist live geschaltet.",
         "additionalFields": {
           "appendAttribution": false
         }
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "2b985dcf-c946-4ae2-a398-fd8e86a19f5d"
@@ -883,11 +883,257 @@
       },
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       },
       "webhookId": "d3177b55-ecf0-4b62-b2e1-4d2da2e7d788"
+    },
+    {
+      "id": "github-get-main-sha",
+      "name": "GitHub: Main-SHA lesen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        700
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/gabrielGR19/AK-Assistance/git/ref/heads/main",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "github-delete-branch-precheck",
+      "name": "GitHub: Alten Branch löschen (idempotent)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        620
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.github.com/repos/gabrielGR19/AK-Assistance/git/refs/heads/blog/{{ $('Callback parsen').first().json.post_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "github-create-branch",
+      "name": "GitHub: Branch anlegen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        800
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/gabrielGR19/AK-Assistance/git/refs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ref: 'refs/heads/blog/' + $('Callback parsen').first().json.post_id, sha: $('GitHub: Main-SHA lesen').first().json.object.sha }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "github-create-pr",
+      "name": "GitHub: PR erstellen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3160,
+        700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/gabrielGR19/AK-Assistance/pulls",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Blog-Artikel: ' + $('HTML und Pfad berechnen').first().json.title, head: 'blog/' + $('Callback parsen').first().json.post_id, base: 'main' }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "github-merge-pr",
+      "name": "GitHub: PR mergen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        700
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/gabrielGR19/AK-Assistance/pulls/{{ $json.number }}/merge",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ merge_method: 'squash' }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "github-delete-branch",
+      "name": "GitHub: Branch löschen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        800
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.github.com/repos/gabrielGR19/AK-Assistance/git/refs/heads/blog/{{ $('Callback parsen').first().json.post_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CJf1IoksyuWPDgO9",
+          "name": "GitHub API"
+        }
+      },
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -1073,7 +1319,7 @@
         ],
         [
           {
-            "node": "GitHub: Artikel committen",
+            "node": "GitHub: Main-SHA lesen",
             "type": "main",
             "index": 0
           }
@@ -1091,7 +1337,7 @@
         ],
         [
           {
-            "node": "GitHub: Artikel committen",
+            "node": "GitHub: Main-SHA lesen",
             "type": "main",
             "index": 0
           }
@@ -1149,7 +1395,7 @@
       "main": [
         [
           {
-            "node": "Telegram: Artikel live",
+            "node": "GitHub: PR erstellen",
             "type": "main",
             "index": 0
           }
@@ -1173,6 +1419,94 @@
           }
         ]
       ]
+    },
+    "GitHub: Main-SHA lesen": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Alten Branch löschen (idempotent)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Alten Branch löschen (idempotent)": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Branch anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Branch anlegen": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Artikel committen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: PR erstellen": {
+      "main": [
+        [
+          {
+            "node": "GitHub: PR mergen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: PR mergen": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Branch löschen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram: Artikel live",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: GitHub-Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1184,32 +1518,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "0467ba32-092f-41b3-8596-014fb699a853",
-  "activeVersionId": "0467ba32-092f-41b3-8596-014fb699a853",
-  "versionCounter": 42,
+  "versionId": "a5649677-50f2-44ec-b99f-9d1e13f0bad9",
+  "activeVersionId": "a5649677-50f2-44ec-b99f-9d1e13f0bad9",
+  "versionCounter": 51,
   "triggerCount": 2,
-  "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2026-06-02T21:46:41.894Z",
-      "createdAt": "2026-06-02T21:46:41.894Z",
-      "role": "workflow:owner",
-      "workflowId": "ispDA5uyFhkkZT37",
-      "projectId": "a9T2t83fThlISn9u",
-      "project": {
-        "updatedAt": "2026-04-21T20:47:05.365Z",
-        "createdAt": "2026-04-21T20:34:33.830Z",
-        "id": "a9T2t83fThlISn9u",
-        "name": "Moritz Koch <koch_moritz12@gmx.de>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "156eef8d-1ffc-4930-8ec3-98ca7ae9c972"
-      }
-    }
-  ],
-  "versionMetadata": {
-    "name": null,
-    "description": null
-  }
+  "tags": []
 }

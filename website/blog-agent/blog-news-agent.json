@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-19T16:28:35.013Z",
+  "updatedAt": "2026-08-03T13:19:05.822Z",
   "createdAt": "2026-06-02T21:54:38.470Z",
   "id": "ZBjJfxJ9Ulqm57wU",
   "name": "AK Blog-Agent — KI-Wochenrückblick",
@@ -13,7 +13,7 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 8 * * 1"
+              "expression": "0 1 * * 1"
             }
           ]
         }
@@ -70,7 +70,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"query\": \"künstliche Intelligenz OR artificial intelligence OR AI OR OpenAI OR ChatGPT\",\n  \"topic\": \"news\",\n  \"days\": 7,\n  \"max_results\": 15,\n  \"search_depth\": \"basic\"\n}",
+        "jsonBody": "{\n  \"query\": \"\\\"KI im Handwerk\\\" OR \\\"künstliche Intelligenz Handwerksbetrieb\\\" OR \\\"KI Telefonassistent Handwerk\\\" OR \\\"KI Notdienst Handwerk\\\" OR \\\"KI Vertragsprüfung VOB\\\" OR \\\"künstliche Intelligenz Bauleistungen\\\" OR \\\"KI Terminplanung Handwerk\\\" OR \\\"KI Personalmangel Handwerk\\\"\",\n  \"topic\": \"general\",\n  \"time_range\": \"month\",\n  \"max_results\": 15,\n  \"search_depth\": \"basic\"\n}",
         "options": {
           "timeout": 30000
         }
@@ -88,15 +88,15 @@
       "waitBetweenTries": 3000,
       "credentials": {
         "httpHeaderAuth": {
-          "name": "Tavily API",
-          "id": "o65pLxEbRnNMXUpQ"
+          "id": "o65pLxEbRnNMXUpQ",
+          "name": "Tavily API"
         }
       },
       "onError": "continueErrorOutput"
     },
     {
       "parameters": {
-        "jsCode": "// Quellen für den KI-Wochenrückblick aufbereiten (aus EINER breiten Suche).\n// Tavily-Ergebnisse ROBUST einlesen - egal wie n8n die HTTP-Antwort strukturiert.\nfunction fromObj(o) {\n  if (!o || typeof o !== 'object') return null;\n  if (Array.isArray(o.results)) return o.results;\n  if (o.body && Array.isArray(o.body.results)) return o.body.results;\n  if (o.data && Array.isArray(o.data.results)) return o.data.results;\n  return null;\n}\nfunction scan(items) {\n  if (!Array.isArray(items)) return null;\n  // a) ein Item enthält die results-Liste (Standardfall)\n  for (const it of items) {\n    const j = (it && it.json) ? it.json : it;\n    const r = fromObj(j);\n    if (r && r.length) return r;\n  }\n  // b) Items SIND die Ergebnisse (gesplittet -> jedes hat url)\n  const hits = items.map(it => (it && it.json) ? it.json : it).filter(x => x && x.url);\n  if (hits.length) return hits;\n  return null;\n}\n// Bewusst nur .all() (manche n8n-Versionen liefern .first() unerwartet).\nlet results = [];\ntry { results = scan($input.all()) || results; } catch (e) {}\nif (!results.length) { try { results = scan($('Themen-Recherche (Tavily)').all()) || results; } catch (e) {} }\nif (!results.length) { try { if (Array.isArray($json.results)) results = $json.results; } catch (e) {} }\n\n// Eingebaute Diagnose (zeigt im Output, was wirklich am Eingang lag)\nlet _debug = null;\ntry {\n  const a = $input.all();\n  const j0 = (a[0] && a[0].json) ? a[0].json : null;\n  _debug = {\n    input_items: a.length,\n    first_keys: j0 ? Object.keys(j0) : [],\n    results_is_array: !!(j0 && Array.isArray(j0.results)),\n    results_len: (j0 && Array.isArray(j0.results)) ? j0.results.length : -1\n  };\n} catch (e) { _debug = { err: String(e) }; }\n\n// Domain aus URL extrahieren - OHNE new URL() (in mancher n8n-Sandbox blockiert)\nconst domainOf = (url) => {\n  const m = String(url || '').match(/^https?:\\/\\/([^\\/?#]+)/i);\n  return m ? m[1].replace(/^www\\./i, '') : '';\n};\n\n// Nach Tavily-Relevanz sortieren, je Domain nur die beste Meldung, max. 7 Quellen\nresults = results.slice().sort((a, b) => (b.score || 0) - (a.score || 0));\nconst seenDomains = new Set();\nconst sources = [];\nfor (const r of results) {\n  if (!r.url) continue;\n  const d = domainOf(r.url);\n  if (!d || seenDomains.has(d)) continue;\n  seenDomains.add(d);\n  const content = (r.content || r.raw_content || '')\n    .replace(/\\s+/g, ' ').trim().substring(0, 1500);\n  sources.push({\n    url: r.url,\n    title: r.title || '',\n    published_date: r.published_date || '',\n    domain: d,\n    snippet: content\n  });\n  if (sources.length >= 7) break;\n}\n\n// Mindestens 3 verschiedene Domains erforderlich (Anti-Halluzination)\nconst enough_sources = sources.length >= 3;\n\n// Exakter System-Prompt\nconst claude_system = \"Du bist Redakteur für den AK-Assistance-Blog. Zielgruppe: deutsche Handwerksbetriebe,\\ndie wissen wollen, was in der KI-Welt passiert und was es für sie bedeutet.\\n\\nDu erhältst eine Liste echter, aktueller Nachrichtenquellen zur KI-Welt. Erstelle daraus\\neinen redaktionellen Wochenrückblick.\\n\\nStrikte Regeln:\\n- Verwende AUSSCHLIESSLICH die unten gelieferten Quellen. Keine Information, die dort nicht\\n  steht, darf in den Artikel. Keine Zahlen, Zitate, Studien oder Personen erfinden.\\n- Wähle die 3–5 wichtigsten, für Handwerksbetriebe relevantesten Meldungen aus. Lass\\n  themenfremde oder belanglose Einträge weg.\\n- Ordne jede Meldung kurz ein: Was bedeutet das (falls relevant) für Handwerksbetriebe?\\n- Wenn eine Quelle unklar oder widersprüchlich ist, benenne das.\\n- Schreibe auf Deutsch, sachlich, klar, ohne Marketing-Floskeln.\\n- Länge: 600–900 Wörter.\\n- Struktur: H1-Titel, kurze Einleitung (2–3 Sätze), 3–5 H2-Abschnitte (je eine Meldung),\\n  Fazit, Quellenliste.\\n- Quellenliste am Ende als nummerierte Liste: [Nr] Titel — Domain (Datum) — URL.\\n- Verwende nur Quellen, die du auch wirklich im Text verarbeitet hast.\\n- Wenn weniger als 3 verwertbare Quellen vorhanden sind, antworte ausschließlich mit:\\n  \\\"INSUFFICIENT_SOURCES\\\".\\n\\nGib das Ergebnis GENAU in diesem Format zurück. Keine Code-Bloecke, kein JSON, nichts vor oder nach den Markern:\\n\\n###TITLE###\\n<Titel>\\n###SLUG###\\n<slug, nur Kleinbuchstaben und Bindestriche>\\n###META###\\n<Meta-Description, max 155 Zeichen>\\n###KEYWORDS###\\n<keyword1, keyword2, keyword3>\\n###BODY###\\n<vollstaendiger Artikel in Markdown, 600-900 Woerter, mit H1/H2 und Quellenliste am Ende>\\n###SOURCES###\\n<je verarbeitete Quelle eine Zeile im Format: URL | Titel | Datum>\\n###END###\";\n\n// User-Message: alle aufbereiteten Quellen (Titel, Domain, Datum, URL, Inhalt)\nconst quellenText = sources.map((s, i) =>\n  `[${i + 1}] ${s.title}\\nDomain: ${s.domain}\\nDatum: ${s.published_date || 'unbekannt'}\\nURL: ${s.url}\\nInhalt: ${s.snippet}`\n).join('\\n\\n');\n\nlet heute = '';\ntry { heute = $now.toFormat('dd.MM.yyyy'); } catch (e) { heute = new Date().toLocaleDateString('de-DE'); }\nconst claude_user = `Erstelle einen KI-Wochenrückblick (Stand ${heute}) aus diesen Quellen:\\n\\n${quellenText}`;\n\nreturn [{ json: {\n  enough_sources,\n  sources_count: sources.length,\n  domains_count: seenDomains.size,\n  _debug,\n  sources,\n  claude_system,\n  claude_user\n}}];\n"
+        "jsCode": "// Quellen für den KI-Wochenrückblick aufbereiten (aus EINER breiten Suche).\n// Tavily-Ergebnisse ROBUST einlesen - egal wie n8n die HTTP-Antwort strukturiert.\nfunction fromObj(o) {\n  if (!o || typeof o !== 'object') return null;\n  if (Array.isArray(o.results)) return o.results;\n  if (o.body && Array.isArray(o.body.results)) return o.body.results;\n  if (o.data && Array.isArray(o.data.results)) return o.data.results;\n  return null;\n}\nfunction scan(items) {\n  if (!Array.isArray(items)) return null;\n  // a) ein Item enthält die results-Liste (Standardfall)\n  for (const it of items) {\n    const j = (it && it.json) ? it.json : it;\n    const r = fromObj(j);\n    if (r && r.length) return r;\n  }\n  // b) Items SIND die Ergebnisse (gesplittet -> jedes hat url)\n  const hits = items.map(it => (it && it.json) ? it.json : it).filter(x => x && x.url);\n  if (hits.length) return hits;\n  return null;\n}\n// Bewusst nur .all() (manche n8n-Versionen liefern .first() unerwartet).\nlet results = [];\ntry { results = scan($input.all()) || results; } catch (e) {}\nif (!results.length) { try { results = scan($('Themen-Recherche (Tavily)').all()) || results; } catch (e) {} }\nif (!results.length) { try { if (Array.isArray($json.results)) results = $json.results; } catch (e) {} }\n\n// Eingebaute Diagnose (zeigt im Output, was wirklich am Eingang lag)\nlet _debug = null;\ntry {\n  const a = $input.all();\n  const j0 = (a[0] && a[0].json) ? a[0].json : null;\n  _debug = {\n    input_items: a.length,\n    first_keys: j0 ? Object.keys(j0) : [],\n    results_is_array: !!(j0 && Array.isArray(j0.results)),\n    results_len: (j0 && Array.isArray(j0.results)) ? j0.results.length : -1\n  };\n} catch (e) { _debug = { err: String(e) }; }\n\n// Domain aus URL extrahieren - OHNE new URL() (in mancher n8n-Sandbox blockiert)\nconst domainOf = (url) => {\n  const m = String(url || '').match(/^https?:\\/\\/([^\\/?#]+)/i);\n  return m ? m[1].replace(/^www\\./i, '') : '';\n};\n\n// Nach Tavily-Relevanz sortieren, je Domain nur die beste Meldung, max. 7 Quellen\nresults = results.slice().sort((a, b) => (b.score || 0) - (a.score || 0));\nconst seenDomains = new Set();\nconst sources = [];\nfor (const r of results) {\n  if (!r.url) continue;\n  const d = domainOf(r.url);\n  if (!d || seenDomains.has(d)) continue;\n  seenDomains.add(d);\n  const content = (r.content || r.raw_content || '')\n    .replace(/\\s+/g, ' ').trim().substring(0, 1500);\n  sources.push({\n    url: r.url,\n    title: r.title || '',\n    published_date: r.published_date || '',\n    domain: d,\n    snippet: content\n  });\n  if (sources.length >= 7) break;\n}\n\n// Mindestens 3 verschiedene Domains erforderlich (Anti-Halluzination)\nconst enough_sources = sources.length >= 3;\n\n// Exakter System-Prompt\nconst claude_system = \"Du bist Redakteur für den AK-Assistance-Blog. Zielgruppe: deutsche Handwerksbetriebe, die wissen wollen, wie KI konkrete\\nProbleme in ihrem Betrieb lösen kann - z.B. Erreichbarkeit/Telefonie,\\nNotfall-/SOS-Situationen, Prüfung von Verträgen/Ausschreibungen nach VOB,\\nTerminplanung, Personalmangel, Angebotserstellung.\\n\\nDu erhältst eine Liste echter, aktueller Nachrichtenquellen zur KI-Welt. Erstelle daraus\\neinen redaktionellen Wochenrückblick.\\n\\nStrikte Regeln:\\n- Verwende AUSSCHLIESSLICH die unten gelieferten Quellen. Keine Information, die dort nicht\\n  steht, darf in den Artikel. Keine Zahlen, Zitate, Studien oder Personen erfinden.\\n- Wähle die 3–5 wichtigsten, für Handwerksbetriebe relevantesten Meldungen aus. Lass\\n  themenfremde oder belanglose Einträge weg.\\n- Ordne jede Meldung kurz ein: Was bedeutet das (falls relevant) für Handwerksbetriebe?\\n- Wenn eine Quelle unklar oder widersprüchlich ist, benenne das.\\n- Schreibe auf Deutsch, sachlich, klar, ohne Marketing-Floskeln.\\n- Länge: 600–900 Wörter.\\n- Struktur: H1-Titel, kurze Einleitung (2–3 Sätze), 3–5 H2-Abschnitte (je eine Meldung),\\n  Fazit, Quellenliste.\\n- Quellenliste am Ende als nummerierte Liste: [Nr] Titel — Domain (Datum) — URL.\\n- Verwende nur Quellen, die du auch wirklich im Text verarbeitet hast.\\n- Wenn weniger als 3 verwertbare Quellen vorhanden sind, antworte ausschließlich mit:\\n  \\\"INSUFFICIENT_SOURCES\\\".\\n\\nGib das Ergebnis GENAU in diesem Format zurück. Keine Code-Bloecke, kein JSON, nichts vor oder nach den Markern:\\n\\n###TITLE###\\n<Titel>\\n###SLUG###\\n<slug, nur Kleinbuchstaben und Bindestriche>\\n###META###\\n<Meta-Description, max 155 Zeichen>\\n###KEYWORDS###\\n<keyword1, keyword2, keyword3>\\n###BODY###\\n<vollstaendiger Artikel in Markdown, 600-900 Woerter, mit H1/H2 und Quellenliste am Ende>\\n###SOURCES###\\n<je verarbeitete Quelle eine Zeile im Format: URL | Titel | Datum>\\n###END###\";\n\n// User-Message: alle aufbereiteten Quellen (Titel, Domain, Datum, URL, Inhalt)\nconst quellenText = sources.map((s, i) =>\n  `[${i + 1}] ${s.title}\\nDomain: ${s.domain}\\nDatum: ${s.published_date || 'unbekannt'}\\nURL: ${s.url}\\nInhalt: ${s.snippet}`\n).join('\\n\\n');\n\nlet heute = '';\ntry { heute = $now.toFormat('dd.MM.yyyy'); } catch (e) { heute = new Date().toLocaleDateString('de-DE'); }\nconst claude_user = `Erstelle einen KI-Wochenrückblick (Stand ${heute}) aus diesen Quellen:\\n\\n${quellenText}`;\n\nreturn [{ json: {\n  enough_sources,\n  sources_count: sources.length,\n  domains_count: seenDomains.size,\n  _debug,\n  sources,\n  claude_system,\n  claude_user\n}}];\n"
       },
       "id": "9b90e14c-1531-40b1-a090-f8e0272c74b8",
       "name": "Quellen aufbereiten",
@@ -176,8 +176,8 @@
       "waitBetweenTries": 5000,
       "credentials": {
         "httpHeaderAuth": {
-          "name": "Anthropic API",
-          "id": "1sqhvuprxy5szWxz"
+          "id": "1sqhvuprxy5szWxz",
+          "name": "Anthropic API"
         }
       },
       "onError": "continueErrorOutput"
@@ -248,8 +248,8 @@
       "webhookId": "e2121660-f12e-48c1-be77-fa11ff789c0a",
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       }
     },
@@ -272,8 +272,8 @@
       "webhookId": "4d84dbb3-8829-4f62-a382-de8d2ce162a1",
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       }
     },
@@ -296,8 +296,8 @@
       "webhookId": "1f943ea3-19ce-4c3a-82ab-89419eb31668",
       "credentials": {
         "telegramApi": {
-          "name": "Telegram account",
-          "id": "9Vp8wPx7MROw0sAO"
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
         }
       }
     },
@@ -319,7 +319,7 @@
     },
     {
       "parameters": {
-        "content": "## 3–4 · Recherche & Aufbereitung\nEINE breite Tavily-Suche (deutsche KI-News). Node 'Quellen aufbereiten' nimmt je Domain die beste Meldung (max. 7), so sind 3+ unabhängige Domains praktisch garantiert. Keine fragile zweite Recherche mehr.",
+        "content": "## 3–4 · Recherche & Aufbereitung\nEINE breite Tavily-Suche (Themenfelder: KI im Handwerk, Telefonie/Erreichbarkeit, Notdienst/SOS, VOB-Vertragsprüfung, Terminplanung, Personalmangel). Node 'Quellen aufbereiten' nimmt je Domain die beste Meldung (max. 7), so sind 3+ unabhängige Domains praktisch garantiert. Keine fragile zweite Recherche mehr.",
         "height": 200,
         "width": 420,
         "color": 4
@@ -564,32 +564,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "d4970733-1869-481d-9586-a006d37ef955",
-  "activeVersionId": "d4970733-1869-481d-9586-a006d37ef955",
-  "versionCounter": 10,
+  "versionId": "b8f220b0-3891-4e49-9ac1-06ef61385e16",
+  "activeVersionId": "b8f220b0-3891-4e49-9ac1-06ef61385e16",
+  "versionCounter": 15,
   "triggerCount": 1,
-  "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2026-06-02T21:54:38.474Z",
-      "createdAt": "2026-06-02T21:54:38.474Z",
-      "role": "workflow:owner",
-      "workflowId": "ZBjJfxJ9Ulqm57wU",
-      "projectId": "a9T2t83fThlISn9u",
-      "project": {
-        "updatedAt": "2026-04-21T20:47:05.365Z",
-        "createdAt": "2026-04-21T20:34:33.830Z",
-        "id": "a9T2t83fThlISn9u",
-        "name": "Moritz Koch <koch_moritz12@gmx.de>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "156eef8d-1ffc-4930-8ec3-98ca7ae9c972"
-      }
-    }
-  ],
-  "versionMetadata": {
-    "name": "Version d4970733",
-    "description": ""
-  }
+  "tags": []
 }
