@@ -7,3 +7,6 @@ dist/
 data/
 .claude/settings.local.json
 .wrangler/
+
+# Local Netlify folder
+.netlify

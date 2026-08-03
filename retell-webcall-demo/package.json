@@ -1,0 +1,17 @@
+{
+  "name": "ak-retell-webcall-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Live-Test-Seite: Web-Call mit dem Retell-Agenten 'Max – Huber Sanitär Technik'",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --format=esm --minify --outfile=public/vendor/app.js",
+    "dev": "npm run build && netlify dev"
+  },
+  "dependencies": {
+    "retell-client-js-sdk": "^2.0.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
