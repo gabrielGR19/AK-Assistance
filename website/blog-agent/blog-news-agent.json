@@ -9,21 +9,46 @@
   "nodes": [
     {
       "parameters": {
-        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 1 * * 1" }] }
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 1 * * 1"
+            }
+          ]
+        }
       },
       "id": "14110c19-19d9-43d3-8993-bb2f2a8a1e77",
       "name": "Wöchentlicher Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-1088, 288]
+      "position": [
+        -1088,
+        288
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "s1", "name": "dry_run", "value": false, "type": "boolean" },
-            { "id": "s2", "name": "telegram_chat_id", "value": "8740574505", "type": "string" },
-            { "id": "s3", "name": "claude_model", "value": "claude-sonnet-4-6", "type": "string" }
+            {
+              "id": "s1",
+              "name": "dry_run",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "s2",
+              "name": "telegram_chat_id",
+              "value": "8740574505",
+              "type": "string"
+            },
+            {
+              "id": "s3",
+              "name": "claude_model",
+              "value": "claude-sonnet-4-6",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -32,7 +57,10 @@
       "name": "Einstellungen",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-864, 288]
+      "position": [
+        -864,
+        288
+      ]
     },
     {
       "parameters": {
@@ -43,17 +71,27 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\n  \"query\": \"\\\"KI im Handwerk\\\" OR \\\"künstliche Intelligenz Handwerksbetrieb\\\" OR \\\"KI Telefonassistent Handwerk\\\" OR \\\"KI Notdienst Handwerk\\\" OR \\\"KI Vertragsprüfung VOB\\\" OR \\\"künstliche Intelligenz Bauleistungen\\\" OR \\\"KI Terminplanung Handwerk\\\" OR \\\"KI Personalmangel Handwerk\\\"\",\n  \"topic\": \"general\",\n  \"time_range\": \"month\",\n  \"max_results\": 15,\n  \"search_depth\": \"basic\"\n}",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "dc4cbc9d-e3df-4209-ba31-a9a9768c177f",
       "name": "Themen-Recherche (Tavily)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-640, 288],
+      "position": [
+        -640,
+        288
+      ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000,
-      "credentials": { "httpHeaderAuth": { "id": "o65pLxEbRnNMXUpQ", "name": "Tavily API" } },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "o65pLxEbRnNMXUpQ",
+          "name": "Tavily API"
+        }
+      },
       "onError": "continueErrorOutput"
     },
     {
@@ -64,13 +102,32 @@
       "name": "Quellen aufbereiten",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-416, 288]
+      "position": [
+        -416,
+        288
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
-          "conditions": [{ "id": "c-31617", "leftValue": "={{ $json.enough_sources }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-31617",
+              "leftValue": "={{ $json.enough_sources }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
           "combinator": "and"
         },
         "options": {}
@@ -79,7 +136,10 @@
       "name": "Genug Quellen (≥3 Domains)?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-208, 288]
+      "position": [
+        -208,
+        288
+      ]
     },
     {
       "parameters": {
@@ -88,21 +148,38 @@
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "anthropic-version", "value": "2023-06-01" }] },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ model: $('Einstellungen').first().json.claude_model, max_tokens: 4096, system: $json.claude_system, messages: [{ role: 'user', content: $json.claude_user }] }) }}",
-        "options": { "timeout": 120000 }
+        "options": {
+          "timeout": 120000
+        }
       },
       "id": "ac5ed4e2-79da-4edc-98f3-2b6f72959f79",
       "name": "Artikel generieren (Claude)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [32, 208],
+      "position": [
+        32,
+        208
+      ],
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 5000,
-      "credentials": { "httpHeaderAuth": { "id": "1sqhvuprxy5szWxz", "name": "Anthropic API" } },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1sqhvuprxy5szWxz",
+          "name": "Anthropic API"
+        }
+      },
       "onError": "continueErrorOutput"
     },
     {
@@ -113,13 +190,32 @@
       "name": "Claude-Antwort parsen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [240, 208]
+      "position": [
+        240,
+        208
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
-          "conditions": [{ "id": "c-71991", "leftValue": "={{ $json.article_valid }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-71991",
+              "leftValue": "={{ $json.article_valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
           "combinator": "and"
         },
         "options": {}
@@ -128,49 +224,82 @@
       "name": "Artikel valide?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [464, 208]
+      "position": [
+        464,
+        208
+      ]
     },
     {
       "parameters": {
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
         "text": "=⚠️ Blog-Agent abgebrochen: Die KI-News-Suche lieferte weniger als 3 unabhängige Quellen-Domains. Kein Wochenrückblick erstellt (Anti-Halluzination).",
-        "additionalFields": { "appendAttribution": false }
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "id": "2fd7b789-b96a-4583-a927-faaa6aa945ed",
       "name": "Telegram: Zu wenige Quellen",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [32, 448],
+      "position": [
+        32,
+        448
+      ],
       "webhookId": "e2121660-f12e-48c1-be77-fa11ff789c0a",
-      "credentials": { "telegramApi": { "id": "9Vp8wPx7MROw0sAO", "name": "Telegram account" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
         "text": "=⚠️ Blog-Agent abgebrochen: Claude konnte aus den Quellen keinen verwertbaren Artikel erstellen (Grund: {{ $json.reason }}). Kein Entwurf angelegt.",
-        "additionalFields": { "appendAttribution": false }
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "id": "e49f0a62-e6b8-421a-8133-df7a146fd3d3",
       "name": "Telegram: Artikel ungültig",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [464, 448],
+      "position": [
+        464,
+        448
+      ],
       "webhookId": "4d84dbb3-8829-4f62-a382-de8d2ce162a1",
-      "credentials": { "telegramApi": { "id": "9Vp8wPx7MROw0sAO", "name": "Telegram account" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
         "chatId": "={{ $('Einstellungen').first().json.telegram_chat_id }}",
         "text": "=❌ Blog-Agent — technischer Fehler: Ein API-Aufruf ist fehlgeschlagen.\nNode: {{ $json.error?.node?.name || 'unbekannt' }}\nMeldung: {{ $json.error?.message || $json.error || 'siehe n8n-Execution-Log' }}",
-        "additionalFields": { "appendAttribution": false }
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "id": "431bac67-5165-4d69-9fa3-d1a7e429aaa2",
       "name": "Telegram: Technischer Fehler",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [-640, 512],
+      "position": [
+        -640,
+        512
+      ],
       "webhookId": "1f943ea3-19ce-4c3a-82ab-89419eb31668",
-      "credentials": { "telegramApi": { "id": "9Vp8wPx7MROw0sAO", "name": "Telegram account" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "9Vp8wPx7MROw0sAO",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
@@ -183,7 +312,10 @@
       "name": "Notiz 1",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-1104, 32]
+      "position": [
+        -1104,
+        32
+      ]
     },
     {
       "parameters": {
@@ -196,7 +328,10 @@
       "name": "Notiz 2",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-464, 32]
+      "position": [
+        -464,
+        32
+      ]
     },
     {
       "parameters": {
@@ -209,7 +344,10 @@
       "name": "Notiz 3",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -222,12 +360,22 @@
       "name": "Notiz 4",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [1328, 32]
+      "position": [
+        1328,
+        32
+      ]
     },
     {
       "parameters": {
         "assignments": {
-          "assignments": [{ "id": "pid-1", "name": "post_id", "value": "=post-{{ $now.toMillis() }}", "type": "string" }]
+          "assignments": [
+            {
+              "id": "pid-1",
+              "name": "post_id",
+              "value": "=post-{{ $now.toMillis() }}",
+              "type": "string"
+            }
+          ]
         },
         "options": {}
       },
@@ -235,7 +383,10 @@
       "name": "Post-ID generieren",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1824, 304]
+      "position": [
+        1824,
+        304
+      ]
     },
     {
       "parameters": {
@@ -244,51 +395,174 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ post_id: $json.post_id, title: $('Claude-Antwort parsen').first().json.title, slug: $('Claude-Antwort parsen').first().json.slug, meta_description: $('Claude-Antwort parsen').first().json.meta_description, keywords: ($('Claude-Antwort parsen').first().json.keywords || []).join(', '), body_markdown: $('Claude-Antwort parsen').first().json.body_markdown, dry_run: String($('Einstellungen').first().json.dry_run) }) }}",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "artikel-weiterleiten",
       "name": "An Workflow 2 senden",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2048, 304],
+      "position": [
+        2048,
+        304
+      ],
       "onError": "continueErrorOutput"
     }
   ],
   "connections": {
-    "Wöchentlicher Trigger": { "main": [[{ "node": "Einstellungen", "type": "main", "index": 0 }]] },
-    "Einstellungen": { "main": [[{ "node": "Themen-Recherche (Tavily)", "type": "main", "index": 0 }]] },
-    "Themen-Recherche (Tavily)": {
+    "Wöchentlicher Trigger": {
       "main": [
-        [{ "node": "Quellen aufbereiten", "type": "main", "index": 0 }],
-        [{ "node": "Telegram: Technischer Fehler", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Einstellungen",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Quellen aufbereiten": { "main": [[{ "node": "Genug Quellen (≥3 Domains)?", "type": "main", "index": 0 }]] },
+    "Einstellungen": {
+      "main": [
+        [
+          {
+            "node": "Themen-Recherche (Tavily)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Themen-Recherche (Tavily)": {
+      "main": [
+        [
+          {
+            "node": "Quellen aufbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quellen aufbereiten": {
+      "main": [
+        [
+          {
+            "node": "Genug Quellen (≥3 Domains)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Genug Quellen (≥3 Domains)?": {
       "main": [
-        [{ "node": "Artikel generieren (Claude)", "type": "main", "index": 0 }],
-        [{ "node": "Telegram: Zu wenige Quellen", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Artikel generieren (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Zu wenige Quellen",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Artikel generieren (Claude)": {
       "main": [
-        [{ "node": "Claude-Antwort parsen", "type": "main", "index": 0 }],
-        [{ "node": "Telegram: Technischer Fehler", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Claude-Antwort parsen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Claude-Antwort parsen": { "main": [[{ "node": "Artikel valide?", "type": "main", "index": 0 }]] },
+    "Claude-Antwort parsen": {
+      "main": [
+        [
+          {
+            "node": "Artikel valide?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Artikel valide?": {
       "main": [
-        [{ "node": "Post-ID generieren", "type": "main", "index": 0 }],
-        [{ "node": "Telegram: Artikel ungültig", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Post-ID generieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Artikel ungültig",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Post-ID generieren": { "main": [[{ "node": "An Workflow 2 senden", "type": "main", "index": 0 }]] },
-    "An Workflow 2 senden": { "main": [[], [{ "node": "Telegram: Technischer Fehler", "type": "main", "index": 0 }]] }
+    "Post-ID generieren": {
+      "main": [
+        [
+          {
+            "node": "An Workflow 2 senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "An Workflow 2 senden": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Telegram: Technischer Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1", "binaryMode": "separate" },
-  "staticData": { "node:Wöchentlicher Trigger": { "recurrenceRules": [] } },
-  "meta": { "templateCredsSetupCompleted": true },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Wöchentlicher Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
   "pinData": {},
   "versionId": "b8f220b0-3891-4e49-9ac1-06ef61385e16",
   "activeVersionId": "b8f220b0-3891-4e49-9ac1-06ef61385e16",
