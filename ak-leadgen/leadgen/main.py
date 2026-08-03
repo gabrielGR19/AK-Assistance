@@ -21,6 +21,9 @@ PFLICHT_UMGEBUNGSVARIABLEN = [
     "SHEET_ID",
 ]
 
+# Sicherheitsabstand zum 1.000-Calls-Freikontingent der Places API (New).
+MONATSLIMIT_CALLS = 900
+
 
 class KonfigurationsFehler(Exception):
     """Config fehlt, ist unvollständig oder unplausibel."""
@@ -28,6 +31,10 @@ class KonfigurationsFehler(Exception):
 
 class UmgebungsFehler(Exception):
     """'.env' fehlt oder Pflichtvariablen sind nicht gesetzt."""
+
+
+class MonatslimitFehler(Exception):
+    """Monatliches Call-Budget (Sicherheitsabstand zum Freikontingent) erreicht."""
 
 
 def lade_und_pruefe_umgebung(basis_verzeichnis=BASIS_VERZEICHNIS):
@@ -166,6 +173,16 @@ def filtere_leads(leads, filter_cfg):
 def befehl_run(args, config, umgebung):
     """Ablauf 'run': Suche, Filter, Dedupe, Sheet-Export, Zusammenfassung (Schritte 1-8)."""
     conn = store.verbindung_oeffnen(DB_PFAD)
+
+    calls_bisher = store.calls_dieser_monat(conn)
+    if calls_bisher >= MONATSLIMIT_CALLS:
+        conn.close()
+        raise MonatslimitFehler(
+            f"Monatliches Call-Budget erreicht: {calls_bisher}/{MONATSLIMIT_CALLS} "
+            "(Sicherheitsabstand zum 1.000-Freikontingent). Lauf abgebrochen, "
+            "kein API-Call ausgeführt."
+        )
+
     lauf_id = store.lauf_starten(conn)
 
     worksheet = sheet.verbinden(umgebung)
@@ -331,7 +348,8 @@ def main(argv=None):
             befehl_run(args, config, umgebung)
         elif args.befehl == "sync-status":
             befehl_sync_status(umgebung)
-    except (KonfigurationsFehler, UmgebungsFehler, places.PlacesFehler, sheet.SheetFehler) as fehler:
+    except (KonfigurationsFehler, UmgebungsFehler, MonatslimitFehler,
+            places.PlacesFehler, sheet.SheetFehler) as fehler:
         print(f"Fehler: {fehler}")
         sys.exit(1)
 

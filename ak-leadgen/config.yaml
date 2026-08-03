@@ -1,23 +1,65 @@
-regionen:
+regionen:            # bewusst weit auseinander, damit sich Radien kaum überlappen
   - name: "Nürnberg"
     lat: 49.4521
     lng: 11.0767
     radius_km: 25
-  - name: "Fürth"
-    lat: 49.4783
-    lng: 10.9903
+  - name: "Erlangen"
+    lat: 49.5897
+    lng: 11.0040
     radius_km: 15
+  - name: "Bamberg"
+    lat: 49.8988
+    lng: 10.9028
+    radius_km: 20
+  - name: "Bayreuth"
+    lat: 49.9456
+    lng: 11.5713
+    radius_km: 20
+  - name: "Ansbach"
+    lat: 49.3001
+    lng: 10.5698
+    radius_km: 20
+  - name: "Neumarkt i.d.OPf."
+    lat: 49.2733
+    lng: 11.4595
+    radius_km: 20
+  - name: "Amberg"
+    lat: 49.4453
+    lng: 11.8522
+    radius_km: 20
+  - name: "Regensburg"
+    lat: 49.0134
+    lng: 12.1016
+    radius_km: 25
+  - name: "Würzburg"
+    lat: 49.7913
+    lng: 9.9534
+    radius_km: 25
+  - name: "Ingolstadt"
+    lat: 48.7665
+    lng: 11.4257
+    radius_km: 25
 
 suchbloecke:            # frei erweiterbar, werden der Reihe nach abgearbeitet
-  - begriff: "Schädlingsbekämpfer"
+  - begriff: "Sanitär Heizung Klima"
     anzahl: 20
-  - begriff: "Gebäudereinigung"
+  - begriff: "Elektriker"
     anzahl: 20
   - begriff: "Schlüsseldienst"
     anzahl: 20
-  - begriff: "Bestatter"
+  - begriff: "Dachdecker"
     anzahl: 20
-  - begriff: "Sanitär Heizung"
+  - begriff: "KFZ Werkstatt"
+    anzahl: 20
+  - begriff: "Rohrreinigung"
+    anzahl: 20
+  - begriff: "Glaserei"
+    anzahl: 20
+  - begriff: "Fensterbau Rollladen"
+    anzahl: 20
+  - begriff: "Aufzugsservice"
+    anzahl: 20
+  - begriff: "Malerbetrieb"
     anzahl: 20
 
 filter:                 # ein Lead muss ALLE erfüllen
@@ -27,6 +69,6 @@ filter:                 # ein Lead muss ALLE erfüllen
   website_pflicht: false
 
 max_neue_leads_pro_lauf: 100
-max_api_calls_pro_lauf: 200      # harte Kostenbremse
+max_api_calls_pro_lauf: 300      # harte Kostenbremse pro Lauf
 sprache: "de"
 region_code: "DE"

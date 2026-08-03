@@ -52,6 +52,16 @@ anhängt.
    Zeigt Block-Zusammenfassungen, schreibt aber nichts in DB oder Sheet.
    Ohne `--dry-run` läuft der echte Lauf.
 
+## Lauf auslösen
+
+Normalfall: Doppelklick auf `Leads holen.command` im Finder. Öffnet ein
+Terminal-Fenster, fragt vor dem echten Lauf kurz nach (verbraucht API-Calls
+und schreibt ins Sheet), sichert vorher `data/leads.db` per `scripts/backup.sh`
+und bleibt am Ende offen, damit die Zusammenfassung lesbar bleibt.
+
+Für Sonderfälle (`--dry-run`, `--block`, `stats`, `sync-status`) das CLI direkt
+nutzen, siehe unten.
+
 ## CLI
 
 ```
@@ -115,4 +125,6 @@ Cron-Einträge (Beispiel, Pfade anpassen):
 
 `max_api_calls_pro_lauf` in `config.yaml` begrenzt die Places-API-Aufrufe pro
 Lauf hart. `max_neue_leads_pro_lauf` begrenzt zusätzlich die Anzahl neuer
-Leads, die pro Lauf ins Sheet geschrieben werden.
+Leads, die pro Lauf ins Sheet geschrieben werden. Zusätzlich bricht `run` ab,
+sobald der laufende Monat 900 Calls erreicht hat (Sicherheitsabstand zum
+1.000er-Freikontingent) — noch bevor der erste API-Call dieses Laufs passiert.
