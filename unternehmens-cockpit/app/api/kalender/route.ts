@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
       reflexionen: daten.reflexionen,
       pensumSoll: daten.pensumSoll,
       vorlagen: daten.vorlagen,
+      labels: daten.labels,
     });
   } catch (err) {
     console.error("Fehler beim Laden des Kalenders:", err);

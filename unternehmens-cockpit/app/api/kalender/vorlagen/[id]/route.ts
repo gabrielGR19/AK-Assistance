@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { aendereKalender } from "@/lib/kalender-db";
 import { personAusHeadern } from "@/lib/benutzer";
 import { darfVorlageAendern, validiereVorlage } from "@/lib/kalender-vorlagen";
+import { erlaubteLabels } from "@/lib/kalender-labels";
 
 type Kontext = { params: Promise<{ id: string }> };
 
@@ -14,10 +15,14 @@ export async function PATCH(request: NextRequest, { params }: Kontext) {
 
   try {
     const { id } = await params;
-    const geprueft = validiereVorlage(await request.json());
-    if (!geprueft.ok) return Response.json({ fehler: geprueft.fehler }, { status: 400 });
+    const roh = await request.json();
 
     const ergebnis = await aendereKalender((daten) => {
+      // Gegen den Stand IN dieser Sperre prüfen, nicht gegen einen separat geladenen — sonst
+      // könnte ein Label zwischen Prüfung und Schreiben verschwinden.
+      const geprueft = validiereVorlage(roh, erlaubteLabels(daten));
+      if (!geprueft.ok) return { status: 400 as const, fehler: geprueft.fehler };
+
       const vorlage = daten.vorlagen.find((v) => v.id === id);
       if (!vorlage) return { status: 404 as const, fehler: "Vorlage nicht gefunden." };
       // Rechteprüfung serverseitig, nicht nur im UI.

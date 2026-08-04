@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PERSONEN, type PersonId, type Termin } from "@/lib/kalender-typen";
+import { labelKarte } from "@/lib/kalender-labels";
 import type { KalenderDaten } from "./KalenderAnsicht";
 import { WOCHENTAG, ausIso, iso, minutenAmTag } from "./datum";
 import { RASTER_HOEHE, alsUhrzeit } from "./geometrie.ts";
@@ -57,6 +58,7 @@ export function Zeitraster({
   beiReflexion,
   beiVorlageAbgelegt,
 }: Props) {
+  const labels = useMemo(() => labelKarte(daten.labels), [daten.labels]);
   const [jetzt, setJetzt] = useState(() => new Date());
   // Tage, für die die Spalte der anderen Person aufgeklappt ist — bewusst pro Tag und nicht
   // global: eine Woche mit einem offenen Tag hat 8 Spalten und bleibt lesbar.
@@ -145,7 +147,7 @@ export function Zeitraster({
         {tage.map((d) => {
           const tagIso = iso(d);
           const offen = offeneTage.has(tagIso);
-          const ist = pensumAm(daten.termine, daten.ich, tagIso);
+          const ist = pensumAm(daten.termine, daten.ich, tagIso, labels);
           const soll = daten.pensumSoll[daten.ich];
           const voll = soll > 0 && ist >= soll;
           const abgeschlossen = daten.reflexionen[daten.ich][tagIso]?.ab ?? false;
@@ -245,6 +247,7 @@ export function Zeitraster({
               zug={zug}
               beginne={beginneMitPunkt}
               beiVorlageAbgelegt={beiVorlageAbgelegt}
+              labels={labels}
             />
           );
         })}

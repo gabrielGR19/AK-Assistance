@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { leseImport } from "./kalender-import.ts";
+import { STANDARD_LABEL_IDS } from "./kalender-labels.ts";
 
 // So sieht eine Datei aus, die der alte Prototyp exportiert: keine Besitzer, flache
 // Reflexionstabelle, Pensum als einzelne Zahl.
@@ -17,7 +18,7 @@ const prototypDatei = {
 };
 
 test("Prototyp-Datei wird der importierenden Person zugeschrieben", () => {
-  const p = leseImport(prototypDatei, "gabriel");
+  const p = leseImport(prototypDatei, "gabriel", STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.equal(p.wert.termine.length, 2);
   assert.ok(p.wert.termine.every((t) => t.besitzer === "gabriel"));
@@ -28,14 +29,14 @@ test("Prototyp-Datei wird der importierenden Person zugeschrieben", () => {
 });
 
 test("leere Reflexionen werden nicht mitgeschleppt", () => {
-  const p = leseImport(prototypDatei, "gabriel");
+  const p = leseImport(prototypDatei, "gabriel", STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.ok(p.wert.reflexionen);
   assert.deepEqual(Object.keys(p.wert.reflexionen), ["2026-07-27"]);
 });
 
 test("ids aus der Datei werden nicht übernommen", () => {
-  const p = leseImport(prototypDatei, "gabriel");
+  const p = leseImport(prototypDatei, "gabriel", STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.ok(p.wert.termine.every((t) => t.id !== "t1" && t.id !== "t2"));
 });
@@ -52,7 +53,7 @@ test("aus einem Cockpit-Export kommen nur die eigenen Einträge", () => {
     reflexionen: { gabriel: { "2026-07-27": { ab: true, notiz: "meins" } }, moritz: { "2026-07-27": { ab: true, notiz: "seins" } } },
     pensumSoll: { gabriel: 300, moritz: 180 },
   };
-  const p = leseImport(export_, "gabriel");
+  const p = leseImport(export_, "gabriel", STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.equal(p.wert.termine.length, 1);
   assert.equal(p.wert.termine[0].titel, "Cold Calls");
@@ -83,6 +84,7 @@ test("Serien bekommen neue id und den richtigen Besitzer", () => {
       ],
     },
     "gabriel",
+    STANDARD_LABEL_IDS,
   );
   assert.ok(p.ok);
   assert.equal(p.wert.serien.length, 1);
@@ -101,6 +103,7 @@ test("kaputte Einträge werden übersprungen und gezählt, nicht eingespielt", (
       ganztags: [{ titel: "Ohne Datum" }],
     },
     "gabriel",
+    STANDARD_LABEL_IDS,
   );
   assert.ok(p.ok);
   assert.equal(p.wert.termine.length, 1);
@@ -108,14 +111,14 @@ test("kaputte Einträge werden übersprungen und gezählt, nicht eingespielt", (
 });
 
 test("etwas, das kein Kalender ist, wird abgelehnt", () => {
-  assert.ok(!leseImport(null, "gabriel").ok);
-  assert.ok(!leseImport("text", "gabriel").ok);
-  assert.ok(!leseImport([1, 2, 3], "gabriel").ok);
-  assert.ok(!leseImport({ irgendwas: true }, "gabriel").ok);
+  assert.ok(!leseImport(null, "gabriel", STANDARD_LABEL_IDS).ok);
+  assert.ok(!leseImport("text", "gabriel", STANDARD_LABEL_IDS).ok);
+  assert.ok(!leseImport([1, 2, 3], "gabriel", STANDARD_LABEL_IDS).ok);
+  assert.ok(!leseImport({ irgendwas: true }, "gabriel", STANDARD_LABEL_IDS).ok);
 });
 
 test("unsinniges Pensum lässt das bestehende stehen", () => {
-  const p = leseImport({ termine: [], pensumSoll: 99999 }, "gabriel");
+  const p = leseImport({ termine: [], pensumSoll: 99999 }, "gabriel", STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.equal(p.wert.pensumSoll, null);
 });
@@ -124,13 +127,13 @@ test("unsinniges Pensum lässt das bestehende stehen", () => {
 // mit einem leeren Objekt überschrieben — damit war die Miniziel-Punktleiste geleert, ohne
 // dass die Rückfrage das angekündigt hätte. null heißt jetzt "die Datei sagt dazu nichts".
 test("Datei ohne Reflexionsblock lässt die Tagesabschlüsse stehen", () => {
-  const p = leseImport({ termine: [prototypDatei.termine[0]] }, "gabriel");
+  const p = leseImport({ termine: [prototypDatei.termine[0]] }, "gabriel", STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.equal(p.wert.reflexionen, null);
 });
 
 test("Datei mit leerem Reflexionsblock ersetzt die Tagesabschlüsse sehr wohl", () => {
-  const p = leseImport({ termine: [], reflexionen: {} }, "gabriel");
+  const p = leseImport({ termine: [], reflexionen: {} }, "gabriel", STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.deepEqual(p.wert.reflexionen, {});
 });
@@ -150,7 +153,7 @@ test("Serien mit unmöglichem Datum oder unmöglicher Uhrzeit werden abgelehnt",
     wiederholung: { art: "taeglich" },
   };
   const zaehle = (abweichung: object) => {
-    const p = leseImport({ termine: [], serien: [{ ...serie, ...abweichung }] }, "gabriel");
+    const p = leseImport({ termine: [], serien: [{ ...serie, ...abweichung }] }, "gabriel", STANDARD_LABEL_IDS);
     assert.ok(p.ok);
     return p.wert.serien.length;
   };
@@ -169,6 +172,7 @@ test("Termine mit unmöglicher Uhrzeit werden abgelehnt", () => {
       ],
     },
     "gabriel",
+    STANDARD_LABEL_IDS,
   );
   assert.ok(p.ok);
   assert.equal(p.wert.termine.length, 0);

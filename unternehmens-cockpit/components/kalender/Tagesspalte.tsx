@@ -1,6 +1,7 @@
 "use client";
 
-import { LABELS, type Termin } from "@/lib/kalender-typen";
+import type { Label, Termin } from "@/lib/kalender-typen";
+import { labelAus } from "@/lib/kalender-labels";
 import { ordneBloecke, type BlockPosition } from "./bloecke";
 import { STUNDE_BIS, STUNDE_VON, SPUR, ausIso, minutenAmTag, uhr } from "./datum";
 import { obenAus, hoeheAus, minuteAusPosition } from "./geometrie.ts";
@@ -18,6 +19,7 @@ interface Props {
   beginne: (e: React.PointerEvent, start: ZugStart) => void;
   // Eine Schnellvorlage wurde auf diesem Tag abgelegt (Minute ab Mitternacht).
   beiVorlageAbgelegt: (tagIso: string, vonMin: number, nutzlast: string) => void;
+  labels: Map<string, Label>;
 }
 
 // Eine Tagesspalte. Zugeklappt zeigt sie nur die eigenen Termine über die volle Breite;
@@ -36,6 +38,7 @@ export function Tagesspalte({
   zug,
   beginne,
   beiVorlageAbgelegt,
+  labels,
 }: Props) {
   const jetztSichtbar = istHeute && jetztMinute >= STUNDE_VON * 60 && jetztMinute <= STUNDE_BIS * 60;
 
@@ -78,7 +81,7 @@ export function Tagesspalte({
         }}
       >
         {ordneBloecke(eigene).map((p) => (
-          <Block key={p.termin.id} position={p} eigen zug={zug} beginne={beginne} tagIso={tagIso} />
+          <Block key={p.termin.id} position={p} eigen zug={zug} beginne={beginne} tagIso={tagIso} labels={labels} />
         ))}
 
         {zug?.art === "neu" && zug.datum === tagIso && (
@@ -90,7 +93,7 @@ export function Tagesspalte({
       {offen && (
         <div className={`${s.haelfte} ${s.haelfteFremd}`} style={{ left: "50%", width: "50%" }}>
           {ordneBloecke(fremde).map((p) => (
-            <Block key={p.termin.id} position={p} eigen={false} zug={null} beginne={beginne} tagIso={tagIso} />
+            <Block key={p.termin.id} position={p} eigen={false} zug={null} beginne={beginne} tagIso={tagIso} labels={labels} />
           ))}
         </div>
       )}
@@ -104,12 +107,14 @@ function Block({
   zug,
   beginne,
   tagIso,
+  labels,
 }: {
   position: BlockPosition;
   eigen: boolean;
   zug: Zug | null;
   beginne: Props["beginne"];
   tagIso: string;
+  labels: Map<string, Label>;
 }) {
   const { termin, spur, anzahl } = position;
   const von = ausIso(termin.start);
@@ -117,7 +122,7 @@ function Block({
   const vonMin = minutenAmTag(von);
   const bisMin = minutenAmTag(bis);
   const hoehe = hoeheAus(vonMin, bisMin);
-  const L = LABELS[termin.label];
+  const L = labelAus(labels, termin.label);
   const wirdGezogen = zug?.terminId === termin.id;
 
   return (

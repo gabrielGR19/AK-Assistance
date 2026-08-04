@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { aendereKalender } from "@/lib/kalender-db";
+import { aendereKalender, ladeKalender } from "@/lib/kalender-db";
 import { personAusHeadern } from "@/lib/benutzer";
 import { validiereSerie } from "@/lib/kalender-serien";
+import { erlaubteLabels } from "@/lib/kalender-labels";
 
 type Kontext = { params: Promise<{ id: string }> };
 
@@ -23,7 +24,10 @@ export async function PATCH(request: NextRequest, { params }: Kontext) {
       if (alt.besitzer !== person) return { status: 403 as const, fehler: FREMD };
 
       // id, Besitzer und bestehende Ausnahmen bleiben serverseitig bestimmt.
-      const geprueft = validiereSerie({ ...roh, id: alt.id, besitzer: alt.besitzer, ausnahmen: alt.ausnahmen });
+      const geprueft = validiereSerie(
+        { ...roh, id: alt.id, besitzer: alt.besitzer, ausnahmen: alt.ausnahmen },
+        erlaubteLabels(daten),
+      );
       if (!geprueft.ok) return { status: 400 as const, fehler: geprueft.fehler };
 
       daten.serien[index] = geprueft.wert;

@@ -14,33 +14,26 @@ export const PERSONEN: Record<PersonId, { name: string }> = {
   moritz: { name: "Moritz" },
 };
 
-export type LabelSchluessel =
-  | "vertrieb"
-  | "programmieren"
-  | "gruendung"
-  | "claude"
-  | "lesen"
-  | "sport"
-  | "arzt";
+// Bewusst ein einfacher String und keine Union mehr: Labels sind seit 04.08.2026 Daten
+// (siehe Label weiter unten), nicht mehr Code. Welche Werte gültig sind, entscheidet zur
+// Laufzeit `daten.labels`, nicht der Compiler.
+export type LabelSchluessel = string;
 
-// Gemeinsame Label-Definition für beide Personen. `arbeit` steuert, ob ein Termin
-// aufs Tagespensum einzahlt.
-//
-// Farbwerte unverändert aus dem Kalender-Prototyp (planung/arbeitskalender.html): `farbe`
-// für Randlinie und Fläche, `text` für die Beschriftung — auf dunklem Grund braucht etwa
-// das kräftige Blau von "Programmieren" eine hellere Schriftfarbe als seine Randlinie.
-export const LABELS: Record<LabelSchluessel, { name: string; farbe: string; text: string; arbeit: boolean }> = {
-  vertrieb: { name: "Vertrieb (Cold Calls)", farbe: "#5AC8FA", text: "#5AC8FA", arbeit: true },
-  programmieren: { name: "Programmieren", farbe: "#0A63D6", text: "#6FA8FF", arbeit: true },
-  gruendung: { name: "Gründung & To-Dos", farbe: "#30B0C7", text: "#40C8DF", arbeit: true },
-  claude: { name: "Claude lernen (Setup)", farbe: "#AF52DE", text: "#C77DEB", arbeit: true },
-  lesen: { name: "Lesen & Lernen", farbe: "#E8A33D", text: "#E8A33D", arbeit: false },
-  sport: { name: "Sport", farbe: "#34C759", text: "#34C759", arbeit: false },
-  arzt: { name: "Arzttermin", farbe: "#FF453A", text: "#FF6961", arbeit: false },
-};
-
-export function istLabel(wert: unknown): wert is LabelSchluessel {
-  return typeof wert === "string" && wert in LABELS;
+// Gemeinsame Label-Definition für beide Personen — liegt jetzt in `daten.labels`
+// (KalenderDaten), nicht mehr hier als Konstante. Anlegen/Ändern/Löschen über
+// lib/kalender-labels.ts und /api/kalender/labels.
+export interface Label {
+  id: string;
+  name: string;
+  // Randlinie und Fläche im Raster/in der Monatsansicht.
+  farbe: string;
+  // Schriftfarbe — auf dunklem Grund braucht etwa ein kräftiges Blau eine hellere
+  // Schriftfarbe als seine Randlinie.
+  text: string;
+  // Steuert, ob ein Termin mit diesem Label aufs Tagespensum einzahlt.
+  arbeit: boolean;
+  // Gruppierung in der Seitenleiste — dieselben zwei Überschriften wie im Prototyp.
+  gruppe: "firma" | "uebrige";
 }
 
 export function istPerson(wert: unknown): wert is PersonId {
@@ -123,6 +116,8 @@ export interface KalenderDaten {
   // Tagespensum-Soll in Minuten, pro Person.
   pensumSoll: Record<PersonId, number>;
   vorlagen: Vorlage[];
+  // Geteilte Liste: Gabriel und Moritz sehen und pflegen dieselben Labels.
+  labels: Label[];
 }
 
 // Ein aufgelöstes Serien-Vorkommen sieht für die Anzeige aus wie ein Termin, existiert

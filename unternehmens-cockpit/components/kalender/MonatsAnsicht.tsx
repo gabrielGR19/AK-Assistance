@@ -1,6 +1,8 @@
 "use client";
 
-import { LABELS, PERSONEN } from "@/lib/kalender-typen";
+import { useMemo } from "react";
+import { PERSONEN } from "@/lib/kalender-typen";
+import { labelAus, labelKarte } from "@/lib/kalender-labels";
 import type { KalenderDaten } from "./KalenderAnsicht";
 import { WOCHENTAG, iso, montagVon, plusTage } from "./datum";
 import s from "./kalender.module.css";
@@ -19,6 +21,7 @@ function kuerzel(besitzer: string): string {
 // Monatsansicht: 6-Wochen-Raster (42 Zellen), bis zu 4 Termine pro Zelle, Rest als
 // "n weitere". Ein Klick auf eine Zelle springt in die Tagesansicht — nichts wird angelegt.
 export function MonatsAnsicht({ anker, daten, onTagWaehlen }: Props) {
+  const karte = useMemo(() => labelKarte(daten.labels), [daten.labels]);
   const erster = new Date(anker.getFullYear(), anker.getMonth(), 1);
   const start = montagVon(erster);
   const heuteIso = iso(new Date());
@@ -58,7 +61,7 @@ export function MonatsAnsicht({ anker, daten, onTagWaehlen }: Props) {
                 </div>
               ))}
               {termine.slice(0, 4).map((t) => {
-                const L = LABELS[t.label];
+                const L = labelAus(karte, t.label);
                 const fremd = t.besitzer !== daten.ich;
                 return (
                   <div key={t.id} className={`${s.mTermin}${fremd ? " " + s.fremd : ""}`}>

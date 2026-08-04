@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { expandiereSerien, validiereSerie } from "./kalender-serien.ts";
 import type { Serie } from "./kalender-typen.ts";
+import { STANDARD_LABEL_IDS } from "./kalender-labels.ts";
 
 // Baut eine gültige Basis-Serie, einzelne Felder werden pro Test überschrieben.
 function serie(teil: Partial<Serie> = {}): Serie {
@@ -96,34 +97,34 @@ test("Anfrage-Zeitraum komplett vor startDatum ergibt leeres Ergebnis", () => {
 });
 
 test("validiereSerie weist fehlenden Titel ab", () => {
-  const r = validiereSerie({ ...serie(), titel: "" });
+  const r = validiereSerie({ ...serie(), titel: "" }, STANDARD_LABEL_IDS);
   assert.equal(r.ok, false);
 });
 
 test("validiereSerie weist unbekanntes Label ab", () => {
-  const r = validiereSerie({ ...serie(), label: "unbekannt" });
+  const r = validiereSerie({ ...serie(), label: "unbekannt" }, STANDARD_LABEL_IDS);
   assert.equal(r.ok, false);
 });
 
 test("validiereSerie weist endeZeit vor startZeit ab", () => {
-  const r = validiereSerie({ ...serie(), startZeit: "12:00", endeZeit: "11:00" });
+  const r = validiereSerie({ ...serie(), startZeit: "12:00", endeZeit: "11:00" }, STANDARD_LABEL_IDS);
   assert.equal(r.ok, false);
 });
 
 test("validiereSerie weist leere Wochentagsliste ab", () => {
-  const r = validiereSerie({ ...serie(), wiederholung: { art: "wochentage", tage: [] } });
+  const r = validiereSerie({ ...serie(), wiederholung: { art: "wochentage", tage: [] } }, STANDARD_LABEL_IDS);
   assert.equal(r.ok, false);
 });
 
 test("validiereSerie akzeptiert gueltige Serie", () => {
-  const r = validiereSerie(serie());
+  const r = validiereSerie(serie(), STANDARD_LABEL_IDS);
   assert.equal(r.ok, true);
 });
 
 test("validiereSerie reicht keine unbekannten Fremdfelder durch", () => {
   // Das Ergebnis wird aus den geprueften Feldern neu aufgebaut. Wuerde stattdessen das
   // Roh-Objekt durchgereicht, landete beliebiger Fremdinhalt in data/kalender.json.
-  const r = validiereSerie({ ...serie(), schadhaft: { tief: true }, admin: true });
+  const r = validiereSerie({ ...serie(), schadhaft: { tief: true }, admin: true }, STANDARD_LABEL_IDS);
   assert.equal(r.ok, true);
   if (!r.ok) return;
   assert.deepEqual(

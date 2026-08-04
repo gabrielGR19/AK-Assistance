@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { aendereKalender } from "@/lib/kalender-db";
+import { aendereKalender, ladeKalender } from "@/lib/kalender-db";
 import { personAusHeadern } from "@/lib/benutzer";
 import { baueTermin, validiereTermin } from "@/lib/kalender-termine";
+import { erlaubteLabels } from "@/lib/kalender-labels";
 
 // POST /api/kalender/termine — legt genau einen Termin an.
 //
@@ -14,7 +15,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const geprueft = validiereTermin(await request.json());
+    // Gegen den aktuellen Label-Stand prüfen, bevor die Schreibsperre überhaupt anläuft.
+    const erlaubt = erlaubteLabels(await ladeKalender());
+    const geprueft = validiereTermin(await request.json(), erlaubt);
     if (!geprueft.ok) return Response.json({ fehler: geprueft.fehler }, { status: 400 });
 
     // Der Besitzer kommt aus der Anmeldung, nie aus der Anfrage — sonst könnte man

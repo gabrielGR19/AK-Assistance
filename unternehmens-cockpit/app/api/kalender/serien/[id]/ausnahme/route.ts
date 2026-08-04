@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { aendereKalender } from "@/lib/kalender-db";
+import { aendereKalender, ladeKalender } from "@/lib/kalender-db";
 import { personAusHeadern } from "@/lib/benutzer";
 import { baueTermin, istEchtesDatum, validiereTermin } from "@/lib/kalender-termine";
+import { erlaubteLabels } from "@/lib/kalender-labels";
 
 type Kontext = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,8 @@ export async function POST(request: NextRequest, { params }: Kontext) {
     // genau diesen Zug abgelehnt, während derselbe Zug bei einem Einzeltermin funktionierte.
     let ersatzEingabe: ReturnType<typeof validiereTermin> | null = null;
     if (body.ersatz !== undefined && body.ersatz !== null) {
-      ersatzEingabe = validiereTermin(body.ersatz);
+      const erlaubt = erlaubteLabels(await ladeKalender());
+      ersatzEingabe = validiereTermin(body.ersatz, erlaubt);
       if (!ersatzEingabe.ok) return Response.json({ fehler: ersatzEingabe.fehler }, { status: 400 });
     }
 

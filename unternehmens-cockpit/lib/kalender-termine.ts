@@ -1,7 +1,6 @@
 // Import mit .ts-Endung, damit der Node-Test-Runner die Datei ohne Bundler auflösen kann
 // (tsconfig: allowImportingTsExtensions). Gilt für alle kalender-* Module.
 import type { PersonId, Termin } from "./kalender-typen.ts";
-import { istLabel } from "./kalender-typen.ts";
 
 // Validierung aller Termin-Eingaben, bevor etwas gespeichert wird. Reine Logik ohne HTTP,
 // damit sie testbar bleibt (Muster wie lib/dienste.ts und lib/checks.ts).
@@ -56,14 +55,16 @@ interface TerminEingabe {
   ende: string;
 }
 
-export function validiereTermin(roh: unknown): Pruefung<TerminEingabe> {
+export function validiereTermin(roh: unknown, erlaubteLabels: ReadonlySet<string>): Pruefung<TerminEingabe> {
   if (!roh || typeof roh !== "object") return { ok: false, fehler: "Keine Termindaten empfangen." };
   const d = roh as Record<string, unknown>;
 
   const titel = text(d.titel, MAX_TITEL);
   if (titel === null) return { ok: false, fehler: `Der Titel darf höchstens ${MAX_TITEL} Zeichen haben.` };
 
-  if (!istLabel(d.label)) return { ok: false, fehler: "Unbekannter Kalender (Label)." };
+  if (typeof d.label !== "string" || !erlaubteLabels.has(d.label)) {
+    return { ok: false, fehler: "Unbekannter Kalender (Label)." };
+  }
 
   const notiz = text(d.notiz ?? "", MAX_NOTIZ);
   if (notiz === null) return { ok: false, fehler: `Die Notiz darf höchstens ${MAX_NOTIZ} Zeichen haben.` };

@@ -161,6 +161,7 @@
 }
 
 .kalEintrag span {
+  flex: 1;
   font-size: 12.5px;
   white-space: nowrap;
   overflow: hidden;
@@ -169,6 +170,18 @@
 
 .kalEintragAus span {
   color: var(--text-3);
+}
+
+.kalEintragBearbeiten {
+  opacity: 0;
+  color: var(--text-3);
+  padding: 0 2px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.kalEintrag:hover .kalEintragBearbeiten {
+  opacity: 1;
 }
 
 /* Schnellvorlagen */
@@ -897,6 +910,22 @@
   background: #ff453a1f;
   border-radius: 6px;
   padding: 5px 7px;
+}
+
+/* Zentrierter Dialog (Label/Vorlage) statt an einer Klickposition verankert — beide kommen
+   aus der Seitenleiste, nicht aus einem Klick ins Raster. */
+.ueberlagerung {
+  position: fixed;
+  inset: 0;
+  background: #00000066;
+  z-index: 59;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popZentriert {
+  position: static;
 }
 
 .popFrage {
