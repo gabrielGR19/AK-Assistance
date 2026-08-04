@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LABELS, type LabelSchluessel, type Wochentag } from "@/lib/kalender-typen";
+import type { Label, LabelSchluessel, Wochentag } from "@/lib/kalender-typen";
 import s from "./kalender.module.css";
 
 export type Wiederholungswahl = "nie" | "taeglich" | "wochentage";
@@ -20,6 +20,7 @@ export interface EditorWerte {
 
 interface Props {
   werte: EditorWerte;
+  labels: Label[];
   // Neuer Termin: Serienfelder sichtbar, Löschen versteckt.
   istNeu: boolean;
   // Gehört der Eintrag zu einer Serie? Dann fragen Speichern/Löschen nach dem Umfang.
@@ -45,6 +46,7 @@ const WOCHENTAGE: { wert: Wochentag; kurz: string }[] = [
 // Änderung nur diesen Tag oder die ganze Serie betreffen soll.
 export function TerminEditor({
   werte: start,
+  labels,
   istNeu,
   ausSerie,
   position,
@@ -146,8 +148,8 @@ export function TerminEditor({
             value={w.label}
             onChange={(e) => aendere("label", e.target.value as LabelSchluessel)}
           >
-            {Object.entries(LABELS).map(([k, L]) => (
-              <option key={k} value={k}>
+            {labels.map((L) => (
+              <option key={L.id} value={L.id}>
                 {L.name}
               </option>
             ))}

@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { KalenderDaten } from "./kalender-typen";
+import { STANDARD_LABELS } from "./kalender-labels.ts";
 
 // Eigene Datei neben cockpit.json: der Kalender wird ungleich häufiger geschrieben als die
 // Kostendaten, und ein Fehler beim einen soll den anderen nicht mitreißen. data/ ist per
@@ -20,6 +21,7 @@ function leererKalender(): KalenderDaten {
     reflexionen: { gabriel: {}, moritz: {} },
     pensumSoll: { gabriel: 240, moritz: 240 },
     vorlagen: [],
+    labels: STANDARD_LABELS.map((l) => ({ ...l })),
   };
 }
 
@@ -44,6 +46,9 @@ function normalisiere(roh: Partial<KalenderDaten> | null): KalenderDaten {
       moritz: roh.pensumSoll?.moritz ?? leer.pensumSoll.moritz,
     },
     vorlagen: Array.isArray(roh.vorlagen) ? roh.vorlagen : [],
+    // Fehlt oder leer (alter Stand ohne Label-Verwaltung): Standardliste einsetzen, damit ein
+    // frisch migrierter Kalender nicht ohne ein einziges Label startet.
+    labels: Array.isArray(roh.labels) && roh.labels.length > 0 ? roh.labels : leer.labels,
   };
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { LabelSchluessel, Serie, Termin, Vorlage, Wochentag } from "@/lib/kalender-typen";
+import type { Label, LabelSchluessel, Serie, Termin, Vorlage, Wochentag } from "@/lib/kalender-typen";
 
 // Schreibzugriffe auf den Kalender. Jeder betrifft genau einen Eintrag — nur so können
 // beide gleichzeitig arbeiten, ohne sich zu überschreiben.
@@ -85,8 +85,31 @@ export function legeVorlageAn(eingabe: VorlagenEingabe) {
   return schicke<{ vorlage: Vorlage }>("/api/kalender/vorlagen", "POST", eingabe);
 }
 
+export function aendereVorlage(id: string, eingabe: VorlagenEingabe) {
+  return schicke<{ vorlage: Vorlage }>(`/api/kalender/vorlagen/${encodeURIComponent(id)}`, "PATCH", eingabe);
+}
+
 export function loescheVorlage(id: string) {
   return schicke<unknown>(`/api/kalender/vorlagen/${encodeURIComponent(id)}`, "DELETE");
+}
+
+export interface LabelEingabe {
+  name: string;
+  farbe: string;
+  arbeit: boolean;
+  gruppe: Label["gruppe"];
+}
+
+export function legeLabelAn(eingabe: LabelEingabe) {
+  return schicke<{ label: Label }>("/api/kalender/labels", "POST", eingabe);
+}
+
+export function aendereLabel(id: string, eingabe: LabelEingabe) {
+  return schicke<{ label: Label }>(`/api/kalender/labels/${encodeURIComponent(id)}`, "PATCH", eingabe);
+}
+
+export function loescheLabel(id: string) {
+  return schicke<unknown>(`/api/kalender/labels/${encodeURIComponent(id)}`, "DELETE");
 }
 
 // Tagesabschluss eines Tages setzen. Immer der eigene — wer schreibt, entscheidet der

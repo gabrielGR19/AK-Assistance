@@ -5,7 +5,7 @@
 // würde man einen Kalendertag überspringen oder doppelt sehen. Stattdessen
 // arbeiten wir mit Date-Feldern (Jahr/Monat/Tag) genau wie der Prototyp
 // (../planung/arbeitskalender.html, Funktion plusTage).
-import { istLabel, istPerson, vorkommenId, type Serie, type Termin, type Wochentag } from "./kalender-typen.ts";
+import { istPerson, vorkommenId, type Serie, type Termin, type Wochentag } from "./kalender-typen.ts";
 import { istEchtesDatum } from "./kalender-termine.ts";
 
 function zwei(n: number): string {
@@ -73,7 +73,10 @@ const RE_ZEIT = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Prüft eine Serie auf Plausibilität, bevor sie gespeichert wird. Bricht beim ersten
 // Fehler ab — für die Anzeige im UI reicht eine konkrete Meldung, keine Fehlerliste.
-export function validiereSerie(roh: unknown): { ok: true; wert: Serie } | { ok: false; fehler: string } {
+export function validiereSerie(
+  roh: unknown,
+  erlaubteLabels: ReadonlySet<string>,
+): { ok: true; wert: Serie } | { ok: false; fehler: string } {
   if (typeof roh !== "object" || roh === null) {
     return { ok: false, fehler: "Die Serie ist kein gültiges Objekt." };
   }
@@ -88,7 +91,7 @@ export function validiereSerie(roh: unknown): { ok: true; wert: Serie } | { ok: 
   if (!istPerson(r.besitzer)) {
     return { ok: false, fehler: "Der Besitzer ist unbekannt." };
   }
-  if (!istLabel(r.label)) {
+  if (typeof r.label !== "string" || !erlaubteLabels.has(r.label)) {
     return { ok: false, fehler: "Das Label ist unbekannt." };
   }
   if (typeof r.notiz !== "string") {

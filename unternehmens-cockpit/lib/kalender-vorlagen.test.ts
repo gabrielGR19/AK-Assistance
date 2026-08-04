@@ -2,43 +2,44 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { baueVorlage, darfVorlageAendern, validiereVorlage } from "./kalender-vorlagen.ts";
 import type { Vorlage } from "./kalender-typen.ts";
+import { STANDARD_LABEL_IDS } from "./kalender-labels.ts";
 
 const gueltig = { titel: "Cold Calls (10 Anrufe)", label: "vertrieb", min: 75 };
 
 test("gültige Vorlage wird angenommen", () => {
-  const p = validiereVorlage(gueltig);
+  const p = validiereVorlage(gueltig, STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.equal(p.wert.min, 75);
 });
 
 test("Titel wird getrimmt", () => {
-  const p = validiereVorlage({ ...gueltig, titel: "  Gym  " });
+  const p = validiereVorlage({ ...gueltig, titel: "  Gym  " }, STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   assert.equal(p.wert.titel, "Gym");
 });
 
 test("leerer Titel wird abgelehnt", () => {
-  const p = validiereVorlage({ ...gueltig, titel: "   " });
+  const p = validiereVorlage({ ...gueltig, titel: "   " }, STANDARD_LABEL_IDS);
   assert.ok(!p.ok);
   assert.match(p.fehler, /Titel/);
 });
 
 test("unbekanntes Label wird abgelehnt", () => {
-  const p = validiereVorlage({ ...gueltig, label: "urlaub" });
+  const p = validiereVorlage({ ...gueltig, label: "urlaub" }, STANDARD_LABEL_IDS);
   assert.ok(!p.ok);
 });
 
 test("zu kurze und zu lange Dauer werden abgelehnt", () => {
-  assert.ok(!validiereVorlage({ ...gueltig, min: 1 }).ok);
-  assert.ok(!validiereVorlage({ ...gueltig, min: 13 * 60 }).ok);
+  assert.ok(!validiereVorlage({ ...gueltig, min: 1 }, STANDARD_LABEL_IDS).ok);
+  assert.ok(!validiereVorlage({ ...gueltig, min: 13 * 60 }, STANDARD_LABEL_IDS).ok);
 });
 
 test("Dauer als Kommazahl wird abgelehnt", () => {
-  assert.ok(!validiereVorlage({ ...gueltig, min: 30.5 }).ok);
+  assert.ok(!validiereVorlage({ ...gueltig, min: 30.5 }, STANDARD_LABEL_IDS).ok);
 });
 
 test("Besitzer kommt aus der Anmeldung, nicht aus der Eingabe", () => {
-  const p = validiereVorlage({ ...gueltig, besitzer: "moritz" });
+  const p = validiereVorlage({ ...gueltig, besitzer: "moritz" }, STANDARD_LABEL_IDS);
   assert.ok(p.ok);
   const v = baueVorlage(p.wert, "gabriel");
   assert.equal(v.besitzer, "gabriel");

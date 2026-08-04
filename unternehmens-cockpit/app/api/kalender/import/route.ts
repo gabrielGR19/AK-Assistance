@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { aendereKalender } from "@/lib/kalender-db";
+import { aendereKalender, ladeKalender } from "@/lib/kalender-db";
 import { personAusHeadern } from "@/lib/benutzer";
 import { leseImport } from "@/lib/kalender-import";
+import { erlaubteLabels } from "@/lib/kalender-labels";
 
 // POST /api/kalender/import — Sicherung einspielen.
 //
@@ -15,7 +16,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const geprueft = leseImport(await request.json(), person);
+    const erlaubt = erlaubteLabels(await ladeKalender());
+    const geprueft = leseImport(await request.json(), person, erlaubt);
     if (!geprueft.ok) return Response.json({ fehler: geprueft.fehler }, { status: 400 });
     const neu = geprueft.wert;
 

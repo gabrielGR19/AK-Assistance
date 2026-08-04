@@ -1,7 +1,6 @@
 // Validierung der Schnellvorlagen ("Cold Calls 75 min", "Gym 120 min").
 // Reine Logik ohne HTTP, wie lib/kalender-termine.ts.
 import type { PersonId, Vorlage } from "./kalender-typen.ts";
-import { istLabel } from "./kalender-typen.ts";
 import type { Pruefung } from "./kalender-termine.ts";
 
 const MAX_TITEL = 100;
@@ -14,7 +13,7 @@ export interface VorlageEingabe {
   min: number;
 }
 
-export function validiereVorlage(roh: unknown): Pruefung<VorlageEingabe> {
+export function validiereVorlage(roh: unknown, erlaubteLabels: ReadonlySet<string>): Pruefung<VorlageEingabe> {
   if (!roh || typeof roh !== "object") return { ok: false, fehler: "Keine Vorlagendaten empfangen." };
   const d = roh as Record<string, unknown>;
 
@@ -23,7 +22,9 @@ export function validiereVorlage(roh: unknown): Pruefung<VorlageEingabe> {
   if (titel.length === 0) return { ok: false, fehler: "Eine Vorlage ohne Titel hilft niemandem." };
   if (titel.length > MAX_TITEL) return { ok: false, fehler: `Der Titel darf höchstens ${MAX_TITEL} Zeichen haben.` };
 
-  if (!istLabel(d.label)) return { ok: false, fehler: "Unbekannter Kalender (Label)." };
+  if (typeof d.label !== "string" || !erlaubteLabels.has(d.label)) {
+    return { ok: false, fehler: "Unbekannter Kalender (Label)." };
+  }
 
   if (typeof d.min !== "number" || !Number.isInteger(d.min)) {
     return { ok: false, fehler: "Die Dauer muss eine ganze Zahl in Minuten sein." };

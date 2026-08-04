@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { aendereKalender } from "@/lib/kalender-db";
+import { aendereKalender, ladeKalender } from "@/lib/kalender-db";
 import { personAusHeadern } from "@/lib/benutzer";
 import { baueVorlage, validiereVorlage } from "@/lib/kalender-vorlagen";
+import { erlaubteLabels } from "@/lib/kalender-labels";
 
 // POST /api/kalender/vorlagen — legt eine eigene Schnellvorlage an.
 export async function POST(request: NextRequest) {
@@ -11,7 +12,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const geprueft = validiereVorlage(await request.json());
+    const erlaubt = erlaubteLabels(await ladeKalender());
+    const geprueft = validiereVorlage(await request.json(), erlaubt);
     if (!geprueft.ok) return Response.json({ fehler: geprueft.fehler }, { status: 400 });
 
     const vorlage = baueVorlage(geprueft.wert, person);

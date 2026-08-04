@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Ganztags, LabelSchluessel, PersonId, Reflexion, Serie, Termin, Vorlage } from "@/lib/kalender-typen";
-import { LABELS, istLabel } from "@/lib/kalender-typen";
+import type { Ganztags, Label, LabelSchluessel, PersonId, Reflexion, Serie, Termin, Vorlage } from "@/lib/kalender-typen";
 import { MONATE, WOCHENTAG, iso, montagVon, plusTage } from "./datum";
 import { Zeitraster, type ZugErgebnis } from "./Zeitraster";
 import { alsUhrzeit } from "./geometrie.ts";
 import { KalenderSeitenleiste } from "./KalenderSeitenleiste";
 import { MonatsAnsicht } from "./MonatsAnsicht";
 import { TerminEditor, type EditorWerte } from "./TerminEditor";
+import { LabelEditor, type LabelWerte } from "./LabelEditor";
+import { VorlagenEditor, type VorlageWerte } from "./VorlagenEditor";
 import { stundenText } from "./pensum.ts";
 import { Zielleiste } from "./Zielleiste";
 import { Miniziel } from "./Miniziel";
@@ -27,6 +28,7 @@ export interface KalenderDaten {
   reflexionen: Record<PersonId, Record<string, Reflexion>>;
   pensumSoll: Record<PersonId, number>;
   vorlagen: Vorlage[];
+  labels: Label[];
 }
 
 // Was die Route tatsächlich liefert: `ich` ist dort `PersonId | null`. Null bedeutet, dass
@@ -88,6 +90,14 @@ export function KalenderAnsicht() {
   const [anker, setAnker] = useState(() => new Date());
   const [daten, setDaten] = useState<KalenderDaten | null>(null);
   const [editor, setEditor] = useState<EditorZustand | null>(null);
+  const [labelEditor, setLabelEditor] = useState<{ id: string | null; werte: LabelWerte; fehler: string | null } | null>(
+    null,
+  );
+  const [vorlageEditor, setVorlageEditor] = useState<{
+    id: string | null;
+    werte: VorlageWerte;
+    fehler: string | null;
+  } | null>(null);
   const [meldung, setMeldung] = useState<string | null>(null);
   // Ausgeblendete Label sind reiner Ansichtszustand dieses Browsers — sie gehören nicht in
   // die geteilte Datei, sonst blendet Gabriel Moritz etwas aus.
@@ -106,7 +116,14 @@ export function KalenderAnsicht() {
   useEffect(() => {
     try {
       const roh = localStorage.getItem(SPEICHER_LABEL);
-      if (roh) setAusgeblendet(new Set((JSON.parse(roh) as string[]).filter(istLabel)));
+      // Kein Abgleich gegen die Label-Liste mehr nötig: ein inzwischen gelöschtes Label im
+      // Ausblende-Set schadet nicht, es blendet dann einfach nichts (mehr) aus.
+      if (roh) {
+        const liste = JSON.parse(roh);
+        if (Array.isArray(liste)) {
+          setAusgeblendet(new Set(liste.filter((x): x is string => typeof x === "string")));
+        }
+      }
     } catch {
       // Unlesbarer Eintrag: dann eben alles sichtbar.
     }
@@ -216,7 +233,7 @@ export function KalenderAnsicht() {
       } catch {
         return; // Etwas anderes als eine Vorlage — ignorieren.
       }
-      if (typeof v.titel !== "string" || !istLabel(v.label)) return;
+      if (typeof v.titel !== "string" || typeof v.label !== "string") return;
       const dauer = typeof v.min === "number" && v.min > 0 ? Math.round(v.min) : 60;
       // So weit nach oben schieben, dass der Termin am selben Tag endet.
       const start = Math.max(0, Math.min(vonMin, 24 * 60 - dauer));
@@ -238,33 +255,84 @@ export function KalenderAnsicht() {
     [neuLaden],
   );
 
-  async function vorlageAnlegen() {
-    const titel = window.prompt("Titel der Vorlage:");
-    if (!titel?.trim()) return;
-    const dauer = Number(window.prompt("Dauer in Minuten:", "60")?.trim());
-    const label = window.prompt(`Label — ${Object.keys(LABELS).join(", ")}`, "gruendung")?.trim();
-    if (!istLabel(label)) {
-      melde("Unbekanntes Label.");
-      return;
-    }
+  // "+ Vorlage anlegen": leeres Formular, erstes Label als Vorschlag.
+  function vorlageNeu() {
+    if (!daten) return;
+    setVorlageEditor({
+      id: null,
+      werte: { titel: "", label: daten.labels[0]?.id ?? "", min: 60 },
+      fehler: null,
+    });
+  }
+
+  function vorlageBearbeiten(v: Vorlage) {
+    setVorlageEditor({ id: v.id, werte: { titel: v.titel, label: v.label, min: v.min }, fehler: null });
+  }
+
+  async function vorlageSpeichern(w: VorlageWerte) {
+    if (!vorlageEditor) return;
     try {
-      await api.legeVorlageAn({
-        titel: titel.trim(),
-        label,
-        min: Number.isFinite(dauer) && dauer > 0 ? Math.round(dauer) : 60,
-      });
+      if (vorlageEditor.id) await api.aendereVorlage(vorlageEditor.id, w);
+      else await api.legeVorlageAn(w);
+      setVorlageEditor(null);
       neuLaden();
     } catch (err) {
-      zeigeFehler(err);
+      setVorlageEditor((v) =>
+        v ? { ...v, fehler: err instanceof Error ? err.message : "Speichern fehlgeschlagen." } : v,
+      );
     }
   }
 
   async function vorlageLoeschen(id: string) {
     try {
       await api.loescheVorlage(id);
+      if (vorlageEditor?.id === id) setVorlageEditor(null);
       neuLaden();
     } catch (err) {
       zeigeFehler(err);
+    }
+  }
+
+  // "+ Label anlegen": leeres Formular in der ersten Gruppe.
+  function labelNeu() {
+    setLabelEditor({ id: null, werte: { name: "", farbe: "#5AC8FA", arbeit: true, gruppe: "uebrige" }, fehler: null });
+  }
+
+  function labelBearbeiten(l: Label) {
+    setLabelEditor({
+      id: l.id,
+      werte: { name: l.name, farbe: l.farbe, arbeit: l.arbeit, gruppe: l.gruppe },
+      fehler: null,
+    });
+  }
+
+  async function labelSpeichern(w: LabelWerte) {
+    if (!labelEditor) return;
+    try {
+      if (labelEditor.id) await api.aendereLabel(labelEditor.id, w);
+      else await api.legeLabelAn(w);
+      setLabelEditor(null);
+      neuLaden();
+    } catch (err) {
+      setLabelEditor((l) =>
+        l ? { ...l, fehler: err instanceof Error ? err.message : "Speichern fehlgeschlagen." } : l,
+      );
+    }
+  }
+
+  // 409 vom Server (noch benutzt / letztes Label) landet als Fehlertext im offenen Dialog,
+  // statt den Dialog zu schliessen — sonst müsste Gabriel den Löschversuch wiederholen, um
+  // die Meldung überhaupt zu sehen.
+  async function labelLoeschen() {
+    if (!labelEditor?.id) return;
+    try {
+      await api.loescheLabel(labelEditor.id);
+      setLabelEditor(null);
+      neuLaden();
+    } catch (err) {
+      setLabelEditor((l) =>
+        l ? { ...l, fehler: err instanceof Error ? err.message : "Löschen fehlgeschlagen." } : l,
+      );
     }
   }
 
@@ -275,7 +343,9 @@ export function KalenderAnsicht() {
     try {
       const { termin } = await api.legeTerminAn({
         titel: "Neuer Termin",
-        label: "gruendung",
+        // Kein hartcodiertes Label mehr — das erste in der Liste, egal welches Gabriel
+        // gerade als erstes angelegt hat. Ein zuvor benutztes Label könnte gelöscht sein.
+        label: daten.labels[0]?.id ?? "",
         notiz: "",
         start: `${tag}T10:00`,
         ende: `${tag}T11:00`,
@@ -352,7 +422,7 @@ export function KalenderAnsicht() {
 
       try {
         if (e.neu) {
-          const { termin } = await api.legeTerminAn(eingabe("Neuer Termin", "gruendung", ""));
+          const { termin } = await api.legeTerminAn(eingabe("Neuer Termin", daten.labels[0]?.id ?? "", ""));
           neuLaden();
           oeffneEditorFuer(termin, daten, { x: innerWidth / 2, y: innerHeight / 3 }, true);
           return;
@@ -539,10 +609,14 @@ export function KalenderAnsicht() {
           Fläche neben der Navigation vollständig aus. */}
       <div className={s.kalender}>
         <KalenderSeitenleiste
+          labels={daten?.labels ?? []}
           ausgeblendet={ausgeblendet}
           beiLabelWechsel={labelUmschalten}
+          beiLabelNeu={labelNeu}
+          beiLabelBearbeiten={labelBearbeiten}
           vorlagen={eigeneVorlagen}
-          beiVorlageNeu={vorlageAnlegen}
+          beiVorlageNeu={vorlageNeu}
+          beiVorlageBearbeiten={vorlageBearbeiten}
           beiVorlageWeg={vorlageLoeschen}
           sichtbareTage={tageDerAnsicht(ansicht === "monat" ? "woche" : ansicht, anker)}
           beiTagWaehlen={(d) => {
@@ -638,6 +712,7 @@ export function KalenderAnsicht() {
       {editor && (
         <TerminEditor
           werte={editor.werte}
+          labels={daten?.labels ?? []}
           istNeu={editor.istNeu}
           ausSerie={editor.serieId !== null}
           position={editor.position}
@@ -645,6 +720,29 @@ export function KalenderAnsicht() {
           beiSpeichern={speichern}
           beiLoeschen={loeschen}
           beiSchliessen={() => setEditor(null)}
+        />
+      )}
+
+      {labelEditor && (
+        <LabelEditor
+          werte={labelEditor.werte}
+          istNeu={labelEditor.id === null}
+          fehler={labelEditor.fehler}
+          beiSpeichern={labelSpeichern}
+          beiLoeschen={labelLoeschen}
+          beiSchliessen={() => setLabelEditor(null)}
+        />
+      )}
+
+      {vorlageEditor && (
+        <VorlagenEditor
+          werte={vorlageEditor.werte}
+          labels={daten?.labels ?? []}
+          istNeu={vorlageEditor.id === null}
+          fehler={vorlageEditor.fehler}
+          beiSpeichern={vorlageSpeichern}
+          beiLoeschen={() => vorlageEditor.id && vorlageLoeschen(vorlageEditor.id)}
+          beiSchliessen={() => setVorlageEditor(null)}
         />
       )}
 

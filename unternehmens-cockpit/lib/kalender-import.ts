@@ -94,8 +94,16 @@ function lesePensum(roh: unknown, person: PersonId): number | null {
 /**
  * Liest eine Sicherungsdatei und gibt zurück, was für `person` übernommen werden soll.
  * Einträge, die zu einer anderen Person gehören, werden übersprungen — nicht umgeschrieben.
+ *
+ * `erlaubteLabels` prüft nur, ob Termine/Serien/Vorlagen ein bekanntes Label referenzieren —
+ * ein etwaiges `labels`-Feld in der Datei selbst wird nie gelesen. Die Label-Liste ist geteilt;
+ * eine Sicherung von Gabriel darf nicht die Farben oder Namen ändern, die Moritz gerade sieht.
  */
-export function leseImport(roh: unknown, person: PersonId): Pruefung<ImportErgebnis> {
+export function leseImport(
+  roh: unknown,
+  person: PersonId,
+  erlaubteLabels: ReadonlySet<string>,
+): Pruefung<ImportErgebnis> {
   if (!roh || typeof roh !== "object" || Array.isArray(roh)) {
     return { ok: false, fehler: "Die Datei enthält keinen lesbaren Kalender." };
   }
@@ -114,7 +122,7 @@ export function leseImport(roh: unknown, person: PersonId): Pruefung<ImportErgeb
   const termine: Termin[] = [];
   for (const roheZeile of liste(d.termine)) {
     if (!gehoertMir(roheZeile)) continue;
-    const geprueft = validiereTermin(roheZeile);
+    const geprueft = validiereTermin(roheZeile, erlaubteLabels);
     if (!geprueft.ok) {
       uebersprungen += 1;
       continue;
@@ -126,7 +134,7 @@ export function leseImport(roh: unknown, person: PersonId): Pruefung<ImportErgeb
   for (const roheZeile of liste(d.serien)) {
     if (!gehoertMir(roheZeile)) continue;
     // id und Besitzer setzt der Server, nicht die Datei.
-    const geprueft = validiereSerie({ ...(roheZeile as object), id: neueId("s"), besitzer: person });
+    const geprueft = validiereSerie({ ...(roheZeile as object), id: neueId("s"), besitzer: person }, erlaubteLabels);
     if (!geprueft.ok) {
       uebersprungen += 1;
       continue;
@@ -148,7 +156,7 @@ export function leseImport(roh: unknown, person: PersonId): Pruefung<ImportErgeb
   const vorlagen: Vorlage[] = [];
   for (const roheZeile of liste(d.vorlagen)) {
     if (!gehoertMir(roheZeile)) continue;
-    const geprueft = validiereVorlage(roheZeile);
+    const geprueft = validiereVorlage(roheZeile, erlaubteLabels);
     if (!geprueft.ok) {
       uebersprungen += 1;
       continue;
