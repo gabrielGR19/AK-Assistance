@@ -5,7 +5,16 @@ import { timingSafeEqual } from "node:crypto";
 // access_token, der genau einen Anruf freischaltet und nach 30 s verfällt.
 
 const RETELL_ENDPOINT = "https://api.retellai.com/v2/create-web-call";
-const HUBER_AGENT_ID = "agent_2c58a81017d18c4949f2435dc9"; // Max – Huber Sanitär Technik
+// Conversation Flow Agent (from Zweirad Kißkalt - Max)
+const KISSKALT_AGENT_ID = "agent_6f090802fac09830ba6ca1e6c7";
+
+// Der Kißkalt-Agent arbeitet mit Platzhaltern im Prompt. Ohne Werte würde
+// der Agent sie wörtlich vorlesen — deshalb hier fest hinterlegt.
+const DYNAMIC_VARIABLES = {
+  firmenname: "Zweirad Kißkalt",
+  branche: "Zweiradfachgeschäft mit Meisterwerkstatt",
+  tonalitaet: "freundlich und professionell",
+};
 
 /** Vergleich ohne Timing-Leak; Länge darf abweichen. */
 function codeMatches(input, expected) {
@@ -52,8 +61,11 @@ export default async (req) => {
     return json({ ok: true });
   }
 
-  const agentId = process.env.RETELL_AGENT_ID || HUBER_AGENT_ID;
-  const body = { agent_id: agentId };
+  const agentId = process.env.RETELL_AGENT_ID || KISSKALT_AGENT_ID;
+  const body = {
+    agent_id: agentId,
+    retell_llm_dynamic_variables: DYNAMIC_VARIABLES,
+  };
 
   // Unveröffentlichte Agenten brauchen eine explizite Version — sonst
   // sucht Retell nach der letzten veröffentlichten und findet keine.

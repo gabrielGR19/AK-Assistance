@@ -2,7 +2,7 @@
   "name": "ak-retell-webcall-demo",
   "version": "1.0.0",
   "private": true,
-  "description": "Live-Test-Seite: Web-Call mit dem Retell-Agenten 'Max – Huber Sanitär Technik'",
+  "description": "Live-Test-Seite: Web-Call mit dem Retell-Agenten 'Max – Zweirad Kißkalt'",
   "type": "module",
   "scripts": {
     "build": "esbuild src/app.js --bundle --format=esm --minify --outfile=public/vendor/app.js",

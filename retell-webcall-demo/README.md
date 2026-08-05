@@ -1,8 +1,14 @@
-# Retell Web-Call Demo — Huber Sanitärtechnik
+# Retell Web-Call Demo — Zweirad Kißkalt
 
 Einseitige Landingpage für Kundentermine: Ein Klick startet einen
 Live-Web-Call (Browser-Mikrofon) mit dem Retell-Agenten
-`Max – Huber Sanitär Technik`.
+`Conversation Flow Agent (from Zweirad Kißkalt - Max)`
+(`agent_6f090802fac09830ba6ca1e6c7`).
+
+Der Agent arbeitet mit Platzhaltern (`firmenname`, `branche`,
+`tonalitaet`). Die Function füllt sie über
+`retell_llm_dynamic_variables` — ohne das liest der Agent die
+Platzhalter wörtlich vor.
 
 ## Aufbau
 
@@ -25,7 +31,7 @@ einen Anruf und verfällt 30 Sekunden nach Erstellung.
 |---|---|---|
 | `RETELL_API_KEY` | ja | Retell-API-Key (Server-seitig, nie im Frontend) |
 | `ACCESS_CODE` | ja | Zugangscode, den Besucher vor dem Anruf eingeben |
-| `RETELL_AGENT_ID` | nein | Überschreibt die fest hinterlegte Huber-Agent-ID |
+| `RETELL_AGENT_ID` | nein | Überschreibt die fest hinterlegte Kißkalt-Agent-ID |
 | `RETELL_AGENT_VERSION` | nein | Nur nötig, wenn eine bestimmte Agent-Version erzwungen werden soll |
 
 Nichts davon wird committet.
