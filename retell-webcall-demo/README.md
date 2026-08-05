@@ -52,9 +52,17 @@ die Mikrofon-Freigabe auch ohne HTTPS.
 
 ## Deployment
 
+Live: **https://ak-kisskalt-livetest.netlify.app**
+(Netlify-Projekt `ak-kisskalt-livetest`, vormals `ak-huber-livetest` —
+die alte URL antwortet seit dem Umbenennen mit 404.)
+
+Die Site ist **nicht** mit GitHub verbunden: es gibt kein Auto-Deploy,
+ein Push allein ändert die Live-Seite nicht. Jeder Stand geht per CLI
+raus:
+
 ```bash
 npm run build
-netlify deploy --prod
+netlify deploy --prod --dir=public --functions=netlify/functions
 ```
 
 Umgebungsvariablen vorher im Netlify-Dashboard unter
